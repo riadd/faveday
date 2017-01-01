@@ -1,0 +1,24 @@
+{
+  "name": "faveday",
+  "version": "0.1.0",
+  "description": "A minimal journal app",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/riadd/faveday.git"
+  },
+  "keywords": [
+    "journal",
+    "electron"
+  ],
+  "author": "Riad Djemili",
+  "devDependencies": {
+    "electron": "*"
+  },
+  "dependencies": {
+    "jquery": "^2.2.2"
+  }
+}

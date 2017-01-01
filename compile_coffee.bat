@@ -1,0 +1,1 @@
+coffee --watch --compile -j js\faveday.js coffee

@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Faveday</title>
+
+  <link href="css/bootstrap.css" rel="stylesheet" media="screen">
+  <link href="css/style.css" rel="stylesheet" type="text/css"/>
+
+  <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+  <script type="text/javascript" src="lib/bootstrap.min.js"></script>
+  <script type="text/javascript" src="lib/sugar-1.2.4.development.js"></script>
+  <script type="text/javascript" src="lib/hogan-2.0.0.js"></script>
+  <script type="text/javascript" src="lib/dropbox.min.js"></script>
+  <script type="text/javascript" src="lib/flot/jquery.flot.js"></script>
+
+  <script type="text/javascript" src="js/demo-notes.js"></script>
+  <script type="text/javascript" src="js/faveday.js"></script>
+
+  <!-- tmpl-scores -->
+  <script type="text/mustache" id="tmpl-scores">
+    <tr>
+      <th>Date</th>
+      <th>Total</th>
+      <th>Notes</th>
+    </tr>
+    {{#scores}}
+      <tr class="score">
+        <td class="date">
+          <a onclick="onShowMonth('{{dateId}}')">
+            <span>{{dateStr}}</span>
+            <small>{{weekday}}</small>
+          </a>
+        </td>
+        <td class="summary {{styleClass}}">{{summary}}</td>
+        <td class="notes">{{notes}}</td>
+      </tr>
+    {{/scores}}
+  </script>
+
+  <!-- tmpl-dashboard -->
+  <script type="text/mustache" id="tmpl-dashboard">
+    <h1>Dashboard</h1>
+
+    <h2>Recent Days</h2>
+
+    {{> yearsBar}}
+
+    <table class="box scores">
+      {{{recentScores}}}
+    </table>
+
+    <h2>Today</h2>
+    <table class="box scores">
+      {{{todayScores}}}
+    </table>
+
+    <h2>Inspiration</h2>
+    <table class="box scores">
+      {{{bestScores}}}
+    </table>
+  </script>
+
+  <!-- tmpl-month -->
+  <script type="text/mustache" id="tmpl-month">
+    {{> header}}
+
+    <h1>{{title}}</h1>
+    {{> yearsBar}}
+
+    <table class="box scores">
+      {{{scores}}}
+    </table>
+  </script>
+
+  <!-- tmpl-search -->
+  <script type="text/mustache" id="tmpl-search">
+    <h1>{{count}} Results..</h1>
+    {{> yearsBar}}
+
+    <h2>Average {{average}}</h2>
+
+    <table class="box scores">
+      {{{scores}}}
+    </table>
+  </script>
+
+  <!-- tmpl-year -->
+  <script type="text/mustache" id="tmpl-year">
+    {{> header}}
+
+    <h1>Year {{year}}</h1>
+    {{> yearsBar}}
+
+    <table class="box calendar">
+      <tr>
+        <th>Date</th>
+        <th>Summary</th>
+        <th colspan="5"></th>
+      </tr>
+
+      {{#months}}
+        <tr>
+          <td class="value date">
+            <span><a onclick="onShowMonth('{{date}}')">{{date}}</a></span>
+          </td>
+
+          <!-- this year -->
+          <td class="value">
+            <span class="current summary">{{avg}}</span>
+          </td>
+
+          {{#counts}}
+            <td>
+              {{#full}}
+                <span class="bar val{{val}}">&nbsp;</span>
+              {{/full}}
+
+              {{#part}}
+                <span class="dots val{{val}}">&nbsp;</span>
+              {{/part}}
+            </td>
+          {{/counts}}
+
+        </tr>
+      {{/months}}
+    </table>
+
+    {{#scores}}
+      <h2>Random Days</h2>
+
+      <table class="box scores">
+        {{{scores}}}
+      </table>
+    {{/scores}}
+
+    {{#inspiration}}
+      <h2>Inspiration</h2>
+
+      <table class="box scores">
+        {{{inspiration}}}
+      </table>
+    {{/inspiration}}
+  </script>
+
+  <!-- tmpl-years -->
+  <script type="text/mustache" id="tmpl-years">
+    {{> header}}
+
+    <h1>Years</h1>
+    {{> yearsBar}}
+
+    <table class="box calendar years">
+      <tr>
+        <th>Year</th>
+        <th>Total</th>
+        <th>Entries</th>
+        <th>Jan</th>
+        <th>Feb</th>
+        <th>Mar</th>
+        <th>Apr</th>
+        <th>May</th>
+        <th>Jun</th>
+        <th>Jul</th>
+        <th>Aug</th>
+        <th>Sep</th>
+        <th>Oct</th>
+        <th>Nov</th>
+        <th>Dec</th>
+      </tr>
+
+      {{#scores}}
+        <tr>
+          <td class="value date">
+            <span><a onclick="onShowYear({{year}})">{{year}}</a></span>
+          </td>
+
+          <!-- this year -->
+          <td class="value">
+            <span class="current summary total">{{totalAvg}}</span>
+          </td>
+
+          <td class="value">
+            <span class="current summary">{{totalCount}}</span>
+          </td>
+
+          {{#months}}
+            <td>
+              <a onclick="onShowMonth('{{dateId}}')">
+                <div class="scoreCube" style="background-color:{{col}}">
+                  <span>{{val}}</span>
+                </div>
+              </a>
+            </td>
+          {{/months}}
+
+        </tr>
+      {{/scores}}
+    </table>
+
+
+    {{#inspiration}}
+      <h2>{{year}}</h2>
+
+      <table class="box scores">
+        {{{insp}}}
+      </table>
+    {{/inspiration}}
+  </script>
+
+  <!-- tmpl-years-bar -->
+  <script type="text/mustache" id="tmpl-years-bar">
+    <div class="yearsBar">
+      <a onclick="onShowYears()">Years</a>
+      {{#years}}
+        <a onclick="onShowYear({{year}})">{{year}}</a>
+      {{/years}}
+    </div>
+  </script>
+</head>
+
+<body>
+  <div id="loading">Loading..</div>
+
+  <!-- header -->
+  <div class="topBar">
+    You are seeing a demo account. <a href="index.html">Go back to homepage.</a>
+  </div>
+
+  <div id="header">
+    <div class="menu">
+      <h1><a onclick="onShowDashboard()">Faveday</a></h1>
+    </div>
+  </div>
+  <!-- /header -->
+
+  <!-- search form -->
+  <form id="search" class="form-search">
+    <input type="text" class="search-query" placeholder="Search.." />
+  </form>
+  <div class="clear">&nbsp;</div>
+  <!-- /search form -->
+
+  <div id="content">
+  </div>
+</body>

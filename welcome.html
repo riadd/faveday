@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Faveday</title>
+
+  <link href="css/bootstrap.css" rel="stylesheet" media="screen">
+  <link href="css/style.css" rel="stylesheet" type="text/css"/>
+
+  <script type="text/javascript" src="https://code.jquery.com/jquery-latest.js"></script>
+  <script type="text/javascript">window.$ = window.jQuery = require('jquery'); // electron fix</script>
+
+  <script type="text/javascript" src="lib/bootstrap.min.js"></script>
+  <script type="text/javascript" src="lib/sugar-1.2.4.development.js"></script>
+  <script type="text/javascript" src="lib/hogan-2.0.0.js"></script>
+  <script type="text/javascript" src="lib/flot/jquery.flot.js"></script>
+
+  <script type="text/javascript">
+  </script>
+
+</head>
+<body>
+  <div class="welcome container">
+
+    <div class="about">
+      <h1>
+        <em>FaveDay</em> is a <em>diary</em> with <em>beautiful stats</em>.
+      </h1>
+      <p class="lead">
+        Every day you rate yourself with a <em>score</em> and write down some <em>notes</em>.
+        FaveDay tracks these and shows you beautiful plots that can give you new insights into your life.
+      </p>
+
+      <div id="startBtns">
+        <a class="btn btn-primary btn-large" href="app.html">Open Folder</a>
+        <a class="btn btn-primary btn-large" href="demo.html">View Demo Account</a>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="preview">
+      <img src="img/dscore-1.png"/>
+      <img src="img/dscore-2.png"/>
+      <img src="img/dscore-3.png"/>
+      <div class="clear noSize">&nbsp;</div>
+    </div>
+
+    <hr>
+
+    <!-- Three columns of text below the carousel -->
+    <div class="dropbox">
+      <p class="intro lead"></p>
+
+      <div class="row-fluid">
+        <div class="span4">
+          <h2>Local</h2>
+          <p>Faveday saves data on your harddrive. Your data remains with you. If you use cloud synch with that folder is up to you.</p>
+        </div>
+
+        <div class="span4">
+          <h2>Easy</h2>
+          <p>No separate account is necessary to use FaveDay. Just connect via Dropbox and you're good to go. No need to sign with a signup form.</p>
+        </div>
+
+        <div class="span4">
+          <h2>Secure</h2>
+          <p>All your entries remain stored in simple text files in your secure Dropbox folder. FaveDay only has access to that folder and can't access any other data in your Dropbox.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Built by <a href="http://twitter.com/riadd">@riadd</a> 2017</p>
+  </div>
+</body>

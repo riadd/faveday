@@ -1,0 +1,1046 @@
+body {
+  text-align: left;
+  font: 13px verdana, arial, helvetica, sans-serif;
+
+  color: #222;
+  background: #f0f0f0;
+}
+
+a {
+  text-decoration:none;
+}
+
+a:hover {
+  text-decoration:underline;
+  cursor: pointer;
+}
+
+.clear {
+  clear: both;
+}
+
+.noSize {
+	font-size: 0px;
+}
+
+.fa-refresh {
+  cursor: pointer;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 2px;
+  width: 100%;
+}
+
+/* headings */
+
+h1 {
+  margin-top: 20px;
+  text-align: left;
+  letter-spacing: -5px;
+  font-size: 4em;
+  color: #555;
+  text-shadow: 0 2px 1px white;
+}
+
+h1 span {
+  letter-spacing: -2px;
+  font-size: 0.4em;
+}
+
+h1 small {
+  font-size: 0.5em;
+  letter-spacing: -1px;
+}
+
+h2 {
+  color: #555;
+  text-shadow: 0 2px 1px white;
+  margin: 30px 0;
+}
+
+h3 {
+  margin-top: 10px;
+  text-align: left;
+  letter-spacing: -1px;
+  font-size: 1.8em;
+  color: #555555;
+}
+
+/* welcome */
+
+.welcome {
+  border: 1px solid #D1D1D1;
+  background: white;
+  padding: 5px;
+  max-width: 1060px;
+  margin: 50px 0 10px;
+}
+
+.dropbox {
+  padding: 10px 20px 20px 20px;
+}
+
+.dropbox .intro {
+  text-align: center;
+}
+
+/* about */
+
+.about {
+  font-size:        2.4em;
+  text-align:       center;
+
+  border:           3px solid #FF0004;
+  background:       #BD0026;
+  color:            white;
+
+  margin:           30px 20px;
+  padding:          10px 15px;
+
+  clear:            both;
+  border-radius:     10px;
+  -webkit-border-radius: 10px;
+}
+
+.about em {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.about h1 {
+  margin: 30px 10px;
+  font-size:        2.5em;
+  line-height:      70px;
+  color: white;
+  font-style:       italic;
+  text-align: center;
+  text-shadow: 0 2px 1px black;
+}
+
+.about .lead {
+  margin: 30px 0 10px;
+}
+
+/* .preview */
+
+.preview {
+	margin: 30px 20px;
+	background: #333;
+  padding: 10px;
+	color: black;
+}
+
+.preview img {
+  margin: 7px;
+  float: left;
+  width: 312px;
+  border: 1px solid black;
+}
+
+.preview p {
+  text-align: center;
+  color: white;
+}
+
+/* .demo */
+
+.demo {
+	font-size: 2em;
+	text-align: center;
+}
+
+/* faq */
+
+.faq {
+	width: 600px;
+	text-align:   justify;
+}
+
+.faq h1 {
+	letter-spacing: 0;
+	font-size: 2em;
+}
+
+.faq p {
+	font-size: 1.3em;
+}
+
+/* account */
+
+#account {
+  width: 80%;
+  margin: 50px auto;
+}
+
+#signUp {
+  float: left;
+}
+
+#signIn {
+  float: right;
+}
+
+.box {
+  border: 1px solid #ddd;
+  background: white;
+  padding: 5px;
+  max-width: 1050px;
+}
+
+th {
+    text-align: center;
+}
+
+td {
+  padding: 0 10px;
+}
+
+#content
+{
+  margin: 0 auto;
+  padding: 0 15px;
+
+  max-width:1050px;
+  text-align:left;
+}
+
+#content, #header, #search, #addScoreBtn, .welcome, .footer {
+  margin: 0 auto 20px;
+  padding: 0 15px 10px;
+
+  max-width:1050px;
+  min-width:400px;
+}
+
+/* header */
+
+#header {
+  margin: 0 50px 0 0;
+  padding: 0;
+
+  color: white;
+  font-weight: bold;
+  position: relative;
+  top: -2px;
+}
+
+#header a {
+  color: white;
+}
+
+#header .menu, #header .notice, #header .alert {
+  padding: 10px;
+  float: right;
+}
+
+#header .menu {
+  background: #f30000;
+  float: right;
+}
+
+#header .menu h1 {
+  font-size: 1em;
+  letter-spacing: 0;
+  text-shadow: none;
+  color: white;
+  display:inline;
+}
+
+#header .menu small {
+	position: relative;
+	font-style: italic;
+	font-size: 0.8em;
+	top: 3px;
+}
+
+#header div {
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+#header .actions {
+  margin-right: 20px;
+  padding: 10px;
+  color: white;
+  background: #666;
+  float: right;
+}
+
+#header .actions a {
+  color: white;
+}
+
+.topBar {
+  background-color: black;
+  color: white;
+  text-align: center;
+  margin: 0;
+  padding: 10px;
+}
+
+/* footer */
+
+#footer {
+	margin-top: 	20px;
+	font-size: 		1.0em;
+	color: 				#333333;
+}
+
+#footer a {
+	color: #333;
+}
+
+
+.notice, .alert {
+  background: #555;
+  margin-right: 20px;
+  float: right;
+}
+
+#time {
+  text-align: center;
+  margin: 20px 0 10px;
+}
+
+.stats td {
+  padding: 0 15px;
+}
+
+.value {
+  text-align: center;
+  vertical-align: top;
+}
+
+.ratioLeft {
+  width: 15px;
+  padding: 0 0 0 20px;
+}
+
+.ratioRight {
+  width: 15px;
+  padding: 0 20px 0 0;
+}
+
+.ratioBreak {
+  width: 5px;
+  padding: 0;
+  margin: 0;
+}
+
+.spark {
+  vertical-align: top;
+}
+
+.weekend {
+  background: #EAEAEA;
+}
+
+.score .weekend {
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+}
+
+.active {
+  background: #E0E0E0;
+}
+
+.val1, .down {
+  background-color: #FF794D;
+}
+
+.val0 {
+  background-color: #ccc;
+}
+
+.val2, .fail {
+  background-color: #FFB399;
+}
+
+.val3 {
+  background-color: #FFAD26;
+}
+
+.val4, .up, .success {
+  background-color: #9AD600;
+}
+
+.val5, .val6 {
+  background: #33AA66;
+}
+
+.notes {
+  font-size: 0.97em;
+  color: #444;
+  vertical-align: top;
+  text-align: justify;
+}
+
+.notes a {
+  color: #444;
+  font-weight: bold;
+  background: #eee;
+}
+
+.notes em {
+  font-style: normal;
+  font-weight: bold;
+}
+
+.description {
+  font-size: 0.9em;
+  color: #333;
+  vertical-align: top;
+}
+
+.notes p {
+  font-size: 0.95em;
+  font-style: italic;
+  color: #555;
+}
+
+tr .yearRow {
+  background: #6A737D;
+  padding: 2px 0px;
+  text-align: center;
+  font-size: 0.95em;
+}
+
+.month12 {
+}
+
+.month1 {
+  border-bottom: #ddd 2px dashed;
+  padding-bottom: 7px;
+}
+
+.current {
+  font-size: 1.2em;
+}
+
+.prev {
+  color: #333;
+  font-style: italic;
+}
+
+/* month scores */
+
+.monthScores {
+  min-width: 650px;
+  position: relative; /* this is just so that containing div can be absolute */
+  top: -10px;
+}
+
+.monthScores div {
+  padding: 0;
+  margin: 1px;
+
+  position: absolute;
+  -webkit-transition: left 1s ease-out;
+
+  width: 15px;
+  height: 15px;
+}
+
+.monthScores .selected div {
+  border: 1px solid #aa0000;
+}
+
+.monthScores div.val1 {
+  height: 30%;
+  width: 30%;
+  margin: 9px;
+}
+
+.monthScores div.val2 {
+  height: 40%;
+  width: 40%;
+  margin: 7px;
+}
+
+.monthScores div.val3, .monthScores div.val0 {
+  height: 60%;
+  width: 60%;
+  margin: 5px;
+}
+
+.monthScores div.val4 {
+  height: 80%;
+  width: 80%;
+  margin: 3px;
+}
+
+.monthScores div.val5 {
+}
+
+/* years scores */
+
+.years th {
+  padding: 15px;
+}
+
+.years td {
+  padding: 0;
+  margin: 0;
+}
+
+.years .total {
+  font-weight: bold;
+  padding: 20px;
+}
+
+.years .scoreCube {
+  width: 35px;
+  height: 35px;
+  margin: 0;
+  padding: 0 5px;
+  background-color: gray;
+  border: 1px solid white;
+  border-radius: 4px;
+  color: #333;
+}
+
+.years .scoreCube span {
+  padding: 5px 0;
+  display: block;
+}
+
+/* score sorting */
+
+#scoresorting {
+  width: 20px;
+  height: 20px;
+  float: right;
+  display: block;
+  border-top: #ddd 5px solid;
+  border-right: #ddd 5px solid;
+}
+
+#scoreSorting:hover {
+  border-top: #aaa 5px solid;
+  border-right: #aaa 5px solid;
+}
+
+/* details */
+
+#details {
+  border: 1px solid #aaa;
+  border-top: 2px solid #d0d0d0;
+
+  min-height: 80px;
+  background: #e0e0e0;
+  padding: 10px;
+
+  text-align: justify;
+  position: relative;
+
+  -webkit-transition: top 0.5s ease-in-out;
+}
+
+#details h3 {
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+#details .date, #details .day {
+  display: block;
+  float: left;
+}
+
+#details .date {
+   min-width: 150px;
+   margin-right: 20px;
+}
+
+#details .day {
+   min-width: 200px;
+}
+
+#details .social, #details .job, #details .hobby, #details .summary {
+  margin-right: 20px;
+}
+
+#detailsBar {
+  text-align: right;
+  margin: 0px 0px 15px;
+  padding: 5px 10px;
+  background: #444;
+  color: #eee;
+  border-radius: 5px;
+}
+
+#detailsBar a {
+  color: #eee;
+  font-style: italic;
+}
+
+/* details notes */
+
+#notes {
+  max-height: 200px;
+  overflow: auto;
+  padding-right: 10px;
+}
+
+
+/* forms */
+
+/* .start */
+
+.start {
+  display: block;
+  width: 100px;
+  padding: 10px 20px;
+  margin: 10px 30px;
+  color: white;
+  border-radius: 3px;
+  font-size: 3em;
+  cursor: pointer;
+  border: 1px solid #CCC;
+  border-color: rgba(0,0,0,.1) rgba(0,0,0,.1) rgba(0,0,0,.25);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  background-image: -webkit-linear-gradient(top, #62C462, #51A351);
+  height: 60px;
+}
+
+/* add score */
+
+#addScore {
+  z-index: 5;
+  width: 100%;
+  padding: 10px;
+
+  background: -webkit-linear-gradient(63deg, #151515 5px, transparent 5px) 0 5px, -webkit-linear-gradient(-117deg, #151515 5px, transparent 5px) 10px 0px, -webkit-linear-gradient(63deg, #222 5px, transparent 5px) 0px 10px, -webkit-linear-gradient(-117deg, #222 5px, transparent 5px) 10px 5px, -webkit-linear-gradient(0deg, #1b1b1b 10px, transparent 10px), -webkit-linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424);
+  background-color: #131313;
+  background-size: 20px 20px;
+}
+
+#addScore .content {
+  margin: 30px auto;
+
+  max-width: 800px;
+}
+
+#addScore .content h2 {
+  color: white;
+  text-transform: uppercase;
+  font-size: 2.5em;
+  text-shadow: none;
+}
+
+#addScore .content form, #addScore .content .errors {
+  padding: 10px 20px 20px 20px;
+  font-size: 1.5em;
+}
+
+#addScore .content form {
+  border: 5px solid #ccc;
+  background: white;
+}
+
+#addScore .content .errors {
+  border: 10px solid #cc0000;
+  background: red;
+  color: white;
+  margin-top: 10px;
+}
+
+#addScore form select {
+  font-size: 0.80em;
+}
+
+#addScore form .scores h3 {
+  font-size: 1em;
+  font-weight: normal;
+  float: left;
+  margin: 0 10px 10px 10px;
+  padding-top: 10px;
+}
+
+#addScore form .scores div {
+  display: inline;
+  padding: 10px 0;
+
+  /*width: 50px;
+  margin: 0 10px 10px 10px;
+  float: left;*/
+}
+
+#addScore form .scores input {
+  font-size: 1.2em;
+  text-align: center;
+  margin-right: 20px;
+  border: 1px solid #ccc;
+}
+
+#addScore form .submit input {
+  margin-top: 50px;
+  border: 2px solid #ccc;
+  padding: 5px;
+  width: 200px;
+}
+
+#addScore form .submit {
+  text-transform: uppercase;
+  font-size: 0.7em;
+}
+
+#addScore form .submit a {
+  margin-left: 30px;
+}
+
+#addScore form input.del {
+	background-image:url('/images/bin_closed.png');
+	background-repeat: no-repeat;
+	background-position:center;
+	width: 50px;
+}
+
+#addScore form #score_notes {
+  width: 100%;
+}
+
+#addScore .tags {
+  font-size: 0.8em;
+  width: 100%;
+}
+
+#addScore .help {
+	color: #DDD;
+	font-size: 1.4em;
+	margin-bottom: 25px;
+}
+
+/* edit score */
+
+#editScore {
+  background: #447F6E;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: none;
+  padding: 2px;
+  position: absolute;
+  text-shadow: 0 2px 1px black;
+  border-bottom: 2px solid #555555;
+}
+
+#editScore a {
+  color: white;
+}
+
+textarea {
+  width: 100%;
+}
+
+/* years bar */
+
+.yearsBar {
+  margin: 20px 0 10px 0;
+  text-align: right;
+  color: #777777;
+}
+
+.yearsBar a {
+  border-radius: 10px;
+  color: #444;
+  background: #ddd;
+  padding: 4px;
+  border: 1px solid #ccc;
+}
+
+.yearsBar a:hover {
+  color: #ddd;
+  background: #444;
+  text-decoration: none;
+}
+
+/* score table */
+
+.scores td {
+  vertical-align: top;
+}
+
+.scores .date {
+  padding-top: 5px;
+  text-align: center;
+  color: #333;
+  font-size: 1.1em;
+  width: 100px;
+}
+
+.scores .date small {
+   color: #555;
+   font-size: 0.8em;
+   display: block;
+}
+
+.scores .date a, .avgBar a {
+  color: #333;
+}
+
+.scores .date a:hover, .avgBar a:hover, .notes a:hover {
+  background: #333;
+  color: white;
+  text-decoration: none;
+}
+
+.scores .val1 {
+  color: #DB3700;
+}
+
+.scores .val2 {
+  color: #FF794D;
+}
+
+.scores .val3 {
+  color: #D68400;
+}
+
+.scores .val4 {
+  color: #75A300;
+}
+
+.scores .val5, .scores .val6 {
+  color: #27824E;
+}
+
+.scores .val0, .scores .val1, .scores .val2, .scores .val3,
+.scores .val4, .scores .val5, .scores .val6 {
+  font-size: 23px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: center;
+  width: 30px;
+}
+
+/* plot */
+
+.plot {
+  border: 1px solid #ddd;
+  margin: 10px 0;
+  background: white;
+  padding: 5px 10px;
+  width: 1028px;
+  height: 120px;
+}
+
+.plot div {
+  float: left;
+  margin: 0 5px;
+  width: 20px;
+}
+
+.plot .tickLabels div {
+  padding: 5px;
+}
+
+/* tags */
+
+.tags {
+  width: 1038px;
+  margin: 20px 0;
+  text-align: justify;
+  margin-bottom: 40px;
+}
+
+.tags span {
+  color: #777;
+}
+
+.tags a {
+  font-family: arial, verdana;
+}
+
+.tags h3 {
+  font-size: 1em;
+  display: inline;
+  padding: 2px;
+}
+
+.tags .help {
+	text-align: center;
+	color: #555;
+	font-size: 2.0em;
+	margin: 50px;
+}
+
+/* tag bar */
+
+.tagBar {
+  margin-top: 20px;
+}
+
+.tagBar h2 {
+  float: left;
+}
+
+.tagBar div {
+  float: right;
+}
+
+/* chains */
+
+.chains {
+  float: right;
+  margin-top: 20px;
+  text-align: right;
+}
+
+.chains span {
+  font-size: 1.2em;
+
+  padding: 2px 5px;
+  color: white;
+  background: #aaa;
+
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+/* avg bar */
+
+.avgBar {
+  margin: 40px 0 20px;
+  font-size: 1.4em;
+  letter-spacing: -1px;
+}
+
+.avgBar div {
+  display: inline;
+}
+
+.avgBar .more {
+  float: right;
+}
+
+.avgBar .more div {
+  margin-left: 20px;
+  margin-right: 5px;
+}
+
+.avgBar .good {
+  border-bottom: 3px solid green;
+}
+
+.avgBar .bad {
+  border-bottom: 3px solid red;
+}
+
+/* tag metrics */
+
+.tagMetrics {
+  width: 100%;
+  font-size:1.4em;
+  margin: 0 0 50px;
+  color: #444;
+  border: 4px solid #CCC;
+}
+
+.tagMetrics td {
+  text-align: center;
+}
+
+
+.mainBar {
+  float: left;
+  width: 800px;
+}
+
+.mainBar .box {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* side bar */
+
+.sideBar {
+  float: right;
+  width: 200px;
+
+  padding: 5px;
+}
+
+.sideBar div {
+  font-size: 0.9em;
+}
+
+.sideBar span {
+  float: left;
+  display: block;
+  width: 25px;
+  text-align: right;
+}
+
+/* calendar */
+
+.calendar {
+    border: 1px solid #aaa;
+    padding-bottom: 20px;
+}
+
+.calendar .summary, #calendar .prev, #details .value {
+    padding: 2px;
+    -webkit-border-radius: 3px;
+}
+
+.calendar tr .value {
+  padding-top: 5px;
+}
+
+.calendar .bar, .calendar .dots {
+  float: left;
+  display: block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+}
+
+.calendar .bar {
+	width: 51px;
+}
+
+.calendar .val1, .calendar .val2, .calendar .val3, .calendar .val4, .calendar .val5 {
+}
+
+/* stats */
+
+.stats {
+	margin-right: 60px;
+	float: left;
+}
+
+/* search */
+
+#search {
+  font-size: 2em;
+  padding: 15px;
+}
+
+.search-query {
+
+}
+
+#topArea, #addScore {
+  display: none;
+}
+
+#loading {
+  font-size: 3em;
+  padding: 30px;
+  margin-top: 200px;
+  text-align: center;
+  text-shadow: 0 2px 1px white
+}
+
+#startBtns {
+  margin: 50px auto 20px;
+  text-align: center;
+}
+
+.footer {
+  text-align: right;
+  color: #555;
+}
