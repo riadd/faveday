@@ -53,7 +53,7 @@ class FaveDayApp
       loop
         matches = re.exec(txt)
         break unless matches?
-        
+
         @all.push(new Score(new Date(matches[1]), parseInt(matches[2]), matches[3]))
 
     console.log("loaded #{@all.length} entries")
@@ -263,6 +263,7 @@ class FaveDayApp
 
     months = for month, scores of byMonth
       date: Date.create("#{id}-#{parseInt(month)+1}").format('{Mon} {yyyy}')
+      dateId: "#{id}-#{parseInt(month)+1}-1"
       avg: scores.average((s) -> s.summary).format(2)
       counts: countVal(scores, i) for i in [5..1]
 
