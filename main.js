@@ -13,7 +13,9 @@ let mainWindow;
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 1200, height: 700});
-  mainWindow.loadURL('file://' + __dirname + '/welcome.html');
+  
+  // welcome.html
+  mainWindow.loadURL('file://' + __dirname + '/app.html');
 
   mainWindow.setMenu(null);
   mainWindow.webContents.openDevTools();
