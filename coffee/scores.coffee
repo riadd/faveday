@@ -21,7 +21,10 @@ class FaveDayApp
   constructor: ->
     @tmplScores = Hogan.compile($('#tmpl-scores').html())
 
-    $('#search input').keyup(@showSearch)
+    $('#search input').keyup(=>
+      window.clearTimeout(@searchTime) if @searchTime?
+      @searchTime = window.setTimeout(@showSearch, 500)
+    )
 
     @setupScores()
 
