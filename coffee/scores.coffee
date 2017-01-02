@@ -13,6 +13,13 @@ class Score
   weekday: () ->
     @date.format("{Weekday}")
 
+  text: () ->
+    re = /#\w+/gi;
+    @notes.replace(re, (str) ->
+      code = "onShowSearch('#{str}')"
+      "<a onclick=#{code}>#{str}</a>"
+    )
+
   styleClass: () ->
     return 'val0' unless @summary?
     'val'+@summary
@@ -57,7 +64,11 @@ class FaveDayApp
         matches = re.exec(txt)
         break unless matches?
 
-        @all.push(new Score(new Date(matches[1]), parseInt(matches[2]), matches[3]))
+        @all.push(new Score(
+          new Date(matches[1]),
+          parseInt(matches[2]),
+          matches[3])
+        )
 
     console.log("loaded #{@all.length} entries")
     @all = @all.sortBy('date', true)
@@ -137,6 +148,8 @@ class FaveDayApp
       $('#addScore').show()
 
   showDashboard: () ->
+    $('#search input')[0].value = ""
+
     recent = @all[...3]
     bestScores = @all.filter((s) -> s.summary == 5).sample()
 
@@ -285,14 +298,14 @@ class FaveDayApp
       yearsBar: Hogan.compile($('#tmpl-years-bar').html())
     })
 
-  showSearch: () =>
-    needles = $('#search input')[0].value
-    return @showDashboard() if needles.length < 1
+  showSearch: (id) =>
+    id = $('#search input')[0].value
+    return @showDashboard() if id.length < 1
 
     foundScores = @all
     keywords = []
 
-    for needle in needles.split(' ')
+    for needle in id.split(' ')
       continue if needle.length < 1
 
       needle = needle.toLowerCase()
@@ -388,5 +401,6 @@ window.onToggleScoreDialogue = ->
 window.onCancelScoreDialogue = ->
   window.app.cancelScoreDialogue()
 
-window.onShowSearch = ->
-  window.app.showSearch()
+window.onShowSearch = (id) ->
+  $('#search input')[0].value = id if id?
+  window.app.showSearch(id)
