@@ -45,7 +45,7 @@ class FaveDayApp
     @all = []
 
     unless window.localStorage.folder?
-      dialog = require('remote').dialog
+      dialog = require('electron').remote.dialog
       folder = dialog.showOpenDialog({ properties: [ 'openDirectory' ]}).first()
       window.localStorage.folder = folder
 
