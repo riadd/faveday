@@ -170,19 +170,35 @@ class FaveDayApp
       yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
     })
 
+  hasMonth: (date) ->
+    found = @all.any((s) -> s.date.getMonth() is date.getMonth() and 
+      s.date.getYear() is date.getYear())
+
+    return if found then date.format("{yyyy}-{MM}") else null
+
   showMonth: (id) ->
     date = Date.create(id)
 
     title = date.format('{Month} {yyyy}')
-    monthScores = @all.filter((s) -> s.date.getMonth() is date.getMonth() and
+    monthScores = @all.filter((s) -> s.date.getMonth() is date.getMonth() and 
       s.date.getYear() is date.getYear())
+
+    prevYearDate = new Date(date).addYears(-1)
+    prevMonthDate = new Date(date).addMonths(-1)
+    nextMonthDate = new Date(date).addMonths(1)
+    nextYearDate = new Date(date).addYears(1)
 
     @render('#tmpl-month', '#content', {
       title: title,
       scores: if monthScores.isEmpty() then [] else @tmplScores.render({scores: monthScores}),
-      years: @years.map((y) -> {year: y})
+      years: @years.map((y) -> {year: y}),
+      prevYear: @hasMonth(prevYearDate),
+      prevMonth: @hasMonth(prevMonthDate),
+      nextMonth: @hasMonth(nextMonthDate),
+      nextYear: @hasMonth(nextYearDate),
     }, {
       yearsBar: Hogan.compile($('#tmpl-years-bar').html())
+      monthBar: Hogan.compile($('#tmpl-month-bar').html())
     })
 
   updateRandomInspiration: ->

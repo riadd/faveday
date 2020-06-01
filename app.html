@@ -70,6 +70,8 @@
 
     <h1>{{title}}</h1>
     {{> yearsBar}}
+    {{> monthBar}}
+    {{}}
 
     <table class="box scores">
       {{{scores}}}
@@ -217,6 +219,16 @@
       {{#years}}
         <a onclick="onShowYear({{year}})">{{year}}</a>
       {{/years}}
+    </div>
+  </script>
+
+  <!-- tmpl-month-bar -->
+  <script type="text/mustache" id="tmpl-month-bar">
+    <div class="monthBar">
+      <a onclick="onShowMonth('{{prevYear}}')">{{prevYear}}</a>
+      <a onclick="onShowMonth('{{prevMonth}}')">{{prevMonth}}</a>
+      <a onclick="onShowMonth('{{nextMonth}}')">{{nextMonth}}</a>
+      <a onclick="onShowMonth('{{nextYear}}')">{{nextYear}}</a>
     </div>
   </script>
 </head>
