@@ -1,24 +1,57 @@
 'use strict';
 
 const electron = require('electron');
-// Module to control application life.
-const app = electron.app;
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow;
+const path = require('path')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const fs = require('fs');
+
+ipcMain.handle('getRawScores', async (event, options) => {
+  const folder = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+  });
+
+  if (folder.canceled) {
+    return [];
+  }
+
+  const directoryPath = folder.filePaths[0];
+  const files = fs.readdirSync(directoryPath);
+  const re = /([\d-]+),(\d),(.*)/g;
+  
+  let rawScores = [];
+  for (const file of files) {
+    const txt = fs.readFileSync(`${directoryPath}/${file}`, 'utf-8');
+
+    let matches;
+    while ((matches = re.exec(txt)) !== null) {
+      let line = [new Date(matches[1]), parseInt(matches[2]), matches[3]]
+      rawScores.push(line);
+    }
+  }
+
+  return rawScores;
+});
+
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 1200, height: 700});
+  mainWindow = new BrowserWindow({
+    width: 1200, 
+    height: 700,
+    webPreferences: {
+      preload: path.join(__dirname, 'js/preload.js'),
+    },
+  });
   
   // welcome.html
   mainWindow.loadURL('file://' + __dirname + '/app.html');
 
   mainWindow.setMenu(null);
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {
