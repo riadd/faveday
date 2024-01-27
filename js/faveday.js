@@ -36,6 +36,7 @@
 }
 
   FaveDayApp = class FaveDayApp {
+  
     constructor() {
       this.showSearch = this.showSearch.bind(this);
       this.tmplScores = Hogan.compile($('#tmpl-scores').html());
@@ -47,54 +48,42 @@
         return this.searchTime = window.setTimeout(this.showSearch, 500);
       });
 
-      this.all = [];
-      let rawScores = window.api.getRawScores().then((rawScores) => {
-        for (let rawScore of rawScores)
-          this.all.push(new Score(rawScore[0], rawScore[1], rawScore[2]))
-  
-        this.all.sort((a, b) => b.date - a.date);
-        this.onScoreLoaded();
-      });
+      this.all = this.loadScoresFromFiles();
+      this.all.sort((a, b) => b.date - a.date);
+      this.onScoreLoaded();
     }
+    
+    loadScoresFromFiles() {
+      let files = [];
+      for(let i = 2008; i <= 2020; i++) {
+        files.push(`scores-${i}.txt`);
+      }
+      
+      let lines= [];
+      for (let file of files) {
+        let txtFile = new XMLHttpRequest();
 
-    setupDropbox() {
-      this.db = new Dropbox.Client({
-        key: "DYYDuQIY88A=|hZcFHupIV1V83K7o3M0VHrVmeZK70RZnb0PCIVz7ag==",
-        sandbox: true
-      });
-      this.db.authDriver(new Dropbox.Drivers.Redirect({
-        rememberUser: true
-      }));
-      // as redirect param
-      return this.db.authenticate((error, client) => {
-        if (error) {
-          return showError(error);
+        txtFile.open("GET", `http://localhost:8080/scores/${file}`, false); // TODO: make async
+        txtFile.send();
+        
+        if (txtFile.readyState === 4 && txtFile.status === 200) {
+          let newLines = txtFile.responseText.split('\n')
+          lines = lines.concat(newLines);
         }
-        return this.db.getUserInfo((error, userInfo) => {
-          if (error) {
-            return showError(error);
-          }
-          $('#userName').html(userInfo.name);
-          $('#loading').html('Loading Scores from DropBox. Please wait..');
-          return this.db.readFile("scores-db.txt", (error, rawData) => {
-            if (error) {
-              return showError(error);
-            }
-            // load data from dropbox text file
-            this.all = rawData.split('\n').filter(function(l) {
-              return l.length > 10;
-            }).map(function(l) {
-              var summary;
-              summary = parseInt(l[11]);
-              if (summary == null) {
-                summary = null;
-              }
-              return new Score(Date.create(l.slice(0, 10)), summary, l.slice(13));
-            });
-            return this.onScoreLoaded();
-          });
-        });
-      });
+      }
+      
+      let scores = []
+      for (let line of lines) {
+        let parts = line.split(',');
+        
+        let date = new Date(parts[0]);
+        let score = parts[1];
+        let desc = parts.slice(2).join(',');
+        
+        scores.push(new Score(date, score, desc));
+      }
+      
+      return scores;
     }
 
     setupDemoUser() {
@@ -112,15 +101,21 @@
     }
 
     onScoreLoaded() {
-      var ref, ref1;
-      this.years = (function() {
-        var results = [];
-        for (var j = ref = this.all.last().date.getFullYear(), ref1 = this.all.first().date.getFullYear(); ref <= ref1 ? j <= ref1 : j >= ref1; ref <= ref1 ? j++ : j--){ results.push(j); }
-        return results;
+      this.years = (() => {
+        const startYear = this.all.first().date.getFullYear();
+        const endYear = this.all.last().date.getFullYear();
+        const yearRange = [];
+
+        for (let year = startYear; year <= endYear; year++) {
+          yearRange.push(year);
+        }
+
+        return yearRange;
       }).apply(this);
+
       $('#topArea').show();
       $('#loading').hide();
-      // $('#datePicker').datepicker()
+      
       return this.showDashboard();
     }
 
@@ -139,11 +134,11 @@
     toggleScoreDialogue() {
       if ($('#addScore').is(':visible')) {
         $('#addScore').hide();
-        return $('#addScoreBtn .btn').removeClass('active');
+        $('#addScoreBtn .btn').removeClass('active');
       } else {
         $('#datePicker').text(Date.create().format("{dd}-{mm}-{yyyy}"));
         $('#addScoreBtn .btn').addClass('active');
-        return $('#addScore').show();
+        $('#addScore').show();
       }
     }
 
@@ -151,15 +146,19 @@
       var bestScores, recent, toDate, toMonth, today, todayScores;
       $('#search input')[0].value = "";
       recent = this.all.slice(0, 3);
+      
       bestScores = this.all.filter(function(s) {
         return s.summary === 5;
       }).sample();
+      
       today = Date.create();
       toDate = today.getDate();
       toMonth = today.getMonth();
-      todayScores = this.all.filter(function(s) {
-        return s.date.getDate() === toDate && s.date.getMonth() === toMonth;
-      });
+      
+      todayScores = this.all.filter(s =>
+        s.date.getDate() === toDate && s.date.getMonth() === toMonth
+      );
+      
       return this.render('#tmpl-dashboard', '#content', {
         recentScores: this.tmplScores.render({
           scores: recent
@@ -181,28 +180,27 @@
     }
 
     hasMonth(date) {
-      var found;
-      found = this.all.any(function(s) {
-        return s.date.getMonth() === date.getMonth() && s.date.getYear() === date.getYear();
-      });
-      if (found) {
-        return date.format("{yyyy}-{MM}");
-      } else {
-        return null;
-      }
+      const isMonthFound = this.all.some(s =>
+        s.date.getMonth() === date.getMonth() && s.date.getYear() === date.getYear()
+      );
+
+      return isMonthFound ? date.format("{yyyy}-{MM}") : null;
     }
 
-    showMonth(id) {
+   showMonth(id) {
       var date, monthScores, nextMonthDate, nextYearDate, prevMonthDate, prevYearDate, title;
       date = Date.create(id);
       title = date.format('{Month} {yyyy}');
-      monthScores = this.all.filter(function(s) {
-        return s.date.getMonth() === date.getMonth() && s.date.getYear() === date.getYear();
-      });
+
+      monthScores = this.all.filter(s =>
+        s.date.getMonth() === date.getMonth() && s.date.getYear() === date.getYear()
+      );
+
       prevYearDate = new Date(date).addYears(-1);
       prevMonthDate = new Date(date).addMonths(-1);
       nextMonthDate = new Date(date).addMonths(1);
       nextYearDate = new Date(date).addYears(1);
+      
       return this.render('#tmpl-month', '#content', {
         title: title,
         scores: monthScores.isEmpty() ? [] : this.tmplScores.render({
@@ -223,44 +221,32 @@
       });
     }
 
-    updateRandomInspiration() {
-      var bestScores;
-      bestScores = this.all.filter(function(s) {
-        return s.summary === 5;
-      }).sample();
-      return $('#bestScores').html(this.tmplScores.render({
-        scores: bestScores
-      }));
+     updateRandomInspiration() {
+      const bestScores = this.all.filter(s => s.summary === 5).sample();
+      return $('#bestScores').html(this.tmplScores.render({ scores: bestScores }));
     }
 
-    showYears() {
-      var byYear, getColorForVal, getYearInspiration, getYearMonths, inspiration, interpCol, j, k, len, len1, lerp, maxAvg, minAvg, month, ref, year, yearScore, yearScores, yearsScores;
-      lerp = function(t, a, b, i) {
-        return Math.floor(t * parseInt(a[i], 16) + (1 - t) * parseInt(b[i], 16));
-      };
+     showYears() {
+      var byYear, getColorForVal, getYearInspiration, getYearMonths, inspiration, interpCol, j, k, len, len1, maxAvg, minAvg, month, ref, year, yearScore, yearScores, yearsScores;
+
+      const lerp = (t, a, b, i) =>
+        Math.floor(t * parseInt(a[i], 16) + (1 - t) * parseInt(b[i], 16));
+      
       interpCol = function(t, col1, col2) {
         var c1, c2;
         c1 = [col1.slice(1, 3), col1.slice(3, 5), col1.slice(5, 7)];
         c2 = [col2.slice(1, 3), col2.slice(3, 5), col2.slice(5, 7)];
         return `rgb(${lerp(t, c1, c2, 0)}, ${lerp(t, c1, c2, 1)}, ${lerp(t, c1, c2, 2)})`;
       };
-      getColorForVal = function(val) {
-        if (val >= 5.00) {
-          return '#33AA66';
-        }
-        if (val >= 4.00) {
-          return interpCol(val - 4, '#9AD600', '#33AA66');
-        }
-        if (val >= 3.00) {
-          return interpCol(val - 3, '#FFAD26', '#9AD600');
-        }
-        if (val >= 2.00) {
-          return interpCol(val - 2, '#FFB399', '#FFAD26');
-        }
-        if (val >= 1.00) {
-          return interpCol(val - 1, '#FF794D', '#FFB399');
-        }
+
+      getColorForVal = val => {
+        if (val >= 5.00) return '#33AA66';
+        if (val >= 4.00) return interpCol(val - 4, '#9AD600', '#33AA66');
+        if (val >= 3.00) return interpCol(val - 3, '#FFAD26', '#9AD600');
+        if (val >= 2.00) return interpCol(val - 2, '#FFB399', '#FFAD26');
+        if (val >= 1.00) return interpCol(val - 1, '#FF794D', '#FFB399');
       };
+
       getYearMonths = function(yearScores) {
         return Object.values(yearScores.groupBy(function(s) {
           return s.date.getMonth();
@@ -273,24 +259,18 @@
           };
         });
       };
+
       getYearInspiration = (yearScores) => {
-        var inspiration;
-        inspiration = yearScores.filter(function(s) {
-          return s.summary >= 4;
-        }).sample(2).sortBy((function(s) {
-          return s.date;
-        }), true);
-        if (inspiration.isEmpty()) {
-          return null;
-        } else {
-          return this.tmplScores.render({
-            scores: inspiration
-          });
-        }
+        const inspiration = yearScores
+          .filter(s => s.summary >= 4)
+          .sample(2)
+          .sortBy(s => s.date, true);
+
+        return inspiration.isEmpty() ? null : this.tmplScores.render({ scores: inspiration });
       };
-      byYear = this.all.groupBy(function(s) {
-        return s.date.getFullYear();
-      });
+
+      byYear = this.all.groupBy(s => s.date.getFullYear());
+
       yearsScores = (function() {
         var results;
         results = [];
@@ -308,16 +288,19 @@
         }
         return results;
       })();
+      
       maxAvg = yearsScores.map(function(s) {
         return s.months.max(function(m) {
           return m.val;
         }).first().val;
       }).max().first();
+      
       minAvg = yearsScores.map(function(s) {
         return s.months.min(function(m) {
           return m.val;
         }).first().val;
       }).min().first();
+      
 // calculate colors for each month in second step
       for (j = 0, len = yearsScores.length; j < len; j++) {
         yearScore = yearsScores[j];
@@ -328,6 +311,7 @@
           month.val = month.val.format(2);
         }
       }
+      
       inspiration = (function() {
         var results;
         results = [];
@@ -340,6 +324,7 @@
         }
         return results;
       })();
+      
       return this.render('#tmpl-years', '#content', {
         scores: yearsScores.reverse(),
         inspiration: inspiration.filter(function(i) {
@@ -355,13 +340,15 @@
       });
     }
 
-    showYear(id) {
+     showYear(id) {
       var bestScores, byMonth, countVal, i, month, months, randomScores, scores, yearScores;
       countVal = function(scores, val) {
         var ct, i;
+        
         ct = scores.count(function(s) {
           return s.summary === val;
         });
+        
         return {
           val: val,
           full: (function() {
@@ -382,13 +369,16 @@
           })()
         };
       };
+      
       id = parseInt(id);
       yearScores = this.all.filter(function(s) {
         return s.date.getFullYear() === id;
       });
+      
       byMonth = yearScores.groupBy(function(s) {
         return s.date.getMonth();
       });
+      
       months = (function() {
         var results;
         results = [];
@@ -412,15 +402,18 @@
         }
         return results;
       })();
+      
       months.reverse();
       randomScores = yearScores.filter(function(s) {
         return s.summary >= 3;
       }).sample(5);
+      
       bestScores = yearScores.filter(function(s) {
         return s.summary === 5;
       }).sample(2).sortBy((function(s) {
         return s.date;
       }), true);
+      
       return this.render('#tmpl-year', '#content', {
         year: id,
         scores: randomScores.isEmpty() ? [] : this.tmplScores.render({
@@ -440,7 +433,7 @@
       });
     }
 
-    showSearch(id) {
+     showSearch(id) {
       var date, elem, foundScores, j, k, keyword, keywords, len, len1, needle, needleDate, range, ref, ref1, ref2, regex, results, score;
       id = $('#search input')[0].value;
       if (id.length < 1) {
@@ -449,6 +442,7 @@
       foundScores = this.all;
       keywords = [];
       ref = id.split(' ');
+      
       for (j = 0, len = ref.length; j < len; j++) {
         needle = ref[j];
         if (needle.length < 1) {
@@ -492,6 +486,7 @@
           }
         }
       }
+      
       this.render('#tmpl-search', '#content', {
         count: foundScores.length,
         average: foundScores.average(function(s) {
@@ -508,6 +503,7 @@
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
+      
       ref2 = $('.notes');
       results = [];
       for (k = 0, len1 = ref2.length; k < len1; k++) {
@@ -525,8 +521,7 @@
       }
       return results;
     }
-
-  };
+  }
 
   //@showPlot()
 
@@ -548,6 +543,7 @@
   //   };
 
   //   $.plot($("#plot"), plotData, plotOptions);
+  
   window.onload = function() {
     return window.app = new FaveDayApp();
   };
@@ -590,3 +586,9 @@
     }
     return window.app.showSearch(id);
   };
+  
+  // Call onAppStart when the window loads
+  function onAppStart() {
+    var app = new FaveDayApp();
+  };
+

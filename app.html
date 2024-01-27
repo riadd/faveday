@@ -12,6 +12,9 @@
 
   <script type="text/javascript" src="https://code.jquery.com/jquery-latest.js"></script>
 
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client"></script>
+
   <script type="text/javascript" src="lib/bootstrap.min.js"></script>
   <script type="text/javascript" src="lib/sugar-1.2.4.development.js"></script>
   <script type="text/javascript" src="lib/hogan-2.0.0.js"></script>
@@ -228,10 +231,12 @@
       <a onclick="onShowMonth('{{nextYear}}')">{{nextYear}}</a>
     </div>
   </script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
-<body>
-  <div id="loading">Select folder...</div>
+<body  onload="onAppStart()">
+  <div id="loading">Loading files...</div>
 
   <div id="topArea">
     <!-- header -->

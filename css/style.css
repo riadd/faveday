@@ -114,7 +114,6 @@ h3 {
   font-size:        2.5em;
   line-height:      70px;
   color: white;
-  font-style:       italic;
   text-align: center;
   text-shadow: 0 2px 1px black;
 }
@@ -128,14 +127,14 @@ h3 {
 .preview {
 	margin: 30px 20px;
 	background: #333;
-  padding: 10px;
+    padding: 10px;
 	color: black;
 }
 
-.preview img {
+.preview img { 
   margin: 7px;
   float: left;
-  width: 312px;
+  width: 270px;
   border: 1px solid black;
 }
 
