@@ -35,8 +35,7 @@
     }
 }
 
-  FaveDayApp = class FaveDayApp {
-  
+  FaveDayApp = class FaveDayApp {  
     constructor() {
       this.showSearch = this.showSearch.bind(this);
       this.tmplScores = Hogan.compile($('#tmpl-scores').html());
@@ -49,7 +48,8 @@
       });
 
       this.all = this.loadScoresFromFiles();
-      this.all.sort((a, b) => b.date - a.date);
+      this.all.sort((a, b) => a.date - b.date);
+      
       this.onScoreLoaded();
     }
     
@@ -77,7 +77,7 @@
         let parts = line.split(',');
         
         let date = new Date(parts[0]);
-        let score = parts[1];
+        let score = Number(parts[1]);
         let desc = parts.slice(2).join(',');
         
         scores.push(new Score(date, score, desc));
@@ -101,17 +101,26 @@
     }
 
     onScoreLoaded() {
-      this.years = (() => {
-        const startYear = this.all.first().date.getFullYear();
-        const endYear = this.all.last().date.getFullYear();
-        const yearRange = [];
+      // todo: rename to allYears or something
+      // this.years = (() => {
+      //   const startYear = this.all.first().date.getFullYear();
+      //   const endYear = this.all.last().date.getFullYear();
+      //   const yearRange = [];
+      //
+      //   for (let year = startYear; year <= endYear; year++) {
+      //     yearRange.push(year);
+      //   }
+      //
+      //   return yearRange;
+      // }).apply(this);
 
-        for (let year = startYear; year <= endYear; year++) {
-          yearRange.push(year);
-        }
-
-        return yearRange;
-      }).apply(this);
+      let startYear = this.all.first().date.getFullYear();
+      let endYear = this.all.last().date.getFullYear();
+      
+      this.years = [];
+      for (let year = startYear; year <= endYear; year++) {
+        this.years.push(year);
+      }
 
       $('#topArea').show();
       $('#loading').hide();
@@ -227,7 +236,7 @@
     }
 
      showYears() {
-      var byYear, getColorForVal, getYearInspiration, getYearMonths, inspiration, interpCol, j, k, len, len1, maxAvg, minAvg, month, ref, year, yearScore, yearScores, yearsScores;
+      var byYear, getColorForVal, getYearInspiration, getYearMonths, interpCol, j, k, len, len1, month, ref, year, yearScore;
 
       const lerp = (t, a, b, i) =>
         Math.floor(t * parseInt(a[i], 16) + (1 - t) * parseInt(b[i], 16));
@@ -270,63 +279,43 @@
       };
 
       byYear = this.all.groupBy(s => s.date.getFullYear());
+      let allYears = [];
+      
+      for (year in byYear) {
+        let oneYear = byYear[year];
 
-      yearsScores = (function() {
-        var results;
-        results = [];
-        for (year in byYear) {
-          yearScores = byYear[year];
-          results.push({
-            year: year,
-            totalAvg: yearScores.average(function(s) {
-              return s.summary;
-            }).format(2),
-            totalCount: yearScores.length,
-            months: getYearMonths(yearScores),
-            inspiration: getYearInspiration(yearScores)
-          });
-        }
-        return results;
-      })();
-      
-      maxAvg = yearsScores.map(function(s) {
-        return s.months.max(function(m) {
-          return m.val;
-        }).first().val;
-      }).max().first();
-      
-      minAvg = yearsScores.map(function(s) {
-        return s.months.min(function(m) {
-          return m.val;
-        }).first().val;
-      }).min().first();
-      
-// calculate colors for each month in second step
-      for (j = 0, len = yearsScores.length; j < len; j++) {
-        yearScore = yearsScores[j];
-        ref = yearScore.months;
-        for (k = 0, len1 = ref.length; k < len1; k++) {
-          month = ref[k];
-          month.col = getColorForVal(1 + 4 * (month.val - minAvg) / (maxAvg - minAvg));
-          month.val = month.val.format(2);
-        }
+        allYears.push({
+          year: year,
+          totalAvg: oneYear.average(() => s.summary).format(2),
+          totalCount: oneYear.length,
+          months: getYearMonths(oneYear),
+          inspiration: getYearInspiration(oneYear)
+        });
       }
       
-      inspiration = (function() {
-        var results;
-        results = [];
-        for (year in byYear) {
-          yearScores = byYear[year];
-          results.push({
-            year: year,
-            insp: getYearInspiration(yearScores)
-          });
-        }
-        return results;
-      })();
+      let maxAvg = allYears.map(s => s.months.max(m => m.val).first().val()).max().first();
+      let minAvg = allYears.map(s => s.months.min(m => m.val).first().val).min().first();
       
+      for (const oneYear of allYears) {
+        for (const month of oneYear.months) {
+          const normalizedVal = (month.val - minAvg) / (maxAvg - minAvg);
+          month.col = getColorForVal(1 + 4 * normalizedVal);
+          month.val = month.val.toFixed(2);
+        }
+      }
+       
+      let inspiration = [];
+      for (year in byYear) {
+        let oneYear = byYear[year];
+        
+        inspiration.push({
+          year: year,
+          insp: getYearInspiration(oneYear)
+        });
+      }
+       
       return this.render('#tmpl-years', '#content', {
-        scores: yearsScores.reverse(),
+        scores: allYears.reverse(),
         inspiration: inspiration.filter(function(i) {
           return i.insp != null;
         }).reverse(),
@@ -341,7 +330,7 @@
     }
 
      showYear(id) {
-      var bestScores, byMonth, countVal, i, month, months, randomScores, scores, yearScores;
+      var bestScores, byMonth, countVal, i, month, months, randomScores, scores, oneYear;
       countVal = function(scores, val) {
         var ct, i;
         
@@ -371,11 +360,11 @@
       };
       
       id = parseInt(id);
-      yearScores = this.all.filter(function(s) {
+      oneYear = this.all.filter(function(s) {
         return s.date.getFullYear() === id;
       });
       
-      byMonth = yearScores.groupBy(function(s) {
+      byMonth = oneYear.groupBy(function(s) {
         return s.date.getMonth();
       });
       
@@ -404,11 +393,11 @@
       })();
       
       months.reverse();
-      randomScores = yearScores.filter(function(s) {
+      randomScores = oneYear.filter(function(s) {
         return s.summary >= 3;
       }).sample(5);
       
-      bestScores = yearScores.filter(function(s) {
+      bestScores = oneYear.filter(function(s) {
         return s.summary === 5;
       }).sample(2).sortBy((function(s) {
         return s.date;
@@ -569,7 +558,7 @@
   };
 
   window.onUpdateRandomInspiration = function() {
-    return window.app.updateRandomInspiration();
+    return app.updateRandomInspiration();
   };
 
   window.onToggleScoreDialogue = function() {
@@ -589,6 +578,6 @@
   
   // Call onAppStart when the window loads
   function onAppStart() {
-    var app = new FaveDayApp();
+    window.app = new FaveDayApp();
   };
 
