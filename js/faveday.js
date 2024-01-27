@@ -77,10 +77,13 @@
         let parts = line.split(',');
         
         let date = new Date(parts[0]);
-        let score = Number(parts[1]);
-        let desc = parts.slice(2).join(',');
         
-        scores.push(new Score(date, score, desc));
+        if (!isNaN(date.getTime())) {
+          let score = Number(parts[1]);
+          let desc = parts.slice(2).join(',');
+
+          scores.push(new Score(date, score, desc));
+        }
       }
       
       return scores;
@@ -242,9 +245,8 @@
         Math.floor(t * parseInt(a[i], 16) + (1 - t) * parseInt(b[i], 16));
       
       interpCol = function(t, col1, col2) {
-        var c1, c2;
-        c1 = [col1.slice(1, 3), col1.slice(3, 5), col1.slice(5, 7)];
-        c2 = [col2.slice(1, 3), col2.slice(3, 5), col2.slice(5, 7)];
+        let c1 = [col1.slice(1, 3), col1.slice(3, 5), col1.slice(5, 7)];
+        let c2 = [col2.slice(1, 3), col2.slice(3, 5), col2.slice(5, 7)];
         return `rgb(${lerp(t, c1, c2, 0)}, ${lerp(t, c1, c2, 1)}, ${lerp(t, c1, c2, 2)})`;
       };
 
@@ -261,9 +263,7 @@
           return s.date.getMonth();
         })).map(function(scores) {
           return {
-            val: scores.average(function(s) {
-              return s.summary;
-            }),
+            avg: scores.average((s) => s.summary),
             dateId: scores.first().date.format("{yyyy}-{MM}")
           };
         });
@@ -286,21 +286,21 @@
 
         allYears.push({
           year: year,
-          totalAvg: oneYear.average(() => s.summary).format(2),
+          totalAvg: oneYear.average(s => s.summary).format(2),
           totalCount: oneYear.length,
           months: getYearMonths(oneYear),
           inspiration: getYearInspiration(oneYear)
         });
       }
       
-      let maxAvg = allYears.map(s => s.months.max(m => m.val).first().val()).max().first();
-      let minAvg = allYears.map(s => s.months.min(m => m.val).first().val).min().first();
+      let maxAvg = allYears.map(s => s.months.max(m => m.avg).first().avg).max().first();
+      let minAvg = allYears.map(s => s.months.min(m => m.avg).first().avg).min().first();
       
       for (const oneYear of allYears) {
         for (const month of oneYear.months) {
-          const normalizedVal = (month.val - minAvg) / (maxAvg - minAvg);
+          const normalizedVal = (month.avg - minAvg) / (maxAvg - minAvg);
           month.col = getColorForVal(1 + 4 * normalizedVal);
-          month.val = month.val.toFixed(2);
+          month.avg = month.avg.toFixed(2);
         }
       }
        

@@ -29,8 +29,9 @@ a:hover {
 }
 
 table {
-  border-collapse: separate;
-  border-spacing: 2px;
+  border-collapse: collapse;
+  border-spacing: 0px;
+  padding: 5px;
   width: 100%;
 }
 
@@ -181,9 +182,10 @@ h3 {
 }
 
 .box {
-  border: 1px solid #ddd;
+  border: 1px solid #222;
+  box-shadow: #222 0px 5px 10px;
   background: #555;
-  padding: 5px;
+  padding: 15px;
   max-width: 1050px;
 }
 
@@ -750,8 +752,21 @@ textarea {
 
 /* score table */
 
+.scores th {
+  padding: 10px;
+}
+
 .scores td {
   vertical-align: top;
+  padding: 12px;
+}
+
+.scores tr:nth-child(2n+1) {
+  background: #444;
+}
+
+.scores tr:nth-child(2n) {
+  background: #555;
 }
 
 .scores .date {
@@ -803,7 +818,6 @@ textarea {
   padding-top: 5px;
   padding-bottom: 5px;
   text-align: center;
-  width: 30px;
 }
 
 /* plot */
