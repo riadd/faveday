@@ -360,7 +360,7 @@
     }
 
      showYear(id) {
-      var bestScores, byMonth, countVal, i, month, months, randomScores, scores, oneYear;
+      var bestScores, byMonth, countVal, i, month, randomScores, scores, oneYear;
       countVal = function(scores, val) {
         var ct, i;
         
@@ -391,29 +391,17 @@
       oneYear = this.all.filter(s => s.date.getFullYear() === id);
       byMonth = oneYear.groupBy(s => s.date.getMonth());
 
-       months = (function() {
-        var results;
-        results = [];
-        for (month in byMonth) {
-          scores = byMonth[month];
-          results.push({
-            date: Date.create(`${id}-${parseInt(month) + 1}`).format('{Mon} {yyyy}'),
-            dateId: `${id}-${parseInt(month) + 1}-1`,
-            avg: scores.average(function(s) {
-              return s.summary;
-            }).format(2),
-            counts: (function() {
-              var j, results1;
-              results1 = [];
-              for (i = j = 5; j >= 1; i = --j) {
-                results1.push(countVal(scores, i));
-              }
-              return results1;
-            })()
-          });
-        }
-        return results;
-      })();
+      let months = [];
+      for (month in byMonth) {
+        scores = byMonth[month];
+
+        months.push({
+          date: Date.create(`${id}-${parseInt(month) + 1}`).format('{Mon} {yyyy}'),
+          dateId: `${id}-${parseInt(month) + 1}-1`,
+          avg: scores.average(s => s.summary).format(2),
+          counts: [1, 2, 3, 4, 5].map(s => countVal(scores, s))
+        });
+      }
       
       months.reverse();
       randomScores = oneYear.filter(s => s.summary >=3).sample(5);
@@ -421,12 +409,8 @@
       
       return this.render('#tmpl-year', '#content', {
         year: id,
-        scores: randomScores.isEmpty() ? [] : this.tmplScores.render({
-          scores: randomScores
-        }),
-        inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({
-          scores: bestScores
-        }),
+        scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: randomScores}),
+        inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: bestScores}),
         months: months,
         years: this.years.map(y => ({year: y})),
         streak: this.getMaxStreak(oneYear)
