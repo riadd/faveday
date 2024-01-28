@@ -29,8 +29,6 @@ a:hover {
 }
 
 table {
-  border-collapse: collapse;
-  border-spacing: 0px;
   padding: 5px;
   width: 100%;
 }
@@ -950,46 +948,53 @@ textarea {
 
 /* calendar */
 
-.calendar {
+.yearCal {
     border: 1px solid #aaa;
     padding-bottom: 20px;
 }
 
-.calendar td:first-child {
-  width: 10%;
+.yearCal th {
+  padding: 15px;
+  background: #444;
 }
 
-.calendar td:nth-child(2) {
-  width: 5%;
+.yearCal tr .value {
+  padding-top: 5px;
 }
 
-.calendar td:nth-child(n+2) {
+.yearCal td {
+  border-spacing: 3px;
+  border-radius: 16px;
+}
+
+.yearCal td:nth-child(1) {
   width: 15%;
 }
 
-.calendar .summary, #calendar .prev, #details .value {
+.yearCal td:nth-child(2) {
+  width: 15%;
+}
+
+.yearCal td:nth-child(n+3) {
+  width: 20px;
+  height: 20px;
+}
+
+
+.yearCal .summary, #calendar .prev, #details .value {
     padding: 2px;
     -webkit-border-radius: 3px;
 }
 
-.calendar tr .value {
-  padding-top: 5px;
+
+
+
+
+.yearCal .val0 {
+  background-color: #444;
 }
 
-.calendar .bar, .calendar .dots {
-  float: left;
-  display: block;
-  width: 7px;
-  height: 7px;
-  margin-right: 4px;
-}
 
-.calendar .bar {
-	width: 51px;
-}
-
-.calendar .val1, .calendar .val2, .calendar .val3, .calendar .val4, .calendar .val5 {
-}
 
 /* stats */
 
@@ -1034,7 +1039,7 @@ textarea {
 /* years scores */
 
 .years th {
-  padding: 15px;
+  padding: 10px;
 }
 
 .years td {

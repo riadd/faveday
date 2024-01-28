@@ -390,6 +390,8 @@
       id = parseInt(id);
       oneYear = this.all.filter(s => s.date.getFullYear() === id);
       byMonth = oneYear.groupBy(s => s.date.getMonth());
+      
+      const dayNums = Array.from({ length: 31 }, (_, index) => index + 1);
 
       let months = [];
       for (month in byMonth) {
@@ -399,6 +401,7 @@
           date: Date.create(`${id}-${parseInt(month) + 1}`).format('{Mon} {yyyy}'),
           dateId: `${id}-${parseInt(month) + 1}-1`,
           avg: scores.average(s => s.summary).format(2),
+          days: dayNums.map(d => scores.find(s => s.date.getDate() === d)?.summary ?? 0),
           counts: [1, 2, 3, 4, 5].map(s => countVal(scores, s))
         });
       }

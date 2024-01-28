@@ -92,6 +92,10 @@
     <table class="box scores">
       {{{scores}}}
     </table>
+    
+    <div id="streak" class="box">
+      🔥 Best Streak: {{streak.count}} <span>({{streak.start}} - {{streak.end}})</span>
+    </div>
   </script>
 
   <!-- tmpl-year -->
@@ -101,11 +105,11 @@
     <h1>Year {{year}}</h1>
     {{> yearsBar}}
 
-    <table class="box calendar">
+    <table class="box yearCal">
       <tr>
         <th>Date</th>
-        <th>Summary</th>
-        <th colspan="5"></th>
+        <th>Average</th>
+        <th colSpan=31>Calendar</th>
       </tr>
 
       {{#months}}
@@ -118,19 +122,12 @@
           <td class="value">
             <span class="current summary">{{avg}}</span>
           </td>
-
-          {{#counts}}
-            <td>
-              {{#full}}
-                <span class="bar val{{val}}">&nbsp;</span>
-              {{/full}}
-
-              {{#part}}
-                <span class="dots val{{val}}">&nbsp;</span>
-              {{/part}}
+          
+          {{#days}}
+            <td class="dots val{{.}}">
+              &nbsp;
             </td>
-          {{/counts}}
-
+          {{/days}}
         </tr>
       {{/months}}
     </table>
