@@ -498,6 +498,7 @@
           scores: foundScores
         }),
         years: this.years.map(y => ({year: y})),
+        streak: this.getMaxStreak(foundScores) 
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
