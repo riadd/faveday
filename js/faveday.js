@@ -256,11 +256,7 @@
         scores: monthScores.isEmpty() ? [] : this.tmplScores.render({
           scores: monthScores
         }),
-        years: this.years.map(function(y) {
-          return {
-            year: y
-          };
-        }),
+        years: this.years.map(y => ({year: y})),
         prevYear: this.hasMonth(prevYearDate),
         prevMonth: this.hasMonth(prevMonthDate),
         nextMonth: this.hasMonth(nextMonthDate),
@@ -357,11 +353,7 @@
         inspiration: inspiration.filter(function(i) {
           return i.insp != null;
         }).reverse(),
-        years: this.years.map(function(y) {
-          return {
-            year: y
-          };
-        })
+        years: this.years.map(y => ({year: y})),
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -424,15 +416,8 @@
       })();
       
       months.reverse();
-      randomScores = oneYear.filter(function(s) {
-        return s.summary >= 3;
-      }).sample(5);
-      
-      bestScores = oneYear.filter(function(s) {
-        return s.summary === 5;
-      }).sample(2).sortBy((function(s) {
-        return s.date;
-      }), true);
+      randomScores = oneYear.filter(s => s.summary >=3).sample(5);
+      bestScores = oneYear.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
       
       return this.render('#tmpl-year', '#content', {
         year: id,
@@ -443,11 +428,7 @@
           scores: bestScores
         }),
         months: months,
-        years: this.years.map(function(y) {
-          return {
-            year: y
-          };
-        }),
+        years: this.years.map(y => ({year: y})),
         streak: this.getMaxStreak(oneYear)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
@@ -516,11 +497,7 @@
         scores: this.tmplScores.render({
           scores: foundScores
         }),
-        years: this.years.map(function(y) {
-          return {
-            year: y
-          };
-        })
+        years: this.years.map(y => ({year: y})),
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
