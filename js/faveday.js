@@ -48,7 +48,7 @@
       });
 
       this.all = this.loadScoresFromFiles();
-      this.all.sort((a, b) => a.date - b.date);
+      this.all.sort((a, b) => b.date - a.date); // sort in descending order
       
       this.onScoreLoaded();
     }
@@ -117,11 +117,11 @@
       //   return yearRange;
       // }).apply(this);
 
-      let startYear = this.all.first().date.getFullYear();
-      let endYear = this.all.last().date.getFullYear();
+      let minYear = this.all.last().date.getFullYear();
+      let maxYear = this.all.first().date.getFullYear();
       
       this.years = [];
-      for (let year = startYear; year <= endYear; year++) {
+      for (let year = minYear; year <= maxYear; year++) {
         this.years.push(year);
       }
 
