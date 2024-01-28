@@ -51,6 +51,10 @@
     <table class="box scores">
       {{{recentScores}}}
     </table>
+    
+    <div id="streak" class="box">
+      🔥 Best Streak: {{streak.count}} <span>({{streak.start}} - {{streak.end}})</span>
+    </div>
 
     <h2>Today</h2>
     <table class="box scores">
@@ -130,6 +134,10 @@
         </tr>
       {{/months}}
     </table>
+    
+    <div id="streak" class="box">
+      🔥 Best Streak: {{streak.count}} <span>({{streak.start}} - {{streak.end}})</span>
+    </div>
 
     {{#scores}}
       <h2>Random Days</h2>

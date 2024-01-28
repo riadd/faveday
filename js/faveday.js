@@ -153,6 +153,53 @@
         $('#addScore').show();
       }
     }
+    
+    getMaxStreak(scores) {
+      let maxStreakCount = 0;
+      let maxStreakStart = null;
+      let maxStreakEnd = null;
+      
+      let streakCount = 0;
+      let streakStart = null;
+      let streakEnd = null;
+      
+      let prevDate = null;
+      
+      for (let score of scores) {
+        const currentDate = new Date(score.date);
+        currentDate.setHours(0, 0, 0, 0); // Normalize to start of day
+
+        if (prevDate) {
+          // Check if the current date is consecutive
+          const timeDiff = currentDate - prevDate;
+          const dayDiff = Math.abs(timeDiff / (1000 * 3600 * 24));
+
+          if (dayDiff === 1) {
+            streakCount++;
+          } else {
+            streakCount = 1;
+            streakStart = currentDate;
+          }
+        } else {
+          streakCount = 1;
+          streakStart = currentDate;
+        }
+
+        if (streakCount > maxStreakCount) {
+          maxStreakCount = streakCount;
+          maxStreakStart = streakStart;
+          maxStreakEnd = currentDate;
+        }
+
+        prevDate = currentDate;
+      }
+      
+      return {
+        count:maxStreakCount, 
+        start:maxStreakEnd.format("{d} {Mon} {yyyy}"), 
+        end:maxStreakStart.format("{d} {Mon} {yyyy}")
+      }
+    }
 
     showDashboard() {
       var bestScores, recent, toDate, toMonth, today, todayScores;
@@ -172,20 +219,11 @@
       );
       
       return this.render('#tmpl-dashboard', '#content', {
-        recentScores: this.tmplScores.render({
-          scores: recent
-        }),
-        bestScores: this.tmplScores.render({
-          scores: bestScores
-        }),
-        todayScores: this.tmplScores.render({
-          scores: todayScores
-        }),
-        years: this.years.map(function(y) {
-          return {
-            year: y
-          };
-        })
+        recentScores: this.tmplScores.render({scores: recent}),
+        bestScores: this.tmplScores.render({scores: bestScores}),
+        todayScores: this.tmplScores.render({scores: todayScores}),
+        years: this.years.map(y => ({year: y})),
+        streak: this.getMaxStreak(this.all)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -334,9 +372,7 @@
       countVal = function(scores, val) {
         var ct, i;
         
-        ct = scores.count(function(s) {
-          return s.summary === val;
-        });
+        ct = scores.count(s => s.summary === val);
         
         return {
           val: val,
@@ -360,15 +396,10 @@
       };
       
       id = parseInt(id);
-      oneYear = this.all.filter(function(s) {
-        return s.date.getFullYear() === id;
-      });
-      
-      byMonth = oneYear.groupBy(function(s) {
-        return s.date.getMonth();
-      });
-      
-      months = (function() {
+      oneYear = this.all.filter(s => s.date.getFullYear() === id);
+      byMonth = oneYear.groupBy(s => s.date.getMonth());
+
+       months = (function() {
         var results;
         results = [];
         for (month in byMonth) {
@@ -416,7 +447,8 @@
           return {
             year: y
           };
-        })
+        }),
+        streak: this.getMaxStreak(oneYear)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });

@@ -1059,3 +1059,14 @@ textarea {
   padding: 5px 0;
   display: block;
 }
+
+/* streak */
+
+#streak {
+  margin: 20px 0;
+  font-size: 1.2em;
+}
+
+#streak span {
+  color: #aaa;
+}
