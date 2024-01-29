@@ -24,12 +24,16 @@
   <!-- tmpl-scores -->
   <script type="text/mustache" id="tmpl-scores">
     <tr>
+      <th></th>
       <th>Date</th>
       <th>Total</th>
       <th>Notes</th>
     </tr>
     {{#scores}}
       <tr class="score">
+        <td class="value">
+        </td>
+
         <td class="date">
           <a onclick="onShowMonth('{{dateId}}')">
             <span>{{dateStr}}</span>
@@ -162,6 +166,7 @@
 
     <table class="box yearsCal">
       <tr>
+        <th></th>
         <th>Year</th>
         <th>Average</th>
         <th>Entries</th>
@@ -181,8 +186,12 @@
 
       {{#scores}}
         <tr>
+          <td class="value">
+            {{{rankStr}}}
+          </td>
+        
           <td class="value date">
-            <span><a onclick="onShowYear({{year}})">{{year}}</a></span>
+            <a onclick="onShowYear({{year}})">{{year}}</a>
           </td>
 
           <!-- this year -->
@@ -196,7 +205,9 @@
 
           {{#months}}
             <td>
-              <div style="background-color:{{col}}"><a onclick="onShowMonth('{{dateId}}')"></a></div>
+              <div style="background-color:{{col}}; width:{{sz}}px; height:{{sz}}px">
+                <a onclick="onShowMonth('{{dateId}}')"></a>
+              </div>
             </td>
           {{/months}}
 

@@ -191,10 +191,6 @@ th {
   text-align: center;
 }
 
-td {
-  padding: 0 10px;
-}
-
 #content
 {
   margin: 0 auto;
@@ -210,6 +206,14 @@ td {
 
   max-width:1050px;
   min-width:400px;
+}
+
+.rank {
+  background: #65cfff;
+  color: #1a1a1a;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: bolder;
 }
 
 /* header */
@@ -1001,15 +1005,21 @@ textarea {
   background: #444;
 }
 
+.yearsCal td:nth-child(3){
+  width: 100px;
+}
+
 .yearsCal td div {
-  width:25px;
-  height: 25px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50px;
+  margin: 0 auto;
 }
 
 .yearsCal td a {
   color: white;
 }
-  
+
 /* stats */
 
 .stats {

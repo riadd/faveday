@@ -302,7 +302,8 @@
           
           return {
             avg: scores.filter(s => s.summary > 0).average(s => s.summary),
-            dateId: scores.first()?.date.format("{yyyy}-{MM}")
+            dateId: scores.first()?.date.format("{yyyy}-{MM}"),
+            sz: scores.length * 0.8
           };
         });
       };
@@ -328,12 +329,13 @@
           totalAvg: oneYear.average(s => s.summary).format(2),
           totalCount: oneYear.length,
           months: getYearMonths(oneYear),
-          inspiration: getYearInspiration(oneYear)
+          inspiration: getYearInspiration(oneYear),
+          rank: 3
         });
       }
       
-      let maxAvg = allYears.map(s => s.months.max(m => m.avg).first().avg).max().first();
-      let minAvg = allYears.map(s => s.months.min(m => m.avg).first().avg).min().first();
+      //let maxAvg = allYears.map(s => s.months.max(m => m.avg).first().avg).max().first();
+      //let minAvg = allYears.map(s => s.months.min(m => m.avg).first().avg).min().first();
       
       for (const oneYear of allYears) {
         for (const oneMonth of oneYear.months) {
@@ -344,6 +346,9 @@
           oneMonth.col = getColorForVal(oneMonth.avg);
           oneMonth.avg = oneMonth.avg.toFixed(2);
         }
+        
+        oneYear.rank = allYears.filter(y => y.totalAvg > oneYear.totalAvg).length + 1;
+        oneYear.rankStr = oneYear.rank < 4 ? `<span class="rank">${oneYear.rank}</span>` : '';
       }
        
       let inspiration = [];
@@ -358,9 +363,7 @@
        
       return this.render('#tmpl-years', '#content', {
         scores: allYears.reverse(),
-        inspiration: inspiration.filter(function(i) {
-          return i.insp != null;
-        }).reverse(),
+        inspiration: inspiration.filter(i => i.insp != null).reverse(),
         years: this.years.map(y => ({year: y})),
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
