@@ -980,22 +980,36 @@ textarea {
   height: 20px;
 }
 
-
 .yearCal .summary, #calendar .prev, #details .value {
     padding: 2px;
     -webkit-border-radius: 3px;
 }
 
-
-
-
-
 .yearCal .val0 {
   background-color: #444;
 }
 
+/* years cal */
 
+.yearsCal {
+  border: 1px solid #aaa;
+  padding-bottom: 20px;
+}
 
+.yearsCal th {
+  padding: 15px;
+  background: #444;
+}
+
+.yearsCal td div {
+  width:25px;
+  height: 25px;
+}
+
+.yearsCal td a {
+  color: white;
+}
+  
 /* stats */
 
 .stats {

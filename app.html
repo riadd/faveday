@@ -53,7 +53,7 @@
     </table>
     
     <div id="streak" class="box">
-      🔥 Best Streak: {{streak.count}} <span>({{streak.start}} - {{streak.end}})</span>
+      🔥 Best Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
     </div>
 
     <h2>Today</h2>
@@ -94,7 +94,7 @@
     </table>
     
     <div id="streak" class="box">
-      🔥 Best Streak: {{streak.count}} <span>({{streak.start}} - {{streak.end}})</span>
+      🔥 Best Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
     </div>
   </script>
 
@@ -124,7 +124,7 @@
           </td>
           
           {{#days}}
-            <td class="dots val{{.}}">
+            <td class="val{{.}}">
               &nbsp;
             </td>
           {{/days}}
@@ -133,7 +133,7 @@
     </table>
     
     <div id="streak" class="box">
-      🔥 Best Streak: {{streak.count}} <span>({{streak.start}} - {{streak.end}})</span>
+      🔥 Best Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
     </div>
 
     {{#scores}}
@@ -160,10 +160,10 @@
     <h1>Years</h1>
     {{> yearsBar}}
 
-    <table class="box calendar years">
+    <table class="box yearsCal">
       <tr>
         <th>Year</th>
-        <th>Total</th>
+        <th>Average</th>
         <th>Entries</th>
         <th>Jan</th>
         <th>Feb</th>
@@ -196,11 +196,7 @@
 
           {{#months}}
             <td>
-              <a onclick="onShowMonth('{{dateId}}')">
-                <div class="scoreCube" style="background-color:{{col}}">
-                  <span>{{val}}</span>
-                </div>
-              </a>
+              <div style="background-color:{{col}}"><a onclick="onShowMonth('{{dateId}}')"></a></div>
             </td>
           {{/months}}
 

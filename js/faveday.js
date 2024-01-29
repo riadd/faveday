@@ -55,7 +55,7 @@
     
     loadScoresFromFiles() {
       let files = [];
-      for(let i = 2008; i <= 2020; i++) {
+      for(let i = 2008; i <= 2024; i++) {
         files.push(`scores-${i}.txt`);
       }
       
@@ -80,6 +80,10 @@
         
         if (!isNaN(date.getTime())) {
           let score = Number(parts[1]);
+          
+          if (isNaN(score))
+            score = 0;
+          
           let desc = parts.slice(2).join(',');
 
           scores.push(new Score(date, score, desc));
@@ -253,9 +257,7 @@
       
       return this.render('#tmpl-month', '#content', {
         title: title,
-        scores: monthScores.isEmpty() ? [] : this.tmplScores.render({
-          scores: monthScores
-        }),
+        scores: monthScores.isEmpty() ? [] : this.tmplScores.render({scores: monthScores}),
         years: this.years.map(y => ({year: y})),
         prevYear: this.hasMonth(prevYearDate),
         prevMonth: this.hasMonth(prevMonthDate),
@@ -273,37 +275,39 @@
     }
 
      showYears() {
-      var byYear, getColorForVal, getYearInspiration, getYearMonths, interpCol, j, k, len, len1, month, ref, year, yearScore;
-
       const lerp = (t, a, b, i) =>
         Math.floor(t * parseInt(a[i], 16) + (1 - t) * parseInt(b[i], 16));
       
-      interpCol = function(t, col1, col2) {
+      const interpCol = function(t, col1, col2) {
         let c1 = [col1.slice(1, 3), col1.slice(3, 5), col1.slice(5, 7)];
         let c2 = [col2.slice(1, 3), col2.slice(3, 5), col2.slice(5, 7)];
         return `rgb(${lerp(t, c1, c2, 0)}, ${lerp(t, c1, c2, 1)}, ${lerp(t, c1, c2, 2)})`;
       };
 
-      getColorForVal = val => {
+      const getColorForVal = val => {
         if (val >= 5.00) return '#33AA66';
         if (val >= 4.00) return interpCol(val - 4, '#9AD600', '#33AA66');
         if (val >= 3.00) return interpCol(val - 3, '#FFAD26', '#9AD600');
         if (val >= 2.00) return interpCol(val - 2, '#FFB399', '#FFAD26');
         if (val >= 1.00) return interpCol(val - 1, '#FF794D', '#FFB399');
+        return '#444' 
       };
 
-      getYearMonths = function(yearScores) {
-        return Object.values(yearScores.groupBy(function(s) {
-          return s.date.getMonth();
-        })).map(function(scores) {
+      const  getYearMonths = function(oneYear) {
+        let byMonth = oneYear.groupBy(s => s.date.getMonth());
+        const monthNums = Array.from({ length: 12 }, (_, index) => index); // 0..11
+        
+        return monthNums.map(function(m) {
+          let scores = byMonth[m] ?? [];
+          
           return {
-            avg: scores.average((s) => s.summary),
-            dateId: scores.first().date.format("{yyyy}-{MM}")
+            avg: scores.filter(s => s.summary > 0).average(s => s.summary),
+            dateId: scores.first()?.date.format("{yyyy}-{MM}")
           };
         });
       };
-
-      getYearInspiration = (yearScores) => {
+      
+      const getYearInspiration = (yearScores) => {
         const inspiration = yearScores
           .filter(s => s.summary >= 4)
           .sample(2)
@@ -312,9 +316,10 @@
         return inspiration.isEmpty() ? null : this.tmplScores.render({ scores: inspiration });
       };
 
-      byYear = this.all.groupBy(s => s.date.getFullYear());
+      let byYear = this.all.groupBy(s => s.date.getFullYear());
       let allYears = [];
       
+      let year = null;
       for (year in byYear) {
         let oneYear = byYear[year];
 
@@ -331,10 +336,13 @@
       let minAvg = allYears.map(s => s.months.min(m => m.avg).first().avg).min().first();
       
       for (const oneYear of allYears) {
-        for (const month of oneYear.months) {
-          const normalizedVal = (month.avg - minAvg) / (maxAvg - minAvg);
-          month.col = getColorForVal(1 + 4 * normalizedVal);
-          month.avg = month.avg.toFixed(2);
+        for (const oneMonth of oneYear.months) {
+          // removed normalization for now. too complicated
+          //const normalizedVal = (oneMonth.avg - minAvg) / (maxAvg - minAvg);
+          //oneMonth.col = getColorForVal(1 + 4 * normalizedVal);
+
+          oneMonth.col = getColorForVal(oneMonth.avg);
+          oneMonth.avg = oneMonth.avg.toFixed(2);
         }
       }
        
@@ -391,20 +399,19 @@
       oneYear = this.all.filter(s => s.date.getFullYear() === id);
       byMonth = oneYear.groupBy(s => s.date.getMonth());
       
-      const dayNums = Array.from({ length: 31 }, (_, index) => index + 1);
+      const monthNums = Array.from({ length: 12 }, (_, index) => index); // 0..11
+      const dayNums = Array.from({ length: 31 }, (_, index) => index + 1); // 1..31
+      
+      let months = monthNums.map(month => {
+        scores = byMonth[month] ?? [];
 
-      let months = [];
-      for (month in byMonth) {
-        scores = byMonth[month];
-
-        months.push({
+        return {
           date: Date.create(`${id}-${parseInt(month) + 1}`).format('{Mon} {yyyy}'),
           dateId: `${id}-${parseInt(month) + 1}-1`,
           avg: scores.average(s => s.summary).format(2),
           days: dayNums.map(d => scores.find(s => s.date.getDate() === d)?.summary ?? 0),
-          counts: [1, 2, 3, 4, 5].map(s => countVal(scores, s))
-        });
-      }
+        }
+      });
       
       months.reverse();
       randomScores = oneYear.filter(s => s.summary >=3).sample(5);
