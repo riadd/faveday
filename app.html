@@ -122,7 +122,6 @@
             <span><a onclick="onShowMonth('{{dateId}}')">{{date}}</a></span>
           </td>
 
-          <!-- this year -->
           <td class="value">
             <span class="current summary">{{avg}}</span>
           </td>
@@ -170,6 +169,7 @@
         <th>Year</th>
         <th>Average</th>
         <th>Entries</th>
+        <th>Words</th>
         <th>Jan</th>
         <th>Feb</th>
         <th>Mar</th>
@@ -194,13 +194,16 @@
             <a onclick="onShowYear({{year}})">{{year}}</a>
           </td>
 
-          <!-- this year -->
           <td class="value">
             <span class="current summary total">{{totalAvg}}</span>
           </td>
 
           <td class="value">
             <span class="current summary">{{totalCount}}</span>
+          </td>
+          
+           <td class="value">
+            <span class="current summary">{{words}}<small>k</small></span>
           </td>
 
           {{#months}}
@@ -213,6 +216,23 @@
 
         </tr>
       {{/scores}}
+    </table>
+    
+    <table class="box weekdays">
+      <tr>
+        <th>Monday</th>
+        <th>Tuesday</th>
+        <th>Wednesday</th>
+        <th>Thursday</th>
+        <th>Friday</th>
+        <th>Saturday</th>
+        <th>Sunday</th>
+      </tr>
+      <tr>
+          {{#weekdays}}
+            <td>{{.}}</td>
+          {{/weekdays}}
+      </tr>
     </table>
 
     {{#inspiration}}

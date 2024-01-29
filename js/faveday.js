@@ -241,7 +241,7 @@
       return isMonthFound ? date.format("{yyyy}-{MM}") : null;
     }
 
-   showMonth(id) {
+    showMonth(id) {
       var date, monthScores, nextMonthDate, nextYearDate, prevMonthDate, prevYearDate, title;
       date = Date.create(id);
       title = date.format('{Month} {yyyy}');
@@ -269,12 +269,12 @@
       });
     }
 
-     updateRandomInspiration() {
+    updateRandomInspiration() {
       const bestScores = this.all.filter(s => s.summary === 5).sample();
       return $('#bestScores').html(this.tmplScores.render({ scores: bestScores }));
     }
 
-     showYears() {
+    showYears() {
       const lerp = (t, a, b, i) =>
         Math.floor(t * parseInt(a[i], 16) + (1 - t) * parseInt(b[i], 16));
       
@@ -320,6 +320,8 @@
       let byYear = this.all.groupBy(s => s.date.getFullYear());
       let allYears = [];
       
+      
+       
       let year = null;
       for (year in byYear) {
         let oneYear = byYear[year];
@@ -328,9 +330,9 @@
           year: year,
           totalAvg: oneYear.average(s => s.summary).format(2),
           totalCount: oneYear.length,
+          words: (oneYear.map(s => s.notes.split(' ').length).sum() / 1000.0).format(1),
           months: getYearMonths(oneYear),
           inspiration: getYearInspiration(oneYear),
-          rank: 3
         });
       }
       
@@ -360,43 +362,24 @@
           insp: getYearInspiration(oneYear)
         });
       }
+
+      let days = [];
+      for (let i= 0; i < 7; i++) {
+        days.push(this.all.filter(d => d.date.getDay() == i).average(s => s.summary).format(2));
+      }
        
       return this.render('#tmpl-years', '#content', {
         scores: allYears.reverse(),
         inspiration: inspiration.filter(i => i.insp != null).reverse(),
         years: this.years.map(y => ({year: y})),
+        weekdays: days
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
     }
 
      showYear(id) {
-      var bestScores, byMonth, countVal, i, month, randomScores, scores, oneYear;
-      countVal = function(scores, val) {
-        var ct, i;
-        
-        ct = scores.count(s => s.summary === val);
-        
-        return {
-          val: val,
-          full: (function() {
-            var j, ref, results;
-            results = [];
-            for (i = j = 0, ref = Math.floor(ct / 5); (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
-              results.push(i);
-            }
-            return results;
-          })(),
-          part: (function() {
-            var j, ref, results;
-            results = [];
-            for (i = j = 0, ref = ct % 5; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
-              results.push(i);
-            }
-            return results;
-          })()
-        };
-      };
+      var bestScores, byMonth, randomScores, scores, oneYear;
       
       id = parseInt(id);
       oneYear = this.all.filter(s => s.date.getFullYear() === id);

@@ -1009,6 +1009,10 @@ textarea {
   width: 100px;
 }
 
+.yearsCal td {
+  height: 25px;
+}
+
 .yearsCal td div {
   width: 20px;
   height: 20px;
@@ -1018,6 +1022,24 @@ textarea {
 
 .yearsCal td a {
   color: white;
+}
+
+/* weekdays */
+
+table.weekdays {
+  margin: 40px 0;
+}
+
+table.weekdays th {
+  padding: 15px;
+  background: #444;
+}
+
+table.weekdays tr:nth-child(2) td {
+  padding: 15px;
+  font-weight: bold;
+  text-align: center;
+  font-size: 1.5em;
 }
 
 /* stats */
