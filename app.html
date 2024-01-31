@@ -218,7 +218,7 @@
       {{/scores}}
     </table>
     
-    <table class="box weekdays">
+    <table class="box bestEntries">
       <tr>
         <th>Monday</th>
         <th>Tuesday</th>
@@ -229,9 +229,31 @@
         <th>Sunday</th>
       </tr>
       <tr>
-          {{#weekdays}}
+          {{#bestDays}}
             <td>{{.}}</td>
-          {{/weekdays}}
+          {{/bestDays}}
+      </tr>
+    </table>
+    
+    <table class="box bestEntries">
+      <tr>
+        <th>Jan</th>
+        <th>Feb</th>
+        <th>Mar</th>
+        <th>Apr</th>
+        <th>May</th>
+        <th>Jun</th>
+        <th>Jul</th>
+        <th>Aug</th>
+        <th>Sep</th>
+        <th>Oct</th>
+        <th>Nov</th>
+        <th>Dec</th>
+      </tr>
+      <tr>
+          {{#bestMonths}}
+            <td>{{.}}</td>
+          {{/bestMonths}}
       </tr>
     </table>
 

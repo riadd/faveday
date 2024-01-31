@@ -363,16 +363,22 @@
         });
       }
 
-      let days = [];
+      let bestDays = [];
       for (let i= 0; i < 7; i++) {
-        days.push(this.all.filter(d => d.date.getDay() == i).average(s => s.summary).format(2));
+        bestDays.push(this.all.filter(d => d.date.getDay() == i).average(s => s.summary).format(2));
+      }
+
+      let bestMonths = [];
+      for (let i= 0; i < 12; i++) {
+        bestMonths.push(this.all.filter(d => d.date.getMonth() == i).average(s => s.summary).format(2));
       }
        
       return this.render('#tmpl-years', '#content', {
         scores: allYears.reverse(),
         inspiration: inspiration.filter(i => i.insp != null).reverse(),
         years: this.years.map(y => ({year: y})),
-        weekdays: days
+        bestDays: bestDays,
+        bestMonths: bestMonths
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });

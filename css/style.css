@@ -1024,18 +1024,18 @@ textarea {
   color: white;
 }
 
-/* weekdays */
+/* bestDazs */
 
-table.weekdays {
+table.bestEntries {
   margin: 40px 0;
 }
 
-table.weekdays th {
+table.bestEntries th {
   padding: 15px;
   background: #444;
 }
 
-table.weekdays tr:nth-child(2) td {
+table.bestEntries tr:nth-child(2) td {
   padding: 15px;
   font-weight: bold;
   text-align: center;
