@@ -18,11 +18,9 @@
     }
   
     text() {
-      var re;
-      re = /#\w+/gi;
-      return this.notes.replace(re, function (str) {
-        var code;
-        code = `onShowSearch('${str}')`;
+      let re = /#\w+/gi;
+      return this.notes.replace(re, str => {
+        let code = `onShowSearch('${str.slice(1)}')`;
         return `<a onclick=${code}>${str}</a>`;
       });
     }
@@ -320,8 +318,6 @@
       let byYear = this.all.groupBy(s => s.date.getFullYear());
       let allYears = [];
       
-      
-       
       let year = null;
       for (year in byYear) {
         let oneYear = byYear[year];
@@ -383,8 +379,43 @@
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
     }
+    
+    showTags() {
+      const re = /#\w+/gi;
+      
+      let tags = new Set();
+      for (let score of this.all)
+      {
+        let newTags = score.notes.match(re);
+        if (newTags != null)
+          newTags.forEach(tag => tags.add(tag.slice(1)));
+      }
 
-     showYear(id) {
+      let hits = {};
+      for (let score of this.all) {
+        for (let tag of tags)
+        {
+          if (score.notes.toLowerCase().indexOf(tag) > -1)
+          {
+            if (hits[tag] == null) hits[tag] = 0;
+            hits[tag]++;
+          }
+        }
+      }
+      
+      let results = [];
+      for (let [tag,count] of Object.entries(hits))
+        results.push({tag: tag, count: count});
+
+      return this.render('#tmpl-tags', '#content', {
+        years: this.years.map(y => ({year: y})),
+        tags: results
+      }, {
+        yearsBar: Hogan.compile($('#tmpl-years-bar').html())
+      });
+    }
+
+    showYear(id) {
       var bestScores, byMonth, randomScores, scores, oneYear;
       
       id = parseInt(id);
@@ -423,67 +454,71 @@
 
      showSearch(id) {
       var date, elem, foundScores, j, k, keyword, keywords, len, len1, needle, needleDate, range, ref, ref1, ref2, regex, results, score;
+      
       id = $('#search input')[0].value;
+      
       if (id.length < 1) {
         return this.showDashboard();
       }
+      
       foundScores = this.all;
       keywords = [];
       ref = id.split(' ');
       
       for (j = 0, len = ref.length; j < len; j++) {
         needle = ref[j];
+        
         if (needle.length < 1) {
           continue;
         }
+        
         needle = needle.toLowerCase();
+        
         // score criterium
         if (((ref1 = needle[0]) === '>' || ref1 === '<' || ref1 === '=') && needle.length === 2) {
           score = parseInt(needle[1]);
+          
           range = needle[0] === '>' ? (function() {
-            var results = [];
-            for (var k = score; score <= 5 ? k <= 5 : k >= 5; score <= 5 ? k++ : k--){ results.push(k); }
+            let results = [];
+            for (let k = score; score <= 5 ? k <= 5 : k >= 5; score <= 5 ? k++ : k--){ results.push(k); }
             return results;
           }).apply(this) : needle[0] === '<' ? (function() {
-            var results = [];
-            for (var k = 0; 0 <= score ? k <= score : k >= score; 0 <= score ? k++ : k--){ results.push(k); }
+            let results = [];
+            for (let k = 0; 0 <= score ? k <= score : k >= score; 0 <= score ? k++ : k--){ results.push(k); }
             return results;
           }).apply(this) : [score];
-          foundScores = foundScores.filter(function(s) {
-            var ref2;
-            return ref2 = s.summary, indexOf.call(range, ref2) >= 0;
-          });
+          
+          foundScores = foundScores.filter(s => s.summary, indexOf.call(range, ref2) >= 0);
+          
         } else if (needle.last() === '.' && parseInt(needle)) {
           needleDate = parseInt(needle);
-          foundScores = foundScores.filter(function(s) {
-            return s.date.getDate() === needleDate;
-          });
+          foundScores = foundScores.filter(s => s.date.getDate() === needleDate);
+          
         } else {
           // arbitrary date criterium
           date = Date.create(needle);
           if (date.isValid()) {
-            foundScores = foundScores.filter(function(s) {
-              return s.date.is(needle);
-            });
+            foundScores = foundScores.filter(s => s.date.is(needle));
+            
           // text criterium
           } else if (needle.length > 2) {
-            foundScores = foundScores.filter(function(s) {
-              return s.notes.toLowerCase().indexOf(needle) > -1;
-            });
+            foundScores = foundScores.filter(s => s.notes.toLowerCase().indexOf(needle) > -1);
             keywords.push(needle);
           }
         }
       }
       
+      let hits = this.years.map(y => ({
+        year:y,
+        count:foundScores.filter(s => s.date.getFullYear() === y).length
+      }));
+      
       this.render('#tmpl-search', '#content', {
         count: foundScores.length,
-        average: foundScores.average(function(s) {
-          return s.summary;
-        }).format(2),
-        scores: this.tmplScores.render({
-          scores: foundScores
-        }),
+        average: foundScores.average(s => s.summary).format(2),
+        scores: this.tmplScores.render({scores: foundScores}),
         years: this.years.map(y => ({year: y})),
+        hits: hits.filter(hit => hit.count > 0),
         streak: this.getMaxStreak(foundScores) 
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
@@ -499,7 +534,7 @@
           for (n = 0, len2 = keywords.length; n < len2; n++) {
             keyword = keywords[n];
             regex = new RegExp(`(${keyword})`, 'ig');
-            results1.push($(elem).html(elem.textContent.replace(regex, "<strong>$1</strong>")));
+            results1.push($(elem).html(elem.textContent.replace(regex, "<em>$1</em>")));
           }
           return results1;
         })());
@@ -544,9 +579,13 @@
   window.onShowYear = function(id) {
     return window.app.showYear(id);
   };
-
+  
   window.onShowYears = function() {
     return window.app.showYears();
+  };
+
+  window.onShowTags = function() {
+    return window.app.showTags();
   };
 
   window.onShowDashboard = function() {

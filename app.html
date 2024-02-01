@@ -92,6 +92,20 @@
     {{> yearsBar}}
 
     <h2>Average {{average}}</h2>
+    
+    <table class="box bestEntries">
+      <tr>
+        {{#hits}}
+          <th>{{year}}</th>
+        {{/hits}}
+      </tr>
+      
+      <tr>
+        {{#hits}}
+            <td>{{count}}</td>          
+        {{/hits}}
+      </tr>
+    </table>
 
     <table class="box scores">
       {{{scores}}}
@@ -266,9 +280,28 @@
     {{/inspiration}}
   </script>
 
+  <!-- tmpl-years -->
+  <script type="text/mustache" id="tmpl-tags">
+    {{> header}}
+
+    <h1>Tags</h1>
+    {{> yearsBar}}
+
+    <table class="box">
+      <tr>
+        <td>
+          {{#tags}} 
+            <a onclick="onShowSearch('{{tag}}')">{{tag}} ({{count}})</a> 
+          {{/tags}}
+        </td>
+      </tr>
+    </table>
+  </script>
+
   <!-- tmpl-years-bar -->
   <script type="text/mustache" id="tmpl-years-bar">
     <div class="yearsBar">
+      <a onclick="onShowTags()">Tags</a>
       <a onclick="onShowYears()">Years</a>
       {{#years}}
         <a onclick="onShowYear({{year}})">{{year}}</a>
