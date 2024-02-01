@@ -20,8 +20,8 @@
     text() {
       let re = /#\w+/gi;
       return this.notes.replace(re, str => {
-        let code = `onShowSearch('${str.slice(1)}')`;
-        return `<a onclick=${code}>${str}</a>`;
+        let word = str.slice(1);
+        return `<a onclick="onShowSearch('${word}')">${word}</a>`;
       });
     }
   
@@ -206,19 +206,18 @@
     }
 
     showDashboard() {
-      var bestScores, recent, toDate, toMonth, today, todayScores;
       $('#search input')[0].value = "";
-      recent = this.all.slice(0, 3);
+      let recent = this.all.slice(0, 3);
       
-      bestScores = this.all.filter(function(s) {
+      let bestScores = this.all.filter(function(s) {
         return s.summary === 5;
       }).sample();
       
-      today = Date.create();
-      toDate = today.getDate();
-      toMonth = today.getMonth();
+      let today = Date.create();
+      let toDate = today.getDate();
+      let toMonth = today.getMonth();
       
-      todayScores = this.all.filter(s =>
+      let todayScores = this.all.filter(s =>
         s.date.getDate() === toDate && s.date.getMonth() === toMonth
       );
       
@@ -242,18 +241,17 @@
     }
 
     showMonth(id) {
-      var date, monthScores, nextMonthDate, nextYearDate, prevMonthDate, prevYearDate, title;
-      date = Date.create(id);
-      title = date.format('{Month} {yyyy}');
+      let date = Date.create(id);
+      let title = date.format('{Month} {yyyy}');
 
-      monthScores = this.all.filter(s =>
+      let monthScores = this.all.filter(s =>
         s.date.getMonth() === date.getMonth() && s.date.getYear() === date.getYear()
       );
 
-      prevYearDate = new Date(date).addYears(-1);
-      prevMonthDate = new Date(date).addMonths(-1);
-      nextMonthDate = new Date(date).addMonths(1);
-      nextYearDate = new Date(date).addYears(1);
+      let prevYearDate = new Date(date).addYears(-1);
+      let prevMonthDate = new Date(date).addMonths(-1);
+      let nextMonthDate = new Date(date).addMonths(1);
+      let nextYearDate = new Date(date).addYears(1);
       
       return this.render('#tmpl-month', '#content', {
         title: title,
@@ -363,12 +361,12 @@
 
       let bestDays = [];
       for (let i= 0; i < 7; i++) {
-        bestDays.push(this.all.filter(d => d.date.getDay() == i).average(s => s.summary).format(2));
+        bestDays.push(this.all.filter(d => d.date.getDay() === i).average(s => s.summary).format(2));
       }
 
       let bestMonths = [];
       for (let i= 0; i < 12; i++) {
-        bestMonths.push(this.all.filter(d => d.date.getMonth() == i).average(s => s.summary).format(2));
+        bestMonths.push(this.all.filter(d => d.date.getMonth() === i).average(s => s.summary).format(2));
       }
        
       return this.render('#tmpl-years', '#content', {
@@ -456,7 +454,7 @@
     }
 
      showSearch(id) {
-      var date, elem, foundScores, j, k, keyword, keywords, len, len1, needle, needleDate, range, ref, ref1, ref2, regex, results, score;
+      var date, elem, k, keyword, len1, needle, needleDate, range, ref1, ref2, regex, results, score;
       
       id = $('#search input')[0].value;
       
@@ -464,11 +462,11 @@
         return this.showDashboard();
       }
       
-      foundScores = this.all;
-      keywords = [];
-      ref = id.split(' ');
+      let foundScores = this.all;
+      let keywords = [];
+      let ref = id.split(' ');
       
-      for (j = 0, len = ref.length; j < len; j++) {
+      for (let j = 0, len = ref.length; j < len; j++) {
         needle = ref[j];
         
         if (needle.length < 1) {
@@ -477,7 +475,7 @@
         
         needle = needle.toLowerCase();
         
-        // score criterium
+        // score criteria
         if (((ref1 = needle[0]) === '>' || ref1 === '<' || ref1 === '=') && needle.length === 2) {
           score = parseInt(needle[1]);
           
@@ -532,8 +530,8 @@
       for (k = 0, len1 = ref2.length; k < len1; k++) {
         elem = ref2[k];
         results.push((function() {
-          var len2, n, results1;
-          results1 = [];
+          var len2, n;
+          let results1 = [];
           for (n = 0, len2 = keywords.length; n < len2; n++) {
             keyword = keywords[n];
             regex = new RegExp(`(${keyword})`, 'ig');
