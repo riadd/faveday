@@ -57,7 +57,7 @@
     </table>
     
     <div id="streak" class="box">
-      🔥 Best Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
+      🔥 Last Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
     </div>
 
     <h2>Today</h2>
@@ -112,7 +112,7 @@
     </table>
     
     <div id="streak" class="box">
-      🔥 Best Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
+      🔥 Current Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
     </div>
   </script>
 
@@ -176,7 +176,7 @@
 
     <h1>Years</h1>
     {{> yearsBar}}
-
+    
     <table class="box yearsCal">
       <tr>
         <th></th>
@@ -231,6 +231,10 @@
         </tr>
       {{/scores}}
     </table>
+    
+    <div id="streak" class="box">
+      🔥 Best Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
+    </div>
     
     <table class="box bestEntries">
       <tr>

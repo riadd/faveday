@@ -156,7 +156,7 @@
       }
     }
     
-    getMaxStreak(scores) {
+    getMaxStreak(scores, onlyFirst= false) {
       let maxStreakCount = 0;
       let maxStreakStart = null;
       let maxStreakEnd = null;
@@ -179,6 +179,8 @@
           if (dayDiff === 1) {
             streakCount++;
           } else {
+            if (onlyFirst && streakCount >= 2) break;
+            
             streakCount = 1;
             streakStart = currentDate;
           }
@@ -225,7 +227,7 @@
         bestScores: this.tmplScores.render({scores: bestScores}),
         todayScores: this.tmplScores.render({scores: todayScores}),
         years: this.years.map(y => ({year: y})),
-        streak: this.getMaxStreak(this.all)
+        streak: this.getMaxStreak(this.all, true)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -374,7 +376,8 @@
         inspiration: inspiration.filter(i => i.insp != null).reverse(),
         years: this.years.map(y => ({year: y})),
         bestDays: bestDays,
-        bestMonths: bestMonths
+        bestMonths: bestMonths,
+        streak: this.getMaxStreak(this.all)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
