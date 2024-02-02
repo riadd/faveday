@@ -199,9 +199,9 @@
       }
       
       return {
-        count:maxStreakCount, 
-        start:maxStreakEnd.format("{d} {Mon} {yyyy}"), 
-        end:maxStreakStart.format("{d} {Mon} {yyyy}")
+        count: maxStreakCount, 
+        start: maxStreakEnd.format("{d} {Mon} {yyyy}"), 
+        end: maxStreakStart.format("{d} {Mon} {yyyy}")
       }
     }
 
@@ -361,20 +361,20 @@
 
       let bestDays = [];
       for (let i= 0; i < 7; i++) {
-        bestDays.push(this.all.filter(d => d.date.getDay() === i).average(s => s.summary).format(2));
+        bestDays.push(this.all.filter(d => d.date.getDay() === i).average(s => s.summary));
       }
 
       let bestMonths = [];
       for (let i= 0; i < 12; i++) {
-        bestMonths.push(this.all.filter(d => d.date.getMonth() === i).average(s => s.summary).format(2));
+        bestMonths.push(this.all.filter(d => d.date.getMonth() === i).average(s => s.summary));
       }
-       
+      
       return this.render('#tmpl-years', '#content', {
         scores: allYears.reverse(),
         inspiration: inspiration.filter(i => i.insp != null).reverse(),
         years: this.years.map(y => ({year: y})),
-        bestDays: bestDays,
-        bestMonths: bestMonths,
+        bestDays: bestDays.map(s => s.format(2)),
+        bestMonths: bestMonths.map(s => s.format(2)),
         streak: this.getMaxStreak(this.all)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
@@ -394,10 +394,8 @@
 
       let hits = {};
       for (let score of this.all) {
-        for (let tag of tags)
-        {
-          if (score.notes.toLowerCase().indexOf(tag) > -1)
-          {
+        for (let tag of tags) {
+          if (score.notes.toLowerCase().indexOf(tag) > -1) {
             if (hits[tag] == null) hits[tag] = 0;
             hits[tag]++;
           }
@@ -496,12 +494,12 @@
           foundScores = foundScores.filter(s => s.date.getDate() === needleDate);
           
         } else {
-          // arbitrary date criterium
+          // arbitrary date criteria
           date = Date.create(needle);
           if (date.isValid()) {
             foundScores = foundScores.filter(s => s.date.is(needle));
             
-          // text criterium
+          // text criteria
           } else if (needle.length > 2) {
             foundScores = foundScores.filter(s => s.notes.toLowerCase().indexOf(needle) > -1);
             keywords.push(needle);
