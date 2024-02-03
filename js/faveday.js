@@ -466,7 +466,7 @@
     }
 
      showSearch(id) {
-      var date, elem, k, keyword, len1, needle, needleDate, range, ref1, ref2, regex, results, score;
+      var date, elem, k, range, ref1, ref2, regex;
       
       id = $('#search input')[0].value;
       
@@ -479,7 +479,7 @@
       let ref = id.split(' ');
       
       for (let j = 0, len = ref.length; j < len; j++) {
-        needle = ref[j];
+        let needle = ref[j];
         
         if (needle.length < 1) {
           continue;
@@ -489,7 +489,7 @@
         
         // score criteria
         if (((ref1 = needle[0]) === '>' || ref1 === '<' || ref1 === '=') && needle.length === 2) {
-          score = parseInt(needle[1]);
+          let score = parseInt(needle[1]);
           
           range = needle[0] === '>' ? (function() {
             let results = [];
@@ -504,7 +504,7 @@
           foundScores = foundScores.filter(s => s.summary, indexOf.call(range, ref2) >= 0);
           
         } else if (needle.last() === '.' && parseInt(needle)) {
-          needleDate = parseInt(needle);
+          let needleDate = parseInt(needle);
           foundScores = foundScores.filter(s => s.date.getDate() === needleDate);
           
         } else {
@@ -522,8 +522,8 @@
       }
       
       let hits = this.years.map(y => ({
-        year:y,
-        count:foundScores.filter(s => s.date.getFullYear() === y).length
+        year: y,
+        count: foundScores.filter(s => s.date.getFullYear() === y).length
       }));
       
       this.render('#tmpl-search', '#content', {
@@ -537,24 +537,19 @@
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
       
-      ref2 = $('.notes');
-      results = [];
-      for (k = 0, len1 = ref2.length; k < len1; k++) {
-        elem = ref2[k];
-        results.push((function() {
-          var len2, n;
-          let results1 = [];
-          for (n = 0, len2 = keywords.length; n < len2; n++) {
-            keyword = keywords[n];
-            regex = new RegExp(`(${keyword})`, 'ig');
-            results1.push($(elem).html(elem.textContent.replace(regex, "<em>$1</em>")));
-          }
-          return results1;
-        })());
+      // this feels hacky
+      let notesElem = $('.notes');
+      for (k = 0; k < notesElem.length; k++) {
+        elem = notesElem[k];
+
+        for (let n = 0; n < keywords.length; n++) {
+          let keyword = keywords[n];
+          regex = new RegExp(`(${keyword})`, 'ig');
+          $(elem).html(elem.innerHTML.replace(regex, "<em>$1</em>"));
+        }
       }
 
       this.pushHistory(`/search/${id}`, id);
-      return results;
     }
   }
 
