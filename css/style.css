@@ -1036,7 +1036,7 @@ table.bestEntries th {
   background: #444;
 }
 
-table.bestEntries tr:nth-child(2) td {
+table.bestEntries tr:nth-child(n+2) td {
   padding: 15px;
   font-weight: bold;
   text-align: center;

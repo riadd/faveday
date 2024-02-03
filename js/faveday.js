@@ -221,6 +221,8 @@
         s.date.getDate() === toDate && s.date.getMonth() === toMonth
       );
       
+      this.pushHistory('/', '');
+      
       return this.render('#tmpl-dashboard', '#content', {
         recentScores: this.tmplScores.render({scores: recent}),
         bestScores: this.tmplScores.render({scores: bestScores}),
@@ -252,6 +254,8 @@
       let prevMonthDate = new Date(date).addMonths(-1);
       let nextMonthDate = new Date(date).addMonths(1);
       let nextYearDate = new Date(date).addYears(1);
+      
+      this.pushHistory(`/month/${id}`, title);
       
       return this.render('#tmpl-month', '#content', {
         title: title,
@@ -368,6 +372,8 @@
       for (let i= 0; i < 12; i++) {
         bestMonths.push(this.all.filter(d => d.date.getMonth() === i).average(s => s.summary));
       }
+
+      this.pushHistory('/years', 'Years');
       
       return this.render('#tmpl-years', '#content', {
         scores: allYears.reverse(),
@@ -379,6 +385,12 @@
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
+    }
+
+    pushHistory(url, title) {
+      document.title = `Faveday - ${title}`;
+      if (!window.poppingState) 
+        history.pushState({}, '', url);
     }
     
     showTags() {
@@ -438,6 +450,8 @@
       months.reverse();
       randomScores = oneYear.filter(s => s.summary >=3).sample(5);
       bestScores = oneYear.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
+
+      this.pushHistory(`/year/${id}`, id);
       
       return this.render('#tmpl-year', '#content', {
         year: id,
@@ -538,6 +552,8 @@
           return results1;
         })());
       }
+
+      this.pushHistory(`/search/${id}`, id);
       return results;
     }
   }
@@ -609,9 +625,37 @@
     }
     return window.app.showSearch(id);
   };
-  
+
+  window.addEventListener("popstate", (event) => {
+    if (event.state) {
+      console.log("location: " + document.location + ", state: " + JSON.stringify(event.state));
+      // Simulate the loading of the previous page
+      let path = document.location.pathname.slice(1).split('/');
+      window.poppingState = true;
+      
+      switch (path[0]) {
+        case 'year':
+          window.app.showYear(Number(path[1]));
+          break;
+        case 'years':
+          window.app.showYears();
+          break;
+        case 'search':
+          window.app.showSearch(path[1]);
+          break;
+        case 'month':
+          window.app.showMonth(path[1]);
+          break;
+        default:
+          window.app.showDashboard();
+      }
+
+      window.poppingState = false;
+    }
+  });
+
   // Call onAppStart when the window loads
   function onAppStart() {
     window.app = new FaveDayApp();
-  };
+  }
 
