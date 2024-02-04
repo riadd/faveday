@@ -18,11 +18,19 @@
     }
   
     text() {
-      let re = /#\w+/gi;
+      // p{L} is a unicode letter, \d is a digit
+      let re = /#\p{L}[\p{L}\d]*/gui;
       return this.notes.replace(re, str => {
         let word = str.slice(1);
-        return `<a onclick="onShowSearch('${word}')">${word}</a>`;
+        return `<a onclick="onShowSearch('${word}')">${this.camelCaseToSpace(word)}</a>`;
       });
+    }
+
+    camelCaseToSpace(str) {
+      // Ignore sequences of uppercase letters by ensuring a lowercase letter precedes the uppercase to be spaced
+      return str.replace(/([a-z])([A-Z][a-z])/g, '$1 $2')
+        // Handle the edge case where the string starts with lowercase followed by uppercase (e.g., "jMemorize")
+        .replace(/^(.)([A-Z][a-z])/g, '$1 $2');
     }
   
     styleClass() {
