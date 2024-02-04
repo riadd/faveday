@@ -129,8 +129,6 @@
 
       $('#topArea').show();
       $('#loading').hide();
-      
-      return this.showDashboard();
     }
 
     showError() {
@@ -623,28 +621,8 @@
 
   window.addEventListener("popstate", (event) => {
     if (event.state) {
-      console.log("location: " + document.location + ", state: " + JSON.stringify(event.state));
-      // Simulate the loading of the previous page
-      let path = document.location.pathname.slice(1).split('/');
       window.poppingState = true;
-      
-      switch (path[0]) {
-        case 'year':
-          window.app.showYear(Number(path[1]));
-          break;
-        case 'years':
-          window.app.showYears();
-          break;
-        case 'search':
-          window.app.showSearch(path[1]);
-          break;
-        case 'month':
-          window.app.showMonth(path[1]);
-          break;
-        default:
-          window.app.showDashboard();
-      }
-
+      handleRoute();
       window.poppingState = false;
     }
   });
@@ -652,5 +630,27 @@
   // Call onAppStart when the window loads
   function onAppStart() {
     window.app = new FaveDayApp();
+    handleRoute();
+  }
+  
+  function handleRoute() {
+    let path = document.location.pathname.slice(1).split('/');
+
+    switch (path[0]) {
+      case 'year':
+        window.app.showYear(Number(path[1]));
+        break;
+      case 'years':
+        window.app.showYears();
+        break;
+      case 'search':
+        window.onShowSearch(path[1]); // why two functions for this
+        break;
+      case 'month':
+        window.app.showMonth(path[1]);
+        break;
+      default:
+        window.app.showDashboard();
+    }
   }
 

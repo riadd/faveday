@@ -1,0 +1,1 @@
+http-server-spa / index.html 8080
