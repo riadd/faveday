@@ -464,8 +464,6 @@
     }
 
      showSearch(id) {
-      var date, elem, k, range, ref1, ref2, regex;
-      
       id = $('#search input')[0].value;
       
       if (id.length < 1) {
@@ -486,10 +484,11 @@
         needle = needle.toLowerCase();
         
         // score criteria
+        let ref1, ref2;
         if (((ref1 = needle[0]) === '>' || ref1 === '<' || ref1 === '=') && needle.length === 2) {
           let score = parseInt(needle[1]);
           
-          range = needle[0] === '>' ? (function() {
+          let range = needle[0] === '>' ? (function() {
             let results = [];
             for (let k = score; score <= 5 ? k <= 5 : k >= 5; score <= 5 ? k++ : k--){ results.push(k); }
             return results;
@@ -507,7 +506,7 @@
           
         } else {
           // arbitrary date criteria
-          date = Date.create(needle);
+          let date = Date.create(needle);
           if (date.isValid()) {
             foundScores = foundScores.filter(s => s.date.is(needle));
             
@@ -537,12 +536,12 @@
       
       // this feels hacky
       let notesElem = $('.notes');
-      for (k = 0; k < notesElem.length; k++) {
-        elem = notesElem[k];
+      for (let k = 0; k < notesElem.length; k++) {
+        let elem = notesElem[k];
 
         for (let n = 0; n < keywords.length; n++) {
           let keyword = keywords[n];
-          regex = new RegExp(`(${keyword})`, 'ig');
+          const regex = new RegExp(`(${keyword})`, 'ig');
           $(elem).html(elem.innerHTML.replace(regex, "<em>$1</em>"));
         }
       }
