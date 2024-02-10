@@ -337,9 +337,9 @@
 
     <table class="box">
       <tr>
-        <td>
+        <td class="tags">
           {{#tags}} 
-            <a onclick="onShowSearch('{{tag}}')">{{tag}} ({{count}})</a> 
+            <a style="--weight:{{weight}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
           {{/tags}}
         </td>
       </tr>

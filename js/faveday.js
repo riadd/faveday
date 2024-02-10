@@ -432,35 +432,40 @@
     }
 
     pushHistory(url, title) {
-      document.title = `Faveday - ${title}`;
+      document.title = (title.length > 0) ? `Faveday - ${title}` : 'Faveday';
       if (!window.poppingState) 
         history.pushState({}, '', url);
     }
     
-    showTags() {
-      const re = /#\w+/gi;
+    getTags(scores) {
+      const re = /#\p{L}+/gui;
       
-      let tags = new Set();
-      for (let score of this.all)
+      let tagCounter = {};
+      for (let score of scores)
       {
         let newTags = score.notes.match(re);
         if (newTags != null)
-          newTags.forEach(tag => tags.add(tag.slice(1)));
+          newTags.forEach(word => {
+            let tag = word.slice(1).toLowerCase();
+            tagCounter[tag] = (tagCounter[tag] || 0) + 1;
+          });
       }
-
-      let hits = {};
-      for (let score of this.all) {
-        for (let tag of tags) {
-          if (score.notes.toLowerCase().indexOf(tag) > -1) {
-            if (hits[tag] == null) hits[tag] = 0;
-            hits[tag]++;
-          }
-        }
-      }
+      
+      return tagCounter;
+    }
+    
+    showTags() {
+      let hits = this.getTags(this.all);
+      
+      let maxCount = Math.max(...Object.values(hits));
       
       let results = [];
       for (let [tag,count] of Object.entries(hits))
-        results.push({tag: tag, count: count});
+        results.push({tag: tag, count: count, weight: 1 + Math.log(count)/5 });
+      
+      results = results.sortBy(a => a.tag);
+
+      this.pushHistory(`/tags`, 'Tags');
 
       return this.render('#tmpl-tags', '#content', {
         years: this.years.map(y => ({year: y})),
@@ -700,6 +705,9 @@
         break;
       case 'months':
         window.app.showMonths(path[1]);
+        break;
+      case 'tags':
+        window.app.showTags();
         break;
       default:
         window.app.showDashboard();
