@@ -973,11 +973,11 @@ textarea {
 }
 
 .yearCal td:nth-child(1) {
-  width: 15%;
+  width: 10%;
 }
 
 .yearCal td:nth-child(2) {
-  width: 15%;
+  width: 5%;
 }
 
 .yearCal td:nth-child(n+3) {
@@ -992,6 +992,10 @@ textarea {
 
 .yearCal .val0 {
   background-color: #444;
+}
+
+.monthCal a {
+  filter: grayscale(100%);
 }
 
 /* years cal */

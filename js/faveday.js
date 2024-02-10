@@ -277,6 +277,44 @@
       });
     }
 
+    showMonths(monthId) {
+      let date = Date.create(monthId);
+
+      let monthScores = this.all.filter(s =>
+        s.date.getMonth() === date.getMonth()
+      );
+
+      let byYear = monthScores.groupBy(s => s.date.getFullYear());
+      let allMonths = [];
+
+      const dayNums = Array.from({ length: 31 }, (_, index) => index + 1); // 1..31
+
+      let year = null;
+      for (year in byYear) {
+        let oneMonth = byYear[year];
+
+        allMonths.push({
+          date: `${date.format('{Mon}')} ${year}`,
+          totalAvg: oneMonth.average(s => s.summary).format(2),
+          totalCount: oneMonth.length,
+          totalWords: (oneMonth.map(s => s.notes.split(' ').length).sum() / 1000.0).format(1),
+          days: dayNums.map(d => oneMonth.find(s => s.date.getDate() === d && s.date.getMonth() === date.getMonth())?.summary ?? 0),
+        });
+      }
+
+      let title = date.format('{Month}');
+      this.pushHistory(`/months/${monthId}`, title);
+
+      return this.render('#tmpl-months', '#content', {
+        title: title,
+        average: monthScores.average(s => s.summary).format(2),
+        months: allMonths.reverse(),
+        years: this.years.map(y => ({year: y})),
+      }, {
+        yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
+      });
+    }
+
     updateRandomInspiration() {
       const bestScores = this.all.filter(s => s.summary === 5).sample();
       return $('#bestScores').html(this.tmplScores.render({ scores: bestScores }));
@@ -591,6 +629,10 @@
     return window.app.showMonth(id);
   };
 
+  window.onShowMonths = function(id) {
+    return window.app.showMonths(id);
+  };
+
   window.onShowYear = function(id) {
     return window.app.showYear(id);
   };
@@ -634,7 +676,7 @@
     }
   });
 
-  // Call onAppStart when the window loads
+  // Call onAppStart when the window 
   function onAppStart() {
     window.app = new FaveDayApp();
     handleRoute();
@@ -655,6 +697,9 @@
         break;
       case 'month':
         window.app.showMonth(path[1]);
+        break;
+      case 'months':
+        window.app.showMonths(path[1]);
         break;
       default:
         window.app.showDashboard();

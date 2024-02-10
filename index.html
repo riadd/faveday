@@ -82,6 +82,50 @@
     </table>
   </script>
 
+  <!-- tmpl-months -->
+  <script type="text/mustache" id="tmpl-months">
+    {{> header}}
+
+    <h1>{{title}}</h1>
+    {{> yearsBar}}
+
+    <table class="box yearCal">
+      <tr>
+        <th>Date</th>
+        <th>Average</th>
+        <th>Entries</th>
+        <th>Words</th>
+        <th colSpan=31>Calendar</th>
+      </tr>
+
+      {{#months}}
+        <tr>
+          <td class="value date">
+            <span>{{date}}</span>
+          </td>
+
+          <td class="value">
+            <span class="current summary">{{totalAvg}}</span>
+          </td>
+          
+          <td class="value">
+            <span class="current summary">{{totalCount}}</span>
+          </td>
+          
+          <td class="value">
+            <span class="current summary">{{totalWords}}<small>k</small></span>
+          </td>
+          
+          {{#days}}
+            <td class="val{{.}}">
+              &nbsp;
+            </td>
+          {{/days}}
+        </tr>
+      {{/months}}
+    </table>
+  </script>
+
   <!-- tmpl-search -->
   <script type="text/mustache" id="tmpl-search">
     <h1>{{count}} Results..</h1>
@@ -121,7 +165,7 @@
 
     <table class="box yearCal">
       <tr>
-        <th>Date</th>
+        <th colspan=2>Date</th>
         <th>Average</th>
         <th colSpan=31>Calendar</th>
       </tr>
@@ -130,6 +174,10 @@
         <tr>
           <td class="value date">
             <span><a onclick="onShowMonth('{{dateId}}')">{{date}}</a></span>
+          </td>
+          
+          <td class="monthCal">
+            <a onclick="onShowMonths('{{dateId}}')">📅</a>
           </td>
 
           <td class="value">
