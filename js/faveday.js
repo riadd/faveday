@@ -450,26 +450,24 @@
             tagCounter[tag] = (tagCounter[tag] || 0) + 1;
           });
       }
+
+      let results = [];
+      for (let [tag,count] of Object.entries(tagCounter))
+        results.push({tag: tag, count: count, weight: 1 + Math.log(count)/5 });
+
+      results = results.sortBy(a => a.tag);
       
-      return tagCounter;
+      return results;
     }
     
     showTags() {
-      let hits = this.getTags(this.all);
+      let tags = this.getTags(this.all);
       
-      let maxCount = Math.max(...Object.values(hits));
-      
-      let results = [];
-      for (let [tag,count] of Object.entries(hits))
-        results.push({tag: tag, count: count, weight: 1 + Math.log(count)/5 });
-      
-      results = results.sortBy(a => a.tag);
-
       this.pushHistory(`/tags`, 'Tags');
 
       return this.render('#tmpl-tags', '#content', {
         years: this.years.map(y => ({year: y})),
-        tags: results
+        tags: tags
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -580,7 +578,8 @@
         scores: this.tmplScores.render({scores: foundScores}),
         years: this.years.map(y => ({year: y})),
         hits: hits.filter(hit => hit.count > 0),
-        streak: this.getMaxStreak(foundScores) 
+        streak: this.getMaxStreak(foundScores),
+        tags: this.getTags(foundScores)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });

@@ -128,11 +128,9 @@
 
   <!-- tmpl-search -->
   <script type="text/mustache" id="tmpl-search">
-    <h1>{{count}} Results..</h1>
+    <h1>{{count}} Results <small>Ø {{average}}</small></h1>
     {{> yearsBar}}
 
-    <h2>Average {{average}}</h2>
-    
     <table class="box bestEntries">
       <tr>
         {{#hits}}
@@ -144,6 +142,19 @@
         {{#hits}}
             <td>{{count}}</td>          
         {{/hits}}
+      </tr>
+    </table>
+    
+    <table class="box tags">
+      <tr>
+        <th>Tag</th>
+      </tr>
+      <tr>
+        <td>
+          {{#tags}} 
+            <a style="--weight:{{weight}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+          {{/tags}}
+        </td>
       </tr>
     </table>
 
@@ -335,9 +346,12 @@
     <h1>Tags</h1>
     {{> yearsBar}}
 
-    <table class="box">
+    <table class="box tags">
       <tr>
-        <td class="tags">
+        <th>Tag</th>
+      </tr>
+      <tr>
+        <td>
           {{#tags}} 
             <a style="--weight:{{weight}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
           {{/tags}}

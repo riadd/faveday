@@ -1031,7 +1031,12 @@ textarea {
 
 /* tags */
 
-.tags {
+.tags th {
+  padding: 15px;
+  background: #444;
+}
+
+.tags td {
   list-style: none;
   padding-left: 0;
   display: flex;
