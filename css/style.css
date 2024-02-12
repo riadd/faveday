@@ -994,6 +994,28 @@ textarea {
   background-color: #444;
 }
 
+.yearCal .weekday0 {
+  scale: 0.9;
+}
+.yearCal .weekday1 {
+  scale: 0.7;
+}
+.yearCal .weekday2 {
+  scale: 0.7;
+}
+.yearCal .weekday3 {
+  scale: 0.7;
+}
+.yearCal .weekday4 {
+  scale: 0.7;
+}
+.yearCal .weekday5 {
+  scale: 0.7;
+}
+.yearCal .weekday6 {
+  scale: 0.9;
+}
+
 .monthCal a {
   filter: grayscale(100%);
 }
