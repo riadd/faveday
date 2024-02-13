@@ -61,7 +61,7 @@
       {{{todayScores}}}
     </table>
 
-    <h2>Inspiration <small onclick="onUpdateRandomInspiration()"><i class="fa fa-refresh"></i></small></h2>
+    <h2>Inspiration <small onclick="onUpdateRandomInspiration()">🔃</i></small></h2>
 
     <table id="bestScores" class="box scores">
       {{{bestScores}}}
@@ -76,6 +76,19 @@
     {{> yearsBar}}
     {{> monthBar}}
     {{}}
+    
+    <table class="box tags">
+      <tr>
+        <th>Tags</th>
+      </tr>
+      <tr>
+        <td>
+          {{#tags}} 
+            <a style="--weight:{{weight}}; background-color:{{color}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+          {{/tags}}
+        </td>
+      </tr>
+    </table>
 
     <table class="box scores">
       {{{scores}}}
@@ -147,12 +160,12 @@
     
     <table class="box tags">
       <tr>
-        <th>Tag</th>
+        <th>Tags</th>
       </tr>
       <tr>
         <td>
           {{#tags}} 
-            <a style="--weight:{{weight}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+            <a style="--weight:{{weight}}; background-color:{{color}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
           {{/tags}}
         </td>
       </tr>
@@ -196,7 +209,7 @@
           </td>
           
           {{#days}}
-            <td class="val{{.}}">
+            <td class="val{{val}} weekday{{weekday}}">
               &nbsp;
             </td>
           {{/days}}
@@ -348,12 +361,15 @@
 
     <table class="box tags">
       <tr>
-        <th>Tag</th>
+        <th>Tags</th>
       </tr>
       <tr>
         <td>
           {{#tags}} 
-            <a style="--weight:{{weight}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+            <a style="--weight:{{weight}}; background-color:{{color}}" title={{count}} onclick="onShowSearch('{{tag}}')">
+              {{tag}}
+              <small>{{count}}</small>
+            </a> 
           {{/tags}}
         </td>
       </tr>

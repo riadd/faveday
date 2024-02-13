@@ -267,6 +267,7 @@
         title: title,
         scores: monthScores.isEmpty() ? [] : this.tmplScores.render({scores: monthScores}),
         years: this.years.map(y => ({year: y})),
+        tags: this.getTags(monthScores),
         prevYear: this.hasMonth(prevYearDate),
         prevMonth: this.hasMonth(prevMonthDate),
         nextMonth: this.hasMonth(nextMonthDate),
@@ -438,6 +439,29 @@
     }
     
     getTags(scores) {
+      function stringToPastelColor(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        const pastel = (hash & 0x00FFFFFF)
+          .toString(16)
+          .toUpperCase();
+
+        const hex = "#" + ("000000" + pastel).slice(-6);
+        const r = parseInt(hex.substring(1, 3), 16);
+        const g = parseInt(hex.substring(3, 5), 16);
+        const b = parseInt(hex.substring(5, 7), 16);
+
+        // Convert to pastel by increasing the luminance
+        const pastelR = Math.round((r + 255) / 2);
+        const pastelG = Math.round((g + 255) / 2);
+        const pastelB = Math.round((b + 255) / 2);
+
+        return `#${pastelR.toString(16).padStart(2, '0')}${pastelG.toString(16).padStart(2, '0')}${pastelB.toString(16).padStart(2, '0')}`;
+      }
+
       const re = /#\p{L}+/gui;
       
       let tagCounter = {};
@@ -453,7 +477,12 @@
 
       let results = [];
       for (let [tag,count] of Object.entries(tagCounter))
-        results.push({tag: tag, count: count, weight: 1 + Math.log(count)/5 });
+        results.push({
+          tag: tag, 
+          count: count, 
+          weight: 1 + Math.log(count)/5,
+          color: stringToPastelColor(tag)
+        });
 
       results = results.sortBy(a => a.tag);
       
@@ -474,29 +503,32 @@
     }
 
     showYear(id) {
-      var bestScores, byMonth, randomScores, scores, oneYear;
-      
       id = parseInt(id);
-      oneYear = this.all.filter(s => s.date.getFullYear() === id);
-      byMonth = oneYear.groupBy(s => s.date.getMonth());
+      let oneYear = this.all.filter(s => s.date.getFullYear() === id);
+      let byMonth = oneYear.groupBy(s => s.date.getMonth());
       
       const monthNums = Array.from({ length: 12 }, (_, index) => index); // 0..11
       const dayNums = Array.from({ length: 31 }, (_, index) => index + 1); // 1..31
       
       let months = monthNums.map(month => {
-        scores = byMonth[month] ?? [];
+        let scores = byMonth[month] ?? [];
 
         return {
           date: Date.create(`${id}-${parseInt(month) + 1}`).format('{Mon} {yyyy}'),
           dateId: `${id}-${parseInt(month) + 1}-1`,
           avg: scores.average(s => s.summary).format(2),
-          days: dayNums.map(d => scores.find(s => s.date.getDate() === d)?.summary ?? 0),
+          days: dayNums.map(d => {
+            return {
+              val: scores.find(s => s.date.getDate() === d)?.summary ?? 0,
+              weekday: Date.create(`${id}-${parseInt(month) + 1}-${d}`).getDay()
+            }
+          }),
         }
       });
       
       months.reverse();
-      randomScores = oneYear.filter(s => s.summary >=3).sample(5);
-      bestScores = oneYear.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
+      let randomScores = oneYear.filter(s => s.summary >=3).sample(5);
+      let bestScores = oneYear.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
 
       this.pushHistory(`/year/${id}`, id);
       

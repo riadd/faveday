@@ -350,27 +350,22 @@ th {
 }
 
 .val1, .down {
-  background-color: #FF291D;
+  background-color: #ff3128;
 }
-
 .val0 {
   background-color: #ccc;
 }
-
 .val2, .fail {
   background-color: #FFB399;
 }
-
 .val3 {
   background-color: #FFFAA0;
 }
-
 .val4, .up, .success {
   background-color: #9AD600;
 }
-
 .val5, .val6 {
-  background: #33AA66;
+  background-color: #A3BFFE;
 }
 
 .notes {
@@ -821,21 +816,16 @@ textarea {
   text-align: justify;
   margin-bottom: 40px;
 }
-
 .tags span {
   color: #777;
 }
-
 .tags a {
-  font-family: arial, verdana;
 }
-
 .tags h3 {
   font-size: 1em;
   display: inline;
   padding: 2px;
 }
-
 .tags .help {
 	text-align: center;
 	color: #555;
@@ -1057,7 +1047,6 @@ textarea {
   padding: 15px;
   background: #444;
 }
-
 .tags td {
   list-style: none;
   padding-left: 0;
@@ -1067,16 +1056,23 @@ textarea {
   justify-content: center;
   line-height: 1.5rem;
 }
-
 .tags a {
   font-size: calc(var(--weight) * 1em);
   display: block;
-  padding: 0.125rem 0.25rem;
+  padding: 0px 4px;
+  margin: 4px;
+  border-radius: 4px;
+  background-color: #444;
+  color: #333333;
   text-decoration: none;
   position: relative;
 }
+.tags a:hover {
+  background-color: black !important;
+  color: white;
+}
 
-/* bestDazs */
+/* bestDays */
 
 table.bestEntries {
   margin: 40px 0;
