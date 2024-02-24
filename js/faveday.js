@@ -248,8 +248,8 @@
       return isMonthFound ? date.format("{yyyy}-{MM}") : null;
     }
 
-    showMonth(id) {
-      let date = Date.create(id);
+    showMonth(yearNum, monthNum) {
+      let date = Date.create(`${yearNum}-${monthNum}`);
       let title = date.format('{Month} {yyyy}');
 
       let monthScores = this.all.filter(s =>
@@ -261,7 +261,7 @@
       let nextMonthDate = new Date(date).addMonths(1);
       let nextYearDate = new Date(date).addYears(1);
       
-      this.pushHistory(`/month/${id}`, title);
+      this.pushHistory(`/month/${yearNum}/${monthNum}`, title);
       
       return this.render('#tmpl-month', '#content', {
         title: title,
@@ -296,6 +296,7 @@
 
         allMonths.push({
           date: `${date.format('{Mon}')} ${year}`,
+          link: `onShowMonth(${year}, ${date.getMonth() +1})`,
           totalAvg: oneMonth.average(s => s.summary).format(2),
           totalCount: oneMonth.length,
           totalWords: (oneMonth.map(s => s.notes.split(' ').length).sum() / 1000.0).format(1),
@@ -502,8 +503,8 @@
       });
     }
 
-    showYear(id) {
-      id = parseInt(id);
+    showYear(yearNum) {
+      let id = parseInt(yearNum);
       let oneYear = this.all.filter(s => s.date.getFullYear() === id);
       let byMonth = oneYear.groupBy(s => s.date.getMonth());
       
@@ -517,6 +518,7 @@
           date: Date.create(`${id}-${parseInt(month) + 1}`).format('{Mon} {yyyy}'),
           dateId: `${id}-${parseInt(month) + 1}-1`,
           avg: scores.average(s => s.summary).format(2),
+          link: `/month/${yearNum}/${parseInt(month) + 1}`,
           days: dayNums.map(d => {
             return {
               val: scores.find(s => s.date.getDate() === d)?.summary ?? 0,
@@ -661,8 +663,8 @@
     return window.app.setupDropbox();
   };
 
-  window.onShowMonth = function(id) {
-    return window.app.showMonth(id);
+  window.onShowMonth = function(year, month) {
+    return window.app.showMonth(year, month);
   };
 
   window.onShowMonths = function(id) {
@@ -732,7 +734,7 @@
         window.onShowSearch(path[1]); // why two functions for this
         break;
       case 'month':
-        window.app.showMonth(path[1]);
+        window.app.showMonth(path[1], path[2]);
         break;
       case 'months':
         window.app.showMonths(path[1]);

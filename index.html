@@ -114,7 +114,7 @@
       {{#months}}
         <tr>
           <td class="value date">
-            <span>{{date}}</span>
+            <span><a onclick="{{link}}">{{date}}</a></span>
           </td>
 
           <td class="value">
@@ -197,7 +197,7 @@
       {{#months}}
         <tr>
           <td class="value date">
-            <span><a onclick="onShowMonth('{{dateId}}')">{{date}}</a></span>
+            <span><a href="{{link}}">{{date}}</a></span>
           </td>
           
           <td class="monthCal">
@@ -390,10 +390,10 @@
   <!-- tmpl-month-bar -->
   <script type="text/mustache" id="tmpl-month-bar">
     <div class="monthBar">
-      <a onclick="onShowMonth('{{prevYear}}')">{{prevYear}}</a>
-      <a onclick="onShowMonth('{{prevMonth}}')">{{prevMonth}}</a>
-      <a onclick="onShowMonth('{{nextMonth}}')">{{nextMonth}}</a>
-      <a onclick="onShowMonth('{{nextYear}}')">{{nextYear}}</a>
+      <a onclick="onShowMonth('{{prevYear}}')">⏪️</a>
+      <a onclick="onShowMonth('{{prevMonth}}')">◀️</a>
+      <a onclick="onShowMonth('{{nextMonth}}')">▶️</a>
+      <a onclick="onShowMonth('{{nextYear}}')">⏩</a>
     </div>
   </script>
 
