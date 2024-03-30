@@ -279,10 +279,11 @@
     }
 
     showMonths(monthId) {
-      let date = Date.create(monthId);
+      let monthNum = parseInt(monthId)-1;
+      let date = new Date(2024, monthNum, 1);
 
       let monthScores = this.all.filter(s =>
-        s.date.getMonth() === date.getMonth()
+        s.date.getMonth() === monthNum
       );
 
       let byYear = monthScores.groupBy(s => s.date.getFullYear());
@@ -295,12 +296,17 @@
         let oneMonth = byYear[year];
 
         allMonths.push({
-          date: `${date.format('{Mon}')} ${year}`,
+          date: year,
           link: `onShowMonth(${year}, ${date.getMonth() +1})`,
           totalAvg: oneMonth.average(s => s.summary).format(2),
           totalCount: oneMonth.length,
           totalWords: (oneMonth.map(s => s.notes.split(' ').length).sum() / 1000.0).format(1),
-          days: dayNums.map(d => oneMonth.find(s => s.date.getDate() === d && s.date.getMonth() === date.getMonth())?.summary ?? 0),
+          days: dayNums.map(d => {
+            return {
+              val: oneMonth.find(s => s.date.getDate() === d)?.summary ?? 0,
+              weekday: Date.create(`${year}-${parseInt(monthId) + 1}-${d}`).getDay()
+            }
+          }), 
         });
       }
 
@@ -521,9 +527,9 @@
 
         return {
           date: Date.create(`${id}-${parseInt(month) + 1}`).format('{Mon} {yyyy}'),
-          dateId: `${id}-${parseInt(month) + 1}-1`,
           avg: scores.average(s => s.summary).format(2),
           link: `/month/${yearNum}/${parseInt(month) + 1}`,
+          monthId: parseInt(month) +1,
           days: dayNums.map(d => {
             return {
               val: scores.find(s => s.date.getDate() === d)?.summary ?? 0,

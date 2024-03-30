@@ -964,7 +964,7 @@ textarea {
 }
 
 .yearCal th {
-  padding: 15px;
+  padding: 15px 5px;
   background: #444;
 }
 
@@ -1019,6 +1019,10 @@ textarea {
 }
 .yearCal .weekday6 {
   scale: 0.9;
+}
+
+.yearCal .year {
+  width: 50px;
 }
 
 .monthCal a {

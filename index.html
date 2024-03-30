@@ -130,7 +130,7 @@
           </td>
           
           {{#days}}
-            <td class="val{{.}}">
+            <td class="val{{val}} weekday{{weekday}}">
               &nbsp;
             </td>
           {{/days}}
@@ -200,7 +200,7 @@
   <script type="text/mustache" id="tmpl-year">
     {{> header}}
 
-    <h1>Year {{year}}</h1>
+    <h1>{{year}}</h1>
     {{> yearsBar}}
 
     <table class="box yearCal">
@@ -217,7 +217,7 @@
           </td>
           
           <td class="monthCal">
-            <a onclick="onShowMonths('{{dateId}}')"><img src="/img/calendar.svg"/></a>
+            <a onclick="onShowMonths('{{monthId}}')"><img src="/img/calendar.svg"/></a>
           </td>
 
           <td class="value">
