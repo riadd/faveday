@@ -10,3 +10,6 @@ run with 'http-server'
 * supports markdown for entries
 * main page shows most recent entries and then some related entries (e.g. same day in previous years)
 * every entry is associated with a 1-5 rating
+
+icons
+- https://iconduck.com/icons/117778/calendar-appointment-date

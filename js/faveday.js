@@ -307,11 +307,16 @@
       let title = date.format('{Month}');
       this.pushHistory(`/months/${monthId}`, title);
 
+      let randomScores = monthScores.filter(s => s.summary >=3).sample(5);
+      let bestScores = monthScores.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
+
       return this.render('#tmpl-months', '#content', {
         title: title,
         average: monthScores.average(s => s.summary).format(2),
         months: allMonths.reverse(),
         years: this.years.map(y => ({year: y})),
+        scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: randomScores}),
+        inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: bestScores}),
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
       });

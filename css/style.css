@@ -1003,26 +1003,26 @@ textarea {
   scale: 0.9;
 }
 .yearCal .weekday1 {
-  scale: 0.7;
+  scale: 0.6;
 }
 .yearCal .weekday2 {
-  scale: 0.7;
+  scale: 0.6;
 }
 .yearCal .weekday3 {
-  scale: 0.7;
+  scale: 0.6;
 }
 .yearCal .weekday4 {
-  scale: 0.7;
+  scale: 0.6;
 }
 .yearCal .weekday5 {
-  scale: 0.7;
+  scale: 0.6;
 }
 .yearCal .weekday6 {
   scale: 0.9;
 }
 
 .monthCal a {
-  filter: grayscale(100%);
+  filter: invert(80%);
 }
 
 /* years cal */

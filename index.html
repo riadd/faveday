@@ -137,6 +137,22 @@
         </tr>
       {{/months}}
     </table>
+    
+    {{#scores}}
+      <h2>Random Days</h2>
+
+      <table class="box scores">
+        {{{scores}}}
+      </table>
+    {{/scores}}
+
+    {{#inspiration}}
+      <h2>Inspiration</h2>
+
+      <table class="box scores">
+        {{{inspiration}}}
+      </table>
+    {{/inspiration}}
   </script>
 
   <!-- tmpl-search -->
@@ -201,7 +217,7 @@
           </td>
           
           <td class="monthCal">
-            <a onclick="onShowMonths('{{dateId}}')">📅</a>
+            <a onclick="onShowMonths('{{dateId}}')"><img src="/img/calendar.svg"/></a>
           </td>
 
           <td class="value">
