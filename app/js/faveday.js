@@ -1,3 +1,4 @@
+
   Score = class Score {
     constructor(date, summary, notes) {
       this.date = date;
@@ -57,6 +58,58 @@
       this.all.sort((a, b) => b.date - a.date); // sort in descending order
       
       this.onScoreLoaded();
+    }
+    
+    showSummary(scores) {
+      const OPENAI_API_KEY = 'XXX';
+
+      const requestData = {
+        model: "gpt-3.5-turbo",
+        // messages: [
+        //   {
+        //     role: "system",
+        //     content: "You are a digital diary assistant."
+        //   },
+        //   {
+        //     role: "user",
+        //     content: "Summarize the highlights from the following diary entries into bullet points in html ul format. Use no more than 5 bulletpoints. Use the same language as in the journal entries:"+ scores.map(s => s.notes).join(' ')
+        //   }
+        // ]
+        
+        // messages: [
+        //   {
+        //     role: "system",
+        //     content: "You are a wellbeing mentor modeled to speak and think like Jean-Luc Picard of the TNG Enterprise."
+        //   },
+        //   {
+        //     role: "user",
+        //     content: "Provide actionable commentary and draw upon comparisons with historic events and figures - tapping into Picard's deep appreciation of European history. Write from the perspective of being Picard. Keep it short, no more than 3 sentences. You must use the same language as in the journal entries:"+ scores.map(s => s.notes).join(' ')
+        //   }
+        // ]
+
+        messages: [
+          {
+            role: "system",
+            content: "You are: Jean Luc Picard."
+          },
+          {
+            role: "user",
+            content: "You must provide concrete actionable guidance based on the understand of the following journal entries written by your friend. Draw upon historic references based on the life of the figure. Write no more than 3 sentences. You must use the same language as in the journal entries:"+ scores.map(s => s.notes).join(' ')
+          }
+        ]
+      };
+
+      fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify(requestData)
+      })
+        .then(response => response.json())
+        .then(data => $('#ai').html(data.choices[0].message.content ))
+        .catch(error => console.error('Error:', error));
     }
     
     loadScoresFromFiles() {
@@ -262,6 +315,8 @@
       let nextYearDate = new Date(date).addYears(1);
       
       this.pushHistory(`/month/${yearNum}/${monthNum}`, title);
+
+      this.showSummary(monthScores);
       
       return this.render('#tmpl-month', '#content', {
         title: title,
@@ -271,7 +326,7 @@
         prevYear: this.hasMonth(prevYearDate),
         prevMonth: this.hasMonth(prevMonthDate),
         nextMonth: this.hasMonth(nextMonthDate),
-        nextYear: this.hasMonth(nextYearDate)
+        nextYear: this.hasMonth(nextYearDate),
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
         monthBar: Hogan.compile($('#tmpl-month-bar').html())
