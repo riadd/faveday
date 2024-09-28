@@ -50,6 +50,8 @@ function createWindow () {
     },
     backgroundColor: '#333',
     webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: true,
       preload: path.join(__dirname, 'js/preload.js'),
     },
   });
@@ -58,7 +60,7 @@ function createWindow () {
   mainWindow.loadURL('file://' + __dirname + '/index.html');
 
   mainWindow.setMenu(null);
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {
@@ -88,4 +90,21 @@ app.on('activate', function () {
   if (mainWindow === null) {
     createWindow();
   }
+});
+
+// Handle minimize, maximize, and close events
+ipcMain.on('minimize-window', (event) => {
+  mainWindow.minimize();
+});
+
+ipcMain.on('maximize-window', (event) => {
+  if (mainWindow.isMaximized()) {
+    mainWindow.unmaximize();
+  } else {
+    mainWindow.maximize();
+  }
+});
+
+ipcMain.on('close-window', (event) => {
+  mainWindow.close();
 });
