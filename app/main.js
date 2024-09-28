@@ -41,14 +41,21 @@ function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200, 
-    height: 700,
+    height: 800,
+    frame: false,
+    titleBarOverlay: {
+      color: '#2f3241',
+      symbolColor: '#74b1be',
+      height: 60
+    },
+    backgroundColor: '#333',
     webPreferences: {
       preload: path.join(__dirname, 'js/preload.js'),
     },
   });
   
   // welcome.html
-  mainWindow.loadURL('file://' + __dirname + '/app.html');
+  mainWindow.loadURL('file://' + __dirname + '/index.html');
 
   mainWindow.setMenu(null);
   // mainWindow.webContents.openDevTools();

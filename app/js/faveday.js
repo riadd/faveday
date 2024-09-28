@@ -122,7 +122,7 @@
       for (let file of files) {
         let txtFile = new XMLHttpRequest();
 
-        txtFile.open("GET", `http://localhost:8080/scores/${file}`, false); // TODO: make async
+        txtFile.open("GET", `./scores/${file}`, false); // TODO: make async
         txtFile.send();
         
         if (txtFile.readyState === 4 && txtFile.status === 200) {
