@@ -784,6 +784,18 @@
   function onAppStart() {
     window.app = new FaveDayApp();
     handleRoute();
+
+    document.getElementById('minimize-btn').addEventListener('click', () => {
+      window.api.minimize();
+    });
+
+    document.getElementById('maximize-btn').addEventListener('click', () => {
+      window.api.maximize();
+    });
+
+    document.getElementById('close-btn').addEventListener('click', () => {
+      window.api.close();
+    });
   }
   
   function handleRoute() {

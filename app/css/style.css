@@ -200,10 +200,8 @@ th {
   text-align:left;
 }
 
-#content, #header, #search, #addScoreBtn, .welcome, .footer {
-  margin: 0 auto 20px;
-  padding: 0 15px 10px;
-
+#content, #search, #addScoreBtn, .welcome, .footer {
+  margin: 0 auto;
   max-width:1050px;
   min-width:400px;
 }
@@ -216,69 +214,7 @@ th {
   font-weight: bolder;
 }
 
-/* header */
-
-#header {
-  margin: 0 auto;
-  padding: 0;
-
-  color: white;
-  font-weight: bold;
-  position: relative;
-  top: -2px;
-}
-
-#header a {
-  color: white;
-}
-
 #header .menu, #header .notice, #header .alert {
-  padding: 10px;
-  float: right;
-}
-
-#header .menu {
-  background: #f30000;
-  float: right;
-}
-
-#header .menu h1 {
-  font-size: 1em;
-  letter-spacing: 0;
-  text-shadow: none;
-  color: white;
-  display:inline;
-}
-
-#header .menu small {
-	position: relative;
-	font-style: italic;
-	font-size: 0.8em;
-	top: 3px;
-}
-
-#header div {
-  border-bottom-right-radius: 5px;
-  border-bottom-left-radius: 5px;
-}
-
-#header .actions {
-  margin-right: 20px;
-  padding: 10px;
-  color: white;
-  background: #666;
-  float: right;
-}
-
-#header .actions a {
-  color: white;
-}
-
-.topBar {
-  background-color: black;
-  color: white;
-  text-align: center;
-  margin: 0;
   padding: 10px;
 }
 
@@ -560,8 +496,6 @@ tr .yearRow {
   padding-right: 10px;
 }
 
-
-/* forms */
 
 /* .start */
 
@@ -1115,18 +1049,76 @@ table.bestEntries tr:nth-child(n+2) td {
 	float: left;
 }
 
-/* search */
+/* top area */
 
-#search {
+#topArea {
+  -webkit-app-region: drag;
+  position: sticky;  /* This makes the element sticky */
+  top: 0;  /* Stick to the top of the window */
+  z-index: 1000;  /* Ensure the title bar is above other content */
+
+  height: 60px;
+  background-color: #2f2f2f;
+  padding: 0 10px;
+}
+
+#top-area-content {
+  max-width:1050px;
+  min-width:400px;
+  margin: 0 auto;
+
+  display: flex;  /* Enable Flexbox */
+  justify-content: space-between;  /* Spread items out horizontally */
+  align-items: center;  /* Vertically center the items */
+}
+
+#topArea #search {
   font-size: 2em;
-  padding: 15px;
+  padding-top: 16px;
+  width: 200px;
+  justify-content: flex-start;
+  flex-grow: 1;
 }
 
-.search-query {
-
+#topArea #search input {
+  -webkit-app-region: no-drag;
 }
 
-#topArea, #addScore {
+#menu {
+  background: #f30000;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  margin-right: 20px;
+}
+
+#menu h1 {
+  color: white;
+  font-size: 1em;
+  letter-spacing: 0;
+  text-shadow: none;
+  color: white;
+  padding: 0 10px;
+}
+
+#menu h1 a {
+  color: white;
+}
+
+.window-controls button {
+  -webkit-app-region: no-drag;  /* Ensures buttons are clickable, not draggable */
+  padding: 5px 10px;
+  margin-left: 5px;
+  cursor: pointer;
+
+  background-color: #333;
+  border: 1px solid white;
+  color: white;
+  border-radius: 4px;
+}
+
+/* top area done */
+
+#addScore {
   display: none;
 }
 

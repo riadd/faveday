@@ -424,19 +424,21 @@
   <div id="loading">Loading files...</div>
 
   <div id="topArea">
-    <!-- header -->
-    <div id="header">
-      <div class="menu">
+    <div id="top-area-content">
+      <form id="search" class="form-search">
+        <input type="text" class="search-query" placeholder="Search.." />
+      </form>
+  
+      <div id="menu">
         <h1><a onclick="onShowDashboard()">FaveDay</a></h1>
       </div>
+  
+      <div class="window-controls">
+        <button id="minimize-btn">−</button>
+        <button id="maximize-btn">☐</button>
+        <button id="close-btn">✕</button>
+      </div>
     </div>
-    <!-- /header -->
-
-    <!-- search form -->
-    <form id="search" class="form-search">
-      <input type="text" class="search-query" placeholder="Search.." />
-    </form>
-    <!-- /search form -->
 
     <!--
     <div id="addScoreBtn">
@@ -445,8 +447,6 @@
       </div>
     </div>
     -->
-
-    <div class="clear">&nbsp;</div>
 
     <!-- new score form -->
     <div id="addScore">
