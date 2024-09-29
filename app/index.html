@@ -430,7 +430,7 @@
       </form>
   
       <div id="menu">
-        <h1><a onclick="onShowDashboard()">FaveDay</a></h1>
+        <h1><a onclick="onShowDashboard()">FaveDay</a> <a onclick="onAddScore()">+</a> </h1>
       </div>
   
       <div class="window-controls">
@@ -447,39 +447,20 @@
       </div>
     </div>
     -->
-
-    <!-- new score form -->
-    <div id="addScore">
-      <div class="content">
-        <h2>Add Score</h2>
-        <form>
-          <div class="pull-left">
-            <label>Score</label>
-            <div class="controls btn-group">
-              <button class="btn val1">1</button>
-              <button class="btn val2">2</button>
-              <button class="btn val3">3</button>
-              <button class="btn val4">4</button>
-              <button class="btn val5">5</button>
-            </div>
-          </div>
-
-          <div class="pull-right">
-            <label>Date</label>
-            <input type="text" class="span2" data-date-format="dd-mm-yyyy" id="datePicker">
-          </div>
-
-          <textarea cols="74" rows="12" placeholder="Notes"></textarea>
-
-          <div class="">
-            <button class="btn btn-success">Add Score</button>
-            <div onclick="onToggleScoreDialogue();" class="btn btn-inverse">Cancel</div>
-          </div>
-        </form>
-      </div>
-    </div>
-    <!-- /new score form -->
   </div>
+
+  <!-- new score form -->
+  <div id="addScore">
+    <progress id="addScoreProgress" value="0" max="100"></progress>
+    <form>
+      <textarea id="addScoreText" placeholder="Notes"></textarea>
+    </form>
+    <div class="addScoreProperties">
+      <div>28-09-2024</div>
+      <div>3</div>
+    </div>
+  </div>
+  <!-- /new score form -->
 
   <div id="content">
   </div>

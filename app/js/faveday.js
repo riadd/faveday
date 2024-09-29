@@ -698,6 +698,16 @@
 
       this.pushHistory(`/search/${id}`, id);
     }
+    
+    showAddScore() {
+      if ($('#addScore').is(':visible')) {
+        $('#addScore').hide();
+        $('#content').show();
+      } else {
+        $('#addScore').show();
+        $('#content').hide();
+      }
+    }
   }
 
   //@showPlot()
@@ -764,6 +774,10 @@
   window.onCancelScoreDialogue = function() {
     return window.app.cancelScoreDialogue();
   };
+  
+  window.onAddScore = function() {
+    return window.app.showAddScore();
+  }
 
   window.onShowSearch = function(id) {
     if (id != null) {
@@ -796,6 +810,19 @@
     document.getElementById('close-btn').addEventListener('click', () => {
       window.api.close();
     });
+
+    document.getElementById('addScoreText').addEventListener('input', function() {
+      const maxWords = 100; // Set the maximum word count for full progress
+      const text = this.value.trim();
+      const wordCount = text === '' ? 0 : text.split(/\s+/).length; // Split the text by spaces
+
+      // Calculate progress percentage
+      const progressValue = Math.min((wordCount / maxWords) * 100, 100); // Limit to 100%
+
+      // Update the progress bar
+      document.getElementById('addScoreProgress').value = progressValue;
+    });
+
   }
   
   function handleRoute() {

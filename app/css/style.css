@@ -215,7 +215,9 @@ h3 {
   border: 1px solid #222;
   box-shadow: #222 0px 5px 10px;
   background: #555;
+  
   padding: 15px;
+  margin-bottom: 40px;
   max-width: 1050px;
 }
 
@@ -550,109 +552,81 @@ tr .yearRow {
 /* add score */
 
 #addScore {
+  display: none;
+  
   z-index: 5;
-  width: 100%;
-  padding: 10px;
-
-  background: -webkit-linear-gradient(63deg, #151515 5px, transparent 5px) 0 5px, -webkit-linear-gradient(-117deg, #151515 5px, transparent 5px) 10px 0px, -webkit-linear-gradient(63deg, #222 5px, transparent 5px) 0px 10px, -webkit-linear-gradient(-117deg, #222 5px, transparent 5px) 10px 5px, -webkit-linear-gradient(0deg, #1b1b1b 10px, transparent 10px), -webkit-linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424);
-  background-color: #131313;
-  background-size: 20px 20px;
+  position: absolute;
+  top: 60px;
+  left: 0;
+  
+  width: 100vw;
+  height: 100vw;
+  
+  background-color: #333;
+  
+  margin: 0;
+  resize: none;
+  border: none;
+  outline: none;
 }
 
-#addScore .content {
-  margin: 30px auto;
-
-  max-width: 800px;
+#addScore form {
+  width: 100vw;
+  height: 100vw;
+  background-color: #333;
+  
+  display: flex;
+  align-items: center; /* Center vertically */
+  outline: none; /* Optional: remove focus outline */
 }
 
-#addScore .content h2 {
-  color: white;
-  text-transform: uppercase;
-  font-size: 2.5em;
-  text-shadow: none;
-}
+#addScore textarea {
+  width: 70%;
+  max-width: 1000px;
+  height: 100vw;
 
-#addScore .content form, #addScore .content .errors {
-  padding: 10px 20px 20px 20px;
+  background-color: #333;
+  color: #ddd;
   font-size: 1.5em;
+  
+  resize: none; /* Prevent resizing */
+  box-sizing: border-box;
+
+  margin: 20px auto;
+  padding: 60px;
+
+  outline: none; /* Optional: remove focus outline */
+  border: 0;
+  box-shadow: none;
 }
 
-#addScore .content form {
-  border: 5px solid #ccc;
-  background: white;
-}
-
-#addScore .content .errors {
-  border: 10px solid #cc0000;
-  background: red;
-  color: white;
-  margin-top: 10px;
-}
-
-#addScore form select {
-  font-size: 0.80em;
-}
-
-#addScore form .scores h3 {
-  font-size: 1em;
-  font-weight: normal;
-  float: left;
-  margin: 0 10px 10px 10px;
-  padding-top: 10px;
-}
-
-#addScore form .scores div {
-  display: inline;
-  padding: 10px 0;
-
-  /*width: 50px;
-  margin: 0 10px 10px 10px;
-  float: left;*/
-}
-
-#addScore form .scores input {
-  font-size: 1.2em;
-  text-align: center;
-  margin-right: 20px;
-  border: 1px solid #ccc;
-}
-
-#addScore form .submit input {
-  margin-top: 50px;
-  border: 2px solid #ccc;
-  padding: 5px;
-  width: 200px;
-}
-
-#addScore form .submit {
-  text-transform: uppercase;
-  font-size: 0.7em;
-}
-
-#addScore form .submit a {
-  margin-left: 30px;
-}
-
-#addScore form input.del {
-	background-image:url('/images/bin_closed.png');
-	background-repeat: no-repeat;
-	background-position:center;
-	width: 50px;
-}
-
-#addScore form #score_notes {
+#addScore progress {
   width: 100%;
+  height: 6px;
+  border-radius: 10px;
+  background-color: #555;
 }
 
-#addScore .tags {
-  font-size: 0.8em;
-  width: 100%;
+#addScore progress::-webkit-progress-value {
+  background-color: orange;
 }
 
-#addScore .help {
-	color: #DDD;
-	font-size: 1.4em;
-	margin-bottom: 25px;
+#addScore .addScoreProperties {
+  position: fixed;
+  bottom: 20px;
+  display: flex;
+  padding: 20px;
+}
+
+#addScore .addScoreProperties div {
+  padding: 10px;
+  margin: 4px;
+  
+  background-color: #0b3440;
+  color: #2c90fc;
+  
+  border-radius: 4px;
+  border: 1px solid #2c90fc;
 }
 
 /* edit score */
@@ -670,10 +644,6 @@ tr .yearRow {
 
 #editScore a {
   color: white;
-}
-
-textarea {
-  width: 100%;
 }
 
 /* years bar */
@@ -1150,10 +1120,6 @@ table.bestEntries tr:nth-child(n+2) td {
 }
 
 /* top area done */
-
-#addScore {
-  display: none;
-}
 
 #loading {
   font-size: 3em;
