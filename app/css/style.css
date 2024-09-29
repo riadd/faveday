@@ -6,6 +6,38 @@ body {
   background: #333;
 }
 
+/* -------- scrollbars -------- */
+
+/* Style the scrollbar track */
+::-webkit-scrollbar {
+  width: 12px;  /* Width of the scrollbar */
+}
+
+/* Style the scrollbar track */
+::-webkit-scrollbar-track {
+  background-color: #2f3241;  /* Dark background color for the track */
+  border-radius: 10px;
+}
+
+/* Style the scrollbar handle (thumb) */
+::-webkit-scrollbar-thumb {
+  background-color: #444;  /* Dark gray handle */
+  border-radius: 10px;
+  border: 2px solid #2f3241;  /* Match the track background for spacing */
+}
+
+/* Style the hover state of the scrollbar handle */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;  /* Lighter gray on hover */
+}
+
+/* Optional: Style the scrollbar corner when both vertical and horizontal scrollbars are present */
+::-webkit-scrollbar-corner {
+  background-color: #2f3241;  /* Same color as the track */
+}
+
+/* ----- other general styles ----- */
+
 a {
   text-decoration:none;
   color: #60caff;
@@ -1085,6 +1117,7 @@ table.bestEntries tr:nth-child(n+2) td {
 }
 
 #menu {
+  -webkit-app-region: no-drag;  /* Ensures buttons are clickable, not draggable */
   background: #f30000;
   border-bottom-right-radius: 5px;
   border-bottom-left-radius: 5px;
