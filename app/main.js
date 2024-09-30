@@ -37,11 +37,30 @@ ipcMain.handle('getRawScores', async (event, options) => {
   return rawScores;
 });
 
+ipcMain.on('select-folder', async (event) => {
+  const folder = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+  });
+
+  console.log('Selected folder:', folder);
+
+  if (folder.canceled) {
+    return null;
+  } else {
+    return folder.filePaths[0];
+  }
+});
+
 function createWindow () {
+  const config = loadConfig();
+  
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 1200, 
-    height: 800,
+    x: config.windowState.x,
+    y: config.windowState.y,
+    width: config.windowState.width,
+    height: config.windowState.height,
+    
     frame: false,
     titleBarOverlay: {
       color: '#2f3241',
@@ -60,7 +79,7 @@ function createWindow () {
   mainWindow.loadURL('file://' + __dirname + '/index.html');
 
   mainWindow.setMenu(null);
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {
@@ -106,5 +125,44 @@ ipcMain.on('maximize-window', (event) => {
 });
 
 ipcMain.on('close-window', (event) => {
+  saveConfig();
   mainWindow.close();
 });
+
+
+const configFilePath = path.join(app.getPath('userData'), 'faveday-config.json');
+
+function saveConfig() {
+  const windowBounds = mainWindow.getBounds();  // Get current window position and size
+  
+  const config = {
+    windowState: {
+      x: windowBounds.x,
+      y: windowBounds.y,
+      width: windowBounds.width,
+      height: windowBounds.height,
+    }
+  } 
+  fs.writeFileSync(configFilePath, JSON.stringify(config), 'utf-8');
+}
+
+function loadConfig() {
+  try {
+    if (fs.existsSync(configFilePath)) {
+      const data = fs.readFileSync(configFilePath, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error reading window config file:', error);
+  }
+  
+  // Return default window size if no config is found
+  return {
+    windowState: {
+      width: 800,
+      height: 600,
+      x: undefined,
+      y: undefined,
+    }
+  };
+}

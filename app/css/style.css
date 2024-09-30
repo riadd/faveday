@@ -1179,6 +1179,16 @@ table.bestEntries tr:nth-child(n+2) td {
   color: #aaa;
 }
 
+/* footer */
+
+#footer {
+  margin: 20px;
+  color: dimgray;
+}
+
+#footer a {
+  color: dimgray;
+}
 
 /* ai */
 

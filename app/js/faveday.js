@@ -287,7 +287,8 @@
         bestScores: this.tmplScores.render({scores: bestScores}),
         todayScores: this.tmplScores.render({scores: todayScores}),
         years: this.years.map(y => ({year: y})),
-        streak: this.getMaxStreak(this.all, true)
+        streak: this.getMaxStreak(this.all, true),
+        footer: `Total Scores: ${this.all.length}`
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -778,6 +779,10 @@
   window.onAddScore = function() {
     return window.app.showAddScore();
   }
+  
+  window.onSelectFolder = function () {
+    return showSelectFolder();
+  }
 
   window.onShowSearch = function(id) {
     if (id != null) {
@@ -822,7 +827,6 @@
       // Update the progress bar
       document.getElementById('addScoreProgress').value = progressValue;
     });
-
   }
   
   function handleRoute() {
@@ -850,5 +854,9 @@
       default:
         window.app.showDashboard();
     }
+  }
+
+  function showSelectFolder() {
+    return window.api.selectFolder();
   }
 
