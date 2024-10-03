@@ -10,22 +10,50 @@ let mainWindow;
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
 
-ipcMain.handle('getRawScores', async (event, options) => {
+ipcMain.handle('load-scores', async () => {
+  if (config.filesPath != null)
+  {
+    return await loadScoresFromFolder(config.filesPath);
+    //  TODO verify that it worked
+  }
+  else
+  {
+    config.filesPath = await selectFolder();
+    return await loadScoresFromFolder(config.filesPath);
+  }
+});
+
+// TODO implement this
+ipcMain.on('select-folder', async (event) => {
+  await selectFolder();
+});
+
+async function selectFolder() {
   const folder = await dialog.showOpenDialog({
     properties: ['openDirectory'],
   });
 
   if (folder.canceled) {
-    return [];
+    return null;
   }
-
-  const directoryPath = folder.filePaths[0];
-  const files = fs.readdirSync(directoryPath);
-  const re = /([\d-]+),(\d),(.*)/g;
   
+  return folder.filePaths[0];
+}
+
+async function loadScoresFromFolder(dirPath)
+{
+  console.log(`try loading scores from dir ${dirPath}`);
+
+  const files = fs.readdirSync(dirPath);
+  const re = /([\d-]+),(\d),(.*)/g;
+
   let rawScores = [];
   for (const file of files) {
-    const txt = fs.readFileSync(`${directoryPath}/${file}`, 'utf-8');
+    if (!file.endsWith(".txt")) continue;
+    
+    console.log(`read score file ${file}`);
+
+    const txt = fs.readFileSync(`${dirPath}/${file}`, 'utf-8');
 
     let matches;
     while ((matches = re.exec(txt)) !== null) {
@@ -33,34 +61,25 @@ ipcMain.handle('getRawScores', async (event, options) => {
       rawScores.push(line);
     }
   }
+  
+  console.log(`parsed ${rawScores.length} entries`)
 
   return rawScores;
-});
+}
 
-ipcMain.on('select-folder', async (event) => {
-  const folder = await dialog.showOpenDialog({
-    properties: ['openDirectory'],
-  });
+const configFilePath = path.join(app.getPath('userData'), 'faveday-config.json');
+let config = {}
 
-  console.log('Selected folder:', folder);
+function createWindow() {
+  loadConfig();
 
-  if (folder.canceled) {
-    return null;
-  } else {
-    return folder.filePaths[0];
-  }
-});
-
-function createWindow () {
-  const config = loadConfig();
-  
-  // Create the browser window.
+  console.log(`create main window`)
   mainWindow = new BrowserWindow({
     x: config.windowState.x,
     y: config.windowState.y,
     width: config.windowState.width,
     height: config.windowState.height,
-    
+
     frame: false,
     titleBarOverlay: {
       color: '#2f3241',
@@ -74,15 +93,15 @@ function createWindow () {
       preload: path.join(__dirname, 'js/preload.js'),
     },
   });
-  
+
   // welcome.html
   mainWindow.loadURL('file://' + __dirname + '/index.html');
 
   mainWindow.setMenu(null);
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
-  mainWindow.on('closed', function() {
+  mainWindow.on('closed', function () {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
@@ -129,20 +148,18 @@ ipcMain.on('close-window', (event) => {
   mainWindow.close();
 });
 
-
-const configFilePath = path.join(app.getPath('userData'), 'faveday-config.json');
-
 function saveConfig() {
   const windowBounds = mainWindow.getBounds();  // Get current window position and size
   
-  const config = {
-    windowState: {
-      x: windowBounds.x,
-      y: windowBounds.y,
-      width: windowBounds.width,
-      height: windowBounds.height,
-    }
-  } 
+  config.windowState = {
+    x: windowBounds.x,
+    y: windowBounds.y,
+    width: windowBounds.width,
+    height: windowBounds.height,
+  };
+
+  console.log(`saving config: ${JSON.stringify(config, null, 2)}`)
+  
   fs.writeFileSync(configFilePath, JSON.stringify(config), 'utf-8');
 }
 
@@ -150,19 +167,21 @@ function loadConfig() {
   try {
     if (fs.existsSync(configFilePath)) {
       const data = fs.readFileSync(configFilePath, 'utf-8');
-      return JSON.parse(data);
+      config = JSON.parse(data);
+      
+      console.log(`loaded config: ${JSON.stringify(config, null, 2)}`)
+      return;
     }
   } catch (error) {
     console.error('Error reading window config file:', error);
   }
   
   // Return default window size if no config is found
-  return {
+  config = {
+    filesPath: null,
     windowState: {
       width: 800,
       height: 600,
-      x: undefined,
-      y: undefined,
     }
   };
 }

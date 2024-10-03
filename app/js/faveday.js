@@ -54,10 +54,7 @@
         return this.searchTime = window.setTimeout(this.showSearch, 500);
       });
 
-      this.all = this.loadScoresFromFiles();
-      this.all.sort((a, b) => b.date - a.date); // sort in descending order
-      
-      this.onScoreLoaded();
+      this.loadScores();
     }
     
     showSummary(scores) {
@@ -112,44 +109,16 @@
         .catch(error => console.error('Error:', error));
     }
     
-    loadScoresFromFiles() {
-      let files = [];
-      for(let i = 2008; i <= 2024; i++) {
-        files.push(`scores-${i}.txt`);
-      }
-      
-      let lines= [];
-      for (let file of files) {
-        let txtFile = new XMLHttpRequest();
+    async loadScores() {
+      // load scores only returns raw lines since we have to pass primitive data over the bridge
+      let data = await window.api.loadScores();
 
-        txtFile.open("GET", `./scores/${file}`, false); // TODO: make async
-        txtFile.send();
+      this.all = []
+      for (let line of data)
+        this.all.push(new Score(line[0], line[1], line[2]))
         
-        if (txtFile.readyState === 4 && txtFile.status === 200) {
-          let newLines = txtFile.responseText.split('\n')
-          lines = lines.concat(newLines);
-        }
-      }
-      
-      let scores = []
-      for (let line of lines) {
-        let parts = line.split(',');
-        
-        let date = new Date(parts[0]);
-        
-        if (!isNaN(date.getTime())) {
-          let score = Number(parts[1]);
-          
-          if (isNaN(score))
-            score = 0;
-          
-          let desc = parts.slice(2).join(',');
-
-          scores.push(new Score(date, score, desc));
-        }
-      }
-      
-      return scores;
+      this.all.sort((a, b) => b.date - a.date); // sort in descending order
+      this.onScoreLoaded();
     }
 
     setupDemoUser() {
@@ -179,7 +148,7 @@
       //
       //   return yearRange;
       // }).apply(this);
-
+      
       let minYear = this.all.last().date.getFullYear();
       let maxYear = this.all.first().date.getFullYear();
       
@@ -190,6 +159,8 @@
 
       $('#topArea').show();
       $('#loading').hide();
+      
+      handleRoute();
     }
 
     showError() {
@@ -802,7 +773,6 @@
   // Call onAppStart when the window 
   function onAppStart() {
     window.app = new FaveDayApp();
-    handleRoute();
 
     document.getElementById('minimize-btn').addEventListener('click', () => {
       window.api.minimize();

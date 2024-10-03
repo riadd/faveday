@@ -13,3 +13,4 @@ run with 'http-server'
 
 icons
 - https://iconduck.com/icons/117778/calendar-appointment-date
+- https://www.flaticon.com/free-icons/diary
