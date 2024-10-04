@@ -5,7 +5,7 @@
       this.summary = summary;
       this.notes = notes;
     }
-  
+
     dateId() {
       return this.date.format("{yyyy}-{MM}-{dd}");
     }
@@ -114,10 +114,24 @@
       let data = await window.api.loadScores();
 
       this.all = []
-      for (let line of data)
-        this.all.push(new Score(line[0], line[1], line[2]))
+      for (let rawScore of data)
+        this.all.push(new Score(rawScore.date, rawScore.summary, rawScore.notes))
         
       this.onScoreAdded();
+    }
+
+    async saveScores() {
+      let rawScores = [];
+      
+      for (const score of this.all) {
+        rawScores.push({
+          date: score.date,
+          summary: score.summary,
+          notes: score.notes
+        });
+      }
+
+      await window.api.saveScores(rawScores);
     }
 
     setupDemoUser() {
@@ -683,6 +697,7 @@
 
       this.selectScoreVal(3);
       
+      $('#addScore textarea').val('');
       $('#addScore .date').text(new Date().format("{yyyy}-{MM}-{dd}"));
     }
     
@@ -706,16 +721,19 @@
     submitScore() {
       let notes = $('#addScore textarea').val();
 
-      console.log(`add score with ${this.currentVal} and text ${notes}`)
-
-      this.all.push(new Score(
+      console.log(`added score (${this.currentVal}): ${notes}`)
+      
+      const newScore = new Score(
         new Date(),
         this.currentVal,
-        notes  
-      ));
+        notes
+      )
+      
+      this.all.push(newScore)
       
       this.hideAddScore();
       this.onScoreAdded();
+      this.saveScores()
     }
   }
 

@@ -13,14 +13,18 @@ const fs = require('fs');
 ipcMain.handle('load-scores', async () => {
   if (config.filesPath != null)
   {
-    return await loadScoresFromFolder(config.filesPath);
+    return await loadScores(config.filesPath);
     //  TODO verify that it worked
   }
   else
   {
     config.filesPath = await selectFolder();
-    return await loadScoresFromFolder(config.filesPath);
+    return await loadScores(config.filesPath);
   }
+});
+
+ipcMain.handle('save-scores', async (event, scores) => {
+  saveScores(config.filesPath, scores)
 });
 
 // TODO implement this
@@ -40,7 +44,7 @@ async function selectFolder() {
   return folder.filePaths[0];
 }
 
-async function loadScoresFromFolder(dirPath)
+async function loadScores(dirPath)
 {
   console.log(`try loading scores from dir ${dirPath}`);
 
@@ -57,14 +61,53 @@ async function loadScoresFromFolder(dirPath)
 
     let matches;
     while ((matches = re.exec(txt)) !== null) {
-      let line = [new Date(matches[1]), parseInt(matches[2]), matches[3]]
-      rawScores.push(line);
+      let score = {
+        date: new Date(matches[1]),
+        summary: parseInt(matches[2]),
+        notes: matches[3]
+      }
+      
+      rawScores.push(score);
     }
   }
   
   console.log(`parsed ${rawScores.length} entries`)
 
   return rawScores;
+}
+
+async function saveScores(dirPath, scores) {
+  console.log(`try saving scores to dir ${dirPath}`);
+  
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+
+  let scoresByYear = {};
+  for (const score of scores) {
+    const year = score.date.getFullYear();
+    if (!scoresByYear[year]) {
+      scoresByYear[year] = [];
+    }
+    scoresByYear[year].push(score);
+  }
+  
+  for (const [year, yearScores] of Object.entries(scoresByYear)) {
+    const fileName = `${year}.txt`;
+    const filePath = `${dirPath}/${fileName}`;
+    let scoreData = '';
+
+    for (const score of yearScores) {
+      const date = `${score.date.getFullYear()}-${score.date.getMonth() + 1}-${score.date.getDate()}`;
+      scoreData += `${date},${score.summary},${score.notes}\n`;
+    }
+
+    console.log(`write scores to file ${filePath}`);
+
+    fs.writeFileSync(filePath, scoreData, 'utf-8');
+  }
+
+  console.log(`saved ${scores.length} entries`);
 }
 
 const configFilePath = path.join(app.getPath('userData'), 'faveday-config.json');
