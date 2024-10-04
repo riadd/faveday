@@ -930,7 +930,6 @@ tr .yearRow {
 /* calendar */
 
 .yearCal {
-    border: 1px solid #aaa;
     padding-bottom: 20px;
 }
 
@@ -997,7 +996,7 @@ tr .yearRow {
 }
 
 .monthCal a {
-  filter: invert(80%);
+  color: #cecece;
 }
 
 /* years cal */

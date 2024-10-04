@@ -93,7 +93,7 @@ async function saveScores(dirPath, scores) {
   }
   
   for (const [year, yearScores] of Object.entries(scoresByYear)) {
-    const fileName = `${year}.txt`;
+    const fileName = `scores-${year}.txt`;
     const filePath = `${dirPath}/${fileName}`;
     let scoreData = '';
 
@@ -141,7 +141,7 @@ function createWindow() {
   mainWindow.loadURL('file://' + __dirname + '/index.html');
 
   mainWindow.setMenu(null);
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {

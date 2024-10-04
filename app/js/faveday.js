@@ -9,9 +9,13 @@
     dateId() {
       return this.date.format("{yyyy}-{MM}-{dd}");
     }
-  
+    
     dateStr() {
       return this.date.format("{d} {Mon} {yyyy}");
+    }
+
+    monthId() {
+      return this.date.format("{yyyy}-{MM}");
     }
   
     weekday() {
@@ -303,7 +307,7 @@
       
       this.pushHistory(`/month/${yearNum}/${monthNum}`, title);
 
-      this.showSummary(monthScores);
+      //this.showSummary(monthScores);
       
       return this.render('#tmpl-month', '#content', {
         title: title,
@@ -324,10 +328,12 @@
       let monthNum = parseInt(monthId)-1;
       let date = new Date(2024, monthNum, 1);
 
+      // all scores of this month
       let monthScores = this.all.filter(s =>
         s.date.getMonth() === monthNum
       );
 
+      // scores of this month by year
       let byYear = monthScores.groupBy(s => s.date.getFullYear());
       let allMonths = [];
 
@@ -335,11 +341,13 @@
 
       let year = null;
       for (year in byYear) {
+        // we don't just iterate over byYear because we also care about empty month entries
         let oneMonth = byYear[year];
+        let monthDate = new Date(year, monthNum, 1);
 
         allMonths.push({
           date: year,
-          link: `onShowMonth(${year}, ${date.getMonth() +1})`,
+          monthId:  monthDate.format('{yyyy}-{MM}'),
           totalAvg: oneMonth.average(s => s.summary).format(2),
           totalCount: oneMonth.length,
           totalWords: (oneMonth.map(s => s.notes.split(' ').length).sum() / 1000.0).format(1),
@@ -566,12 +574,14 @@
       
       let months = monthNums.map(month => {
         let scores = byMonth[month] ?? [];
-
+        let date = Date.create(`${id}-${parseInt(month) + 1}`);
+        
         return {
-          date: Date.create(`${id}-${parseInt(month) + 1}`).format('{Mon} {yyyy}'),
+          date: date.format('{Mon} {yyyy}'),
           avg: scores.average(s => s.summary).format(2),
           link: `/month/${yearNum}/${parseInt(month) + 1}`,
-          monthId: parseInt(month) +1,
+          monthId: date.format('{yyyy}-{MM}'),
+          monthsId: date.format('{MM}'),
           days: dayNums.map(d => {
             return {
               val: scores.find(s => s.date.getDate() === d)?.summary ?? 0,
@@ -766,8 +776,9 @@
     return window.app.setupDropbox();
   };
 
-  window.onShowMonth = function(year, month) {
-    return window.app.showMonth(year, month);
+  window.onShowMonth = function(monthId) {
+    let [year, month] = monthId.split('-');
+    return window.app.showMonth(parseInt(year), parseInt(month));
   };
 
   window.onShowMonths = function(id) {
