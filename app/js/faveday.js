@@ -117,8 +117,7 @@
       for (let line of data)
         this.all.push(new Score(line[0], line[1], line[2]))
         
-      this.all.sort((a, b) => b.date - a.date); // sort in descending order
-      this.onScoreLoaded();
+      this.onScoreAdded();
     }
 
     setupDemoUser() {
@@ -132,10 +131,10 @@
         }
         return results;
       })();
-      return this.onScoreLoaded();
+      return this.onScoreAdded();
     }
 
-    onScoreLoaded() {
+    onScoreAdded() {
       // todo: rename to allYears or something
       // this.years = (() => {
       //   const startYear = this.all.first().date.getFullYear();
@@ -148,6 +147,8 @@
       //
       //   return yearRange;
       // }).apply(this);
+
+      this.all.sort((a, b) => b.date - a.date); // sort in descending order
       
       let minYear = this.all.last().date.getFullYear();
       let maxYear = this.all.first().date.getFullYear();
@@ -673,12 +674,48 @@
     
     showAddScore() {
       if ($('#addScore').is(':visible')) {
-        $('#addScore').hide();
-        $('#content').show();
-      } else {
-        $('#addScore').show();
-        $('#content').hide();
+        this.hideAddScore();
+        return;
       }
+      
+      $('#addScore').show();
+      $('#content').hide();
+
+      this.selectScoreVal(3);
+      
+      $('#addScore .date').text(new Date().format("{yyyy}-{MM}-{dd}"));
+    }
+    
+    hideAddScore() {
+      $('#addScore').hide();
+      $('#content').show();
+    }
+    
+    selectScoreVal(val) {
+      this.currentVal = val;
+
+      const buttons = document.querySelectorAll('.valButton');
+      buttons.forEach(button => {
+        button.classList.remove('val1', 'val2', 'val3', 'val4', 'val5');
+      });
+
+      const selectedButton = buttons[val - 1];
+      selectedButton.classList.add(`val${val}`);
+    }
+
+    submitScore() {
+      let notes = $('#addScore textarea').val();
+
+      console.log(`add score with ${this.currentVal} and text ${notes}`)
+
+      this.all.push(new Score(
+        new Date(),
+        this.currentVal,
+        notes  
+      ));
+      
+      this.hideAddScore();
+      this.onScoreAdded();
     }
   }
 
@@ -747,14 +784,22 @@
     return window.app.cancelScoreDialogue();
   };
   
-  window.onAddScore = function() {
+  window.onShowAddScore = function() {
     return window.app.showAddScore();
   }
   
+  window.onSubmitScore = function() {
+    return window.app.submitScore();
+  }
+  
   window.onSelectFolder = function () {
-    return showSelectFolder();
+    window.api.selectFolder();
   }
 
+  window.onSelectScoreVal = function (val) {
+    return window.app.selectScoreVal(val)
+  }
+  
   window.onShowSearch = function(id) {
     if (id != null) {
       $('#search input')[0].value = id;
@@ -824,9 +869,5 @@
       default:
         window.app.showDashboard();
     }
-  }
-
-  function showSelectFolder() {
-    return window.api.selectFolder();
   }
 

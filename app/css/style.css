@@ -36,7 +36,38 @@ body {
   background-color: #2f3241;  /* Same color as the track */
 }
 
-/* ----- other general styles ----- */
+/* ----- colors ----- */
+
+.val0 {
+  background-color: #ccc;
+}
+
+.val1 {
+  color: #DB3700 !important;
+  background-color: #ff3128;
+}
+
+.val2 {
+  color: #FF794D !important;
+  background-color: #FFB399;
+}
+
+.val3 {
+  color: #D68400 !important;
+  background-color: #FFFAA0;
+}
+
+.val4 {
+  color: #75A300 !important;
+  background-color: #9AD600;
+}
+
+.val5, .val6 {
+  color: #27824E !important;
+  background-color: #A3BFFE;
+}
+
+/*** other ***/
 
 a {
   text-decoration:none;
@@ -319,25 +350,6 @@ th {
   background: #E0E0E0;
 }
 
-.val1, .down {
-  background-color: #ff3128;
-}
-.val0 {
-  background-color: #ccc;
-}
-.val2, .fail {
-  background-color: #FFB399;
-}
-.val3 {
-  background-color: #FFFAA0;
-}
-.val4, .up, .success {
-  background-color: #9AD600;
-}
-.val5, .val6 {
-  background-color: #A3BFFE;
-}
-
 .notes {
   font-size: 0.97em;
   color: #e3e3e3;
@@ -558,9 +570,9 @@ tr .yearRow {
   position: absolute;
   top: 60px;
   left: 0;
-  
-  width: 100vw;
-  height: 100vw;
+
+  width: 100%;
+  box-sizing: border-box;
   
   background-color: #333;
   
@@ -571,8 +583,7 @@ tr .yearRow {
 }
 
 #addScore form {
-  width: 100vw;
-  height: 100vw;
+  height: calc(100vh - 100px);
   background-color: #333;
   
   display: flex;
@@ -583,7 +594,7 @@ tr .yearRow {
 #addScore textarea {
   width: 70%;
   max-width: 1000px;
-  height: 100vw;
+  height: 100%;
 
   background-color: #333;
   color: #ddd;
@@ -616,17 +627,63 @@ tr .yearRow {
   bottom: 20px;
   display: flex;
   padding: 20px;
+  opacity: 50%;
 }
 
-#addScore .addScoreProperties div {
+#addScore .addScoreProperties button {
   padding: 10px;
-  margin: 4px;
-  
-  background-color: #0b3440;
-  color: #2c90fc;
+  height: 40px;
   
   border-radius: 4px;
   border: 1px solid #2c90fc;
+  
+  color: #7dbaff;
+  background-color: #005580;
+}
+
+#addScore .addScoreProperties .valButton {
+  width: 40px;
+  font-weight: bold;
+  text-align: center;
+}
+
+#addScore .addScoreProperties button {
+  padding: 10px;
+  margin: 4px;
+}
+
+#addScore .val0 {
+  background-color: #ccc;
+}
+
+#addScore .val1 {
+  color: #DB3700 !important;
+  background-color: #ff3128 !important;
+}
+
+#addScore .val2 {
+  color: #FF794D !important;
+  background-color: #FFB399 !important;
+}
+
+#addScore .val3 {
+  color: #D68400 !important;
+  background-color: #FFFAA0 !important;
+}
+
+#addScore .val4 {
+  color: #75A300 !important;
+  background-color: #9AD600 !important;
+}
+
+#addScore .val5, #addScore .val6 {
+  color: #27824E !important;
+  background-color: #A3BFFE !important;
+}
+
+#addScore .addScoreProperties .submit {
+  color: #d59392;
+  background-color: #942a25 !important;
 }
 
 /* edit score */
@@ -708,26 +765,6 @@ tr .yearRow {
   background: #333;
   color: white;
   text-decoration: none;
-}
-
-.scores .val1 {
-  color: #DB3700;
-}
-
-.scores .val2 {
-  color: #FF794D;
-}
-
-.scores .val3 {
-  color: #D68400;
-}
-
-.scores .val4 {
-  color: #75A300;
-}
-
-.scores .val5, .scores .val6 {
-  color: #27824E;
 }
 
 .scores .val0, .scores .val1, .scores .val2, .scores .val3,

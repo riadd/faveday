@@ -434,7 +434,7 @@
       </form>
   
       <div id="menu">
-        <h1><a onclick="onShowDashboard()">FaveDay</a> <a onclick="onAddScore()">+</a> </h1>
+        <h1><a onclick="onShowDashboard()">FaveDay</a> <a onclick="onShowAddScore()">+</a> </h1>
       </div>
   
       <div class="window-controls">
@@ -460,8 +460,13 @@
       <textarea id="addScoreText" placeholder="Notes"></textarea>
     </form>
     <div class="addScoreProperties">
-      <div>28-09-2024</div>
-      <div>3</div>
+      <button class="date">28-09-2024</button>
+      <button class="valButton" onclick="onSelectScoreVal(1)">1</button>
+      <button class="valButton" onclick="onSelectScoreVal(2)">2</button>
+      <button class="valButton val3" onclick="onSelectScoreVal(3)">3</button>
+      <button class="valButton" onclick="onSelectScoreVal(4)">4</button>
+      <button class="valButton" onclick="onSelectScoreVal(5)">5</button>
+      <button class="submit" onclick="onSubmitScore()">Add Score</button>
     </div>
   </div>
   <!-- /new score form -->
