@@ -661,7 +661,10 @@
             
           // text criteria
           } else if (needle.length > 2) {
-            foundScores = foundScores.filter(s => s.notes.toLowerCase().indexOf(needle) > -1);
+            const needleLower = needle.toLowerCase();
+            const regex = new RegExp(`\\b${needleLower}`, 'i'); // 'i' makes it case-insensitive
+            foundScores = foundScores.filter(s => regex.test(s.notes));
+            
             keywords.push(needle);
           }
         }
@@ -700,6 +703,10 @@
     }
     
     showEditScore(dateId) {
+      if (dateId == null)
+        dateId = new Date().format("{yyyy}-{MM}-{dd}");
+        
+      
       if ($('#editScore').is(':visible')) {
         this.hideEditScore();
         return;
@@ -716,7 +723,11 @@
       this.updateScoreProgress(score.notes)
       $('#editScore .date').text(score.date.format("{yyyy}-{MM}-{dd}"));
       this.selectScoreVal(score.summary);
-      $('#editScore textarea').val(score.notes);
+      
+      let textarea = $('#editScore textarea')
+      textarea.val(score.notes);
+      textarea.focus(); // Focus on the textarea
+      textarea.get(0).setSelectionRange(score.notes.length, score.notes.length);
     }
     
     hideEditScore() {
@@ -897,6 +908,10 @@
 
         // Call your submit function or trigger a form submission here
         window.app.submitScore();
+      }
+
+      if (event.key === 'Escape') {
+        window.app.hideEditScore();
       }
     });
   }

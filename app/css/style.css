@@ -632,6 +632,8 @@ tr .yearRow {
   outline: none; /* Optional: remove focus outline */
   border: 0;
   box-shadow: none;
+
+  line-height: 1.6;
 }
 
 #editScore progress {
