@@ -23,12 +23,15 @@
     }
   
     text() {
-      // p{L} is a unicode letter, \d is a digit
-      let re = /#\p{L}[\p{L}\d]*/gui;
-      return this.notes.replace(re, str => {
+      // replace search tags
+      let re = /#\p{L}[\p{L}\d]*/gui; // p{L} is a unicode letter, \d is a digit
+      let text = this.notes.replace(re, str => {
         let word = str.slice(1);
         return `<a onclick="onShowSearch('${word}')">${this.camelCaseToSpace(word)}</a>`;
       });
+      
+      // replace new-lines
+      return text.replace(/\n/g, "<br>");
     }
 
     camelCaseToSpace(str) {
@@ -710,6 +713,7 @@
       if (score == null)
         score = new Score(new Date(), 3, '')
 
+      this.updateScoreProgress(score.notes)
       $('#editScore .date').text(score.date.format("{yyyy}-{MM}-{dd}"));
       this.selectScoreVal(score.summary);
       $('#editScore textarea').val(score.notes);
@@ -756,6 +760,17 @@
       this.hideEditScore();
       this.onScoreAdded();
       this.saveScores()
+    }
+    
+    updateScoreProgress(text) {
+      const maxWords = 100; // Set the maximum word count for full progress
+      const wordCount = text === '' ? 0 : text.split(/\s+/).length; // Split the text by spaces
+
+      // Calculate progress percentage
+      const progressValue = Math.min((wordCount / maxWords) * 100, 100); // Limit to 100%
+
+      // Update the progress bar
+      document.getElementById('editScoreProgress').value = progressValue;
     }
   }
 
@@ -873,15 +888,7 @@
     });
 
     document.getElementById('editScoreText').addEventListener('input', function() {
-      const maxWords = 100; // Set the maximum word count for full progress
-      const text = this.value.trim();
-      const wordCount = text === '' ? 0 : text.split(/\s+/).length; // Split the text by spaces
-
-      // Calculate progress percentage
-      const progressValue = Math.min((wordCount / maxWords) * 100, 100); // Limit to 100%
-
-      // Update the progress bar
-      document.getElementById('editScoreProgress').value = progressValue;
+      window.app.updateScoreProgress(this.value.trim())
     });
   }
   

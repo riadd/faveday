@@ -64,7 +64,7 @@ async function loadScores(dirPath)
       let score = {
         date: new Date(matches[1]),
         summary: parseInt(matches[2]),
-        notes: matches[3]
+        notes: matches[3].replace(/\\n/g, "\n")
       }
       
       rawScores.push(score);
@@ -99,7 +99,7 @@ async function saveScores(dirPath, scores) {
 
     for (const score of yearScores) {
       const date = `${score.date.getFullYear()}-${score.date.getMonth() + 1}-${score.date.getDate()}`;
-      scoreData += `${date},${score.summary},${score.notes}\n`;
+      scoreData += `${date},${score.summary},${score.notes.replace(/\n/g, "\\n")}\n`;
     }
 
     console.log(`write scores to file ${filePath}`);
