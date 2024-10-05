@@ -890,6 +890,15 @@
     document.getElementById('editScoreText').addEventListener('input', function() {
       window.app.updateScoreProgress(this.value.trim())
     });
+
+    document.getElementById('editScoreText').addEventListener('keydown', function() {
+      if (event.ctrlKey && event.key === 'Enter') {
+        event.preventDefault(); // Prevents default behavior (optional, depending on your needs)
+
+        // Call your submit function or trigger a form submission here
+        window.app.submitScore();
+      }
+    });
   }
   
   function handleRoute() {
