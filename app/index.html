@@ -20,23 +20,21 @@
   <!-- tmpl-scores -->
   <script type="text/mustache" id="tmpl-scores">
     <tr>
-      <th></th>
       <th>Date</th>
       <th>Total</th>
       <th>Notes</th>
     </tr>
     {{#scores}}
       <tr class="score">
-        <td class="value">
-        </td>
-
         <td class="date">
           <a onclick="onShowMonth('{{monthId}}')">
             <span>{{dateStr}}</span>
             <small>{{weekday}}</small>
           </a>
         </td>
-        <td class="summary {{styleClass}}">{{summary}}</td>
+        <td class="summary {{styleClass}}">
+          <a onclick="onShowEditScore('{{dateId}}')">{{summary}}</a>
+        </td>
         <td class="notes">{{{text}}}</td>
       </tr>
     {{/scores}}
@@ -434,7 +432,7 @@
       </form>
   
       <div id="menu">
-        <h1><a onclick="onShowDashboard()">FaveDay</a> <a onclick="onShowAddScore()">+</a> </h1>
+        <h1><a onclick="onShowDashboard()">FaveDay</a> <a onclick="onShowEditScore()">+</a> </h1>
       </div>
   
       <div class="window-controls">
@@ -454,12 +452,12 @@
   </div>
 
   <!-- new score form -->
-  <div id="addScore">
-    <progress id="addScoreProgress" value="0" max="100"></progress>
+  <div id="editScore">
+    <progress id="editScoreProgress" value="0" max="100"></progress>
     <form>
-      <textarea id="addScoreText" placeholder="Notes"></textarea>
+      <textarea id="editScoreText" placeholder="Notes"></textarea>
     </form>
-    <div class="addScoreProperties">
+    <div class="editScoreProperties">
       <button class="date">28-09-2024</button>
       <button class="valButton" onclick="onSelectScoreVal(1)">1</button>
       <button class="valButton" onclick="onSelectScoreVal(2)">2</button>

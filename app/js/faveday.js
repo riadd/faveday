@@ -696,23 +696,27 @@
       this.pushHistory(`/search/${id}`, id);
     }
     
-    showAddScore() {
-      if ($('#addScore').is(':visible')) {
-        this.hideAddScore();
+    showEditScore(dateId) {
+      if ($('#editScore').is(':visible')) {
+        this.hideEditScore();
         return;
       }
       
-      $('#addScore').show();
+      $('#editScore').show();
       $('#content').hide();
-
-      this.selectScoreVal(3);
       
-      $('#addScore textarea').val('');
-      $('#addScore .date').text(new Date().format("{yyyy}-{MM}-{dd}"));
+      let score = this.all.find(s => s.dateId() === dateId)
+      
+      if (score == null)
+        score = new Score(new Date(), 3, '')
+
+      $('#editScore .date').text(score.date.format("{yyyy}-{MM}-{dd}"));
+      this.selectScoreVal(score.summary);
+      $('#editScore textarea').val(score.notes);
     }
     
-    hideAddScore() {
-      $('#addScore').hide();
+    hideEditScore() {
+      $('#editScore').hide();
       $('#content').show();
     }
     
@@ -729,19 +733,27 @@
     }
 
     submitScore() {
-      let notes = $('#addScore textarea').val();
+      let dateId = $('#editScore .date').text()
 
-      console.log(`added score (${this.currentVal}): ${notes}`)
+      let score = this.all.find(s => s.dateId() === dateId)
+      let isNew = false;
       
-      const newScore = new Score(
-        new Date(),
-        this.currentVal,
-        notes
-      )
+      if (score == null)
+      {
+        score = new Score(new Date(), 3, '')
+        this.all.push(score)
+        isNew = true;
+      }
       
-      this.all.push(newScore)
+      let notes = $('#editScore textarea').val();
       
-      this.hideAddScore();
+      score.date = new Date(dateId)
+      score.summary = this.currentVal
+      score.notes = notes
+      
+      console.log(`${isNew ? 'added' : 'edited'} score (${this.currentVal}): ${notes}`)
+      
+      this.hideEditScore();
       this.onScoreAdded();
       this.saveScores()
     }
@@ -813,8 +825,8 @@
     return window.app.cancelScoreDialogue();
   };
   
-  window.onShowAddScore = function() {
-    return window.app.showAddScore();
+  window.onShowEditScore = function(dateId) {
+    return window.app.showEditScore(dateId);
   }
   
   window.onSubmitScore = function() {
@@ -860,7 +872,7 @@
       window.api.close();
     });
 
-    document.getElementById('addScoreText').addEventListener('input', function() {
+    document.getElementById('editScoreText').addEventListener('input', function() {
       const maxWords = 100; // Set the maximum word count for full progress
       const text = this.value.trim();
       const wordCount = text === '' ? 0 : text.split(/\s+/).length; // Split the text by spaces
@@ -869,7 +881,7 @@
       const progressValue = Math.min((wordCount / maxWords) * 100, 100); // Limit to 100%
 
       // Update the progress bar
-      document.getElementById('addScoreProgress').value = progressValue;
+      document.getElementById('editScoreProgress').value = progressValue;
     });
   }
   

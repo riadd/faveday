@@ -38,33 +38,56 @@ body {
 
 /* ----- colors ----- */
 
+:root {
+  --color-val1: #DB3700; 
+  --color-val2: #FF794D; 
+  --color-val3: #D68400; 
+  --color-val4: #75A300; 
+  --color-val5: #27824E; 
+}
+
 .val0 {
   background-color: #ccc;
 }
 
 .val1 {
-  color: #DB3700 !important;
   background-color: #ff3128;
 }
 
 .val2 {
-  color: #FF794D !important;
   background-color: #FFB399;
 }
 
 .val3 {
-  color: #D68400 !important;
   background-color: #FFFAA0;
 }
 
 .val4 {
-  color: #75A300 !important;
   background-color: #9AD600;
 }
 
 .val5, .val6 {
-  color: #27824E !important;
   background-color: #A3BFFE;
+}
+
+.summary.val1 a {
+  color: var(--color-val1);
+}
+
+.summary.val2 a {
+  color: var(--color-val2);
+}
+
+.summary.val3 a {
+  color: var(--color-val3);
+}
+
+.summary.val4 a {
+  color: var(--color-val4);
+}
+  
+.summary.val5 a, .summary.val6 a {
+  color: var(--color-val5);
 }
 
 /*** other ***/
@@ -563,7 +586,7 @@ tr .yearRow {
 
 /* add score */
 
-#addScore {
+#editScore {
   display: none;
   
   z-index: 5;
@@ -582,7 +605,7 @@ tr .yearRow {
   outline: none;
 }
 
-#addScore form {
+#editScore form {
   height: calc(100vh - 100px);
   background-color: #333;
   
@@ -591,7 +614,7 @@ tr .yearRow {
   outline: none; /* Optional: remove focus outline */
 }
 
-#addScore textarea {
+#editScore textarea {
   width: 70%;
   max-width: 1000px;
   height: 100%;
@@ -611,18 +634,18 @@ tr .yearRow {
   box-shadow: none;
 }
 
-#addScore progress {
+#editScore progress {
   width: 100%;
   height: 6px;
   border-radius: 10px;
   background-color: #555;
 }
 
-#addScore progress::-webkit-progress-value {
+#editScore progress::-webkit-progress-value {
   background-color: orange;
 }
 
-#addScore .addScoreProperties {
+#editScore .editScoreProperties {
   position: fixed;
   bottom: 20px;
   display: flex;
@@ -630,7 +653,7 @@ tr .yearRow {
   opacity: 50%;
 }
 
-#addScore .addScoreProperties button {
+#editScore .editScoreProperties button {
   padding: 10px;
   height: 40px;
   
@@ -641,66 +664,49 @@ tr .yearRow {
   background-color: #005580;
 }
 
-#addScore .addScoreProperties .valButton {
+#editScore .editScoreProperties .valButton {
   width: 40px;
   font-weight: bold;
   text-align: center;
 }
 
-#addScore .addScoreProperties button {
+#editScore .editScoreProperties button {
   padding: 10px;
   margin: 4px;
 }
 
-#addScore .val0 {
+#editScore .val0 {
   background-color: #ccc;
 }
 
-#addScore .val1 {
+#editScore .val1 {
   color: #DB3700 !important;
   background-color: #ff3128 !important;
 }
 
-#addScore .val2 {
+#editScore .val2 {
   color: #FF794D !important;
   background-color: #FFB399 !important;
 }
 
-#addScore .val3 {
+#editScore .val3 {
   color: #D68400 !important;
   background-color: #FFFAA0 !important;
 }
 
-#addScore .val4 {
+#editScore .val4 {
   color: #75A300 !important;
   background-color: #9AD600 !important;
 }
 
-#addScore .val5, #addScore .val6 {
+#editScore .val5, #editScore .val6 {
   color: #27824E !important;
   background-color: #A3BFFE !important;
 }
 
-#addScore .addScoreProperties .submit {
+#editScore .editScoreProperties .submit {
   color: #d59392;
   background-color: #942a25 !important;
-}
-
-/* edit score */
-
-#editScore {
-  background: #447F6E;
-  font-weight: bold;
-  text-transform: uppercase;
-  display: none;
-  padding: 2px;
-  position: absolute;
-  text-shadow: 0 2px 1px black;
-  border-bottom: 2px solid #555555;
-}
-
-#editScore a {
-  color: white;
 }
 
 /* years bar */
