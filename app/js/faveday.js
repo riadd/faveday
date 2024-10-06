@@ -71,6 +71,10 @@
       this.loadScores();
     }
     
+    fmtDiff(val) {
+      return (val > 0) ? `▲ ${val.format(2)}` : `▼ ${-val.format(2)}`;
+    }
+    
     showSummary(scores) {
       const OPENAI_API_KEY = 'XXX';
 
@@ -272,6 +276,14 @@
         end: maxStreakStart.format("{d} {Mon} {yyyy}")
       }
     }
+    
+    getScores(year, month, date) {
+      return this.all.filter(s =>
+        (year == null || s.date.getFullYear() === year) &&
+        (month == null || s.date.getMonth() === month-1) &&
+        (date == null || s.date.getDate() === date)
+      );
+    }
 
     showDashboard() {
       $('#search input')[0].value = "";
@@ -289,6 +301,17 @@
         s.date.getDate() === toDate && s.date.getMonth() === toMonth
       );
       
+      let diff = null;
+      let prevMonthScores = this.getScores(today.getFullYear(), today.getMonth()) // month-1
+      if (prevMonthScores.length > 0)
+      {
+        let curMonthScores = this.getScores(today.getFullYear(), today.getMonth()+1) // month
+        
+        let prevAvg = prevMonthScores.average(s => s.summary)
+        let curAvg = curMonthScores.average(s => s.summary)
+        diff = this.fmtDiff(curAvg - prevAvg)
+      }
+
       this.pushHistory('/', '');
       
       return this.render('#tmpl-dashboard', '#content', {
@@ -297,6 +320,7 @@
         todayScores: this.tmplScores.render({scores: todayScores}),
         years: this.years.map(y => ({year: y})),
         streak: this.getMaxStreak(this.all, true),
+        diff: diff,
         footer: `Total Scores: ${this.all.length}`
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())

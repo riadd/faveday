@@ -51,7 +51,8 @@
     </table>
     
     <div id="streak" class="box">
-      🔥 Last Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
+      <div>🔥 Last Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span></div>
+      <div class="comparison">{{#diff}}Month Average: {{diff}}{{/diff}}</div>
     </div>
 
     <h2>Today</h2>
@@ -205,7 +206,7 @@
     </table>
     
     <div id="streak" class="box">
-      🔥 Current Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
+      <div>🔥 Current Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span></div>
     </div>
   </script>
 
@@ -326,7 +327,7 @@
     </table>
     
     <div id="streak" class="box">
-      🔥 Best Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
+      <div>🔥 Best Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span></div>
     </div>
     
     <table class="box bestEntries">

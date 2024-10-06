@@ -39,7 +39,7 @@ body {
 /* ----- colors ----- */
 
 :root {
-  --color-val1: #DB3700; 
+  --color-val1: #9e2800; 
   --color-val2: #FF794D; 
   --color-val3: #D68400; 
   --color-val4: #75A300; 
@@ -1221,10 +1221,17 @@ table.bestEntries tr:nth-child(n+2) td {
 #streak {
   margin: -20px 0 50px;
   font-size: 1.2em;
+  display: flex;
 }
 
-#streak span {
+#streak div span {
   color: #aaa;
+}
+
+#streak .comparison {
+  text-align: right;
+  flex-grow: 1;
+  color: #eaeaea;
 }
 
 /* footer */
