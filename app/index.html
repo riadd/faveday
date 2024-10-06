@@ -25,7 +25,7 @@
       <th>Notes</th>
     </tr>
     {{#scores}}
-      <tr class="score">
+      <tr class="score {{empty}}">
         <td class="date">
           <a onclick="onShowMonth('{{monthId}}')">
             <span>{{dateStr}}</span>
@@ -33,7 +33,7 @@
           </a>
         </td>
         <td class="summary {{styleClass}}">
-          <a onclick="onShowEditScore('{{dateId}}')">{{summary}}</a>
+          <a onclick="onShowEditScore('{{dateId}}')">{{summaryText}}</a>
         </td>
         <td class="notes">{{{text}}}</td>
       </tr>
@@ -95,6 +95,13 @@
 <!--    <div id="ai">-->
 <!--      Loading Summary...-->
 <!--    </div>-->
+
+    <div id="filter">
+      <label class="switch">
+        <input type="checkbox" id="showEmptyToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
 
     <table class="box scores">
       {{{scores}}}
@@ -239,10 +246,6 @@
       {{/months}}
     </table>
     
-    <div id="streak" class="box">
-      🔥 Best Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span>
-    </div>
-
     {{#scores}}
       <h2>Random Days</h2>
 

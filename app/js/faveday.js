@@ -21,6 +21,10 @@
     weekday() {
       return this.date.format("{Weekday}");
     }
+    
+    empty() {
+      return this.summary == null ? 'empty' : '';
+    }
   
     text() {
       // replace search tags
@@ -42,10 +46,11 @@
     }
   
     styleClass() {
-      if (this.summary == null) {
-        return 'val0';
-      }
-      return 'val' + this.summary;
+      return this.summary == null ? 'val0' : 'val' + this.summary;
+    }
+    
+    summaryText() {
+      return this.summary || "?"
     }
 }
 
@@ -60,6 +65,8 @@
         }
         return this.searchTime = window.setTimeout(this.showSearch, 500);
       });
+
+      this.showEmpty = false;
 
       this.loadScores();
     }
@@ -208,6 +215,15 @@
       }
     }
     
+    toggleShowEmpty() {
+      this.showEmpty = !this.showEmpty;
+      
+      if (this.showEmpty)
+        $('.empty').show();
+      else
+        $('.empty').hide();
+    }
+    
     getMaxStreak(scores, onlyFirst= false) {
       let maxStreakCount = 0;
       let maxStreakStart = null;
@@ -296,25 +312,46 @@
     }
 
     showMonth(yearNum, monthNum) {
-      let date = Date.create(`${yearNum}-${monthNum}`);
-      let title = date.format('{Month} {yyyy}');
+      this.showEmpty = false;
+      
+      let monthDate = Date.create(`${yearNum}-${monthNum}`);
+      let title = monthDate.format('{Month} {yyyy}');
 
       let monthScores = this.all.filter(s =>
-        s.date.getMonth() === date.getMonth() && s.date.getYear() === date.getYear()
+        s.date.getFullYear() === yearNum &&
+        s.date.getMonth() === monthNum-1
       );
-
-      let prevYearDate = new Date(date).addYears(-1);
-      let prevMonthDate = new Date(date).addMonths(-1);
-      let nextMonthDate = new Date(date).addMonths(1);
-      let nextYearDate = new Date(date).addYears(1);
+      
+      let prevYearDate = new Date(monthDate).addYears(-1);
+      let prevMonthDate = new Date(monthDate).addMonths(-1);
+      let nextMonthDate = new Date(monthDate).addMonths(1);
+      let nextYearDate = new Date(monthDate).addYears(1);
       
       this.pushHistory(`/month/${yearNum}/${monthNum}`, title);
 
       //this.showSummary(monthScores);
+
+      let virtualMonthScores = []
+      for (let dateNum=1; dateNum<=31; dateNum++) {
+        let score = monthScores.find(s => 
+          s.date.getFullYear() === yearNum &&
+          s.date.getMonth() === monthNum-1 &&
+          s.date.getDate() === dateNum);
+        
+        if (score == null)
+        {
+          score = new Score(
+            new Date(yearNum, monthNum-1, dateNum),
+            null,
+            '')
+        }
+        
+        virtualMonthScores.push(score)
+      }
       
-      return this.render('#tmpl-month', '#content', {
+      this.render('#tmpl-month', '#content', {
         title: title,
-        scores: monthScores.isEmpty() ? [] : this.tmplScores.render({scores: monthScores}),
+        scores: virtualMonthScores.isEmpty() ? [] : this.tmplScores.render({scores: virtualMonthScores}),
         years: this.years.map(y => ({year: y})),
         tags: this.getTags(monthScores),
         prevYear: this.hasMonth(prevYearDate),
@@ -325,6 +362,10 @@
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
         monthBar: Hogan.compile($('#tmpl-month-bar').html())
       });
+
+      document.getElementById('showEmptyToggle').addEventListener('change', function() {
+        this.toggleShowEmpty();
+      }.bind(this));
     }
 
     showMonths(monthId) {
@@ -721,7 +762,7 @@
         score = new Score(new Date(), 3, '')
 
       this.updateScoreProgress(score.notes)
-      $('#editScore .date').text(score.date.format("{yyyy}-{MM}-{dd}"));
+      $('#editScore .date').text(dateId);
       this.selectScoreVal(score.summary);
       
       let textarea = $('#editScore textarea')

@@ -46,10 +46,6 @@ body {
   --color-val5: #27824E; 
 }
 
-.val0 {
-  background-color: #ccc;
-}
-
 .val1 {
   background-color: #ff3128;
 }
@@ -68,6 +64,10 @@ body {
 
 .val5, .val6 {
   background-color: #A3BFFE;
+}
+
+.summary.val0 a {
+  color: lightgray;
 }
 
 .summary.val1 a {
@@ -374,10 +374,11 @@ th {
 }
 
 .notes {
-  font-size: 0.97em;
   color: #e3e3e3;
   vertical-align: top;
   text-align: justify;
+  line-height: 1.3em;
+  font-size: 1.1em;
 }
 
 .notes em {
@@ -425,14 +426,15 @@ tr .yearRow {
 /* month bar */
 
 .monthBar {
-  margin: 20px 0;
+  margin: 30px 0 -10px;
   text-align: right;
   font-weight: bold;
+  font-size: 1.2em;
 }
 
 .monthBar a {
   border-radius: 6px;
-  color: black;
+  color: #aaaaaa;
   background: #555555;
   padding: 2px 6px;
 }
@@ -678,7 +680,6 @@ tr .yearRow {
 }
 
 #editScore .val0 {
-  background-color: #ccc;
 }
 
 #editScore .val1 {
@@ -733,6 +734,10 @@ tr .yearRow {
 }
 
 /* score table */
+
+.empty {
+  display: none;
+}
 
 .scores th {
   padding: 10px;
@@ -1214,7 +1219,7 @@ table.bestEntries tr:nth-child(n+2) td {
 /* streak */
 
 #streak {
-  margin: 20px 0;
+  margin: -20px 0 50px;
   font-size: 1.2em;
 }
 
@@ -1244,5 +1249,69 @@ div#ai {
   background-color: #444;
   font-size: 1.1em;
   font-style: italic;
+}
+
+/* filter */
+
+#filter {
+  text-align: right;
+}
+
+/* From Uiverse.io by TimTrayler */
+.switch {
+  --secondary-container: #3a4b39;
+  --primary: #84da89;
+  font-size: 17px;
+  position: relative;
+  display: inline-block;
+  width: 3.7em;
+  height: 1.8em;
+}
+
+.switch input {
+  display: none;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #504f4f;
+  transition: .2s;
+  border-radius: 30px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1.4em;
+  width: 1.4em;
+  border-radius: 20px;
+  left: 0.2em;
+  bottom: 0.2em;
+  background-color: #aeaaae;
+  transition: .4s;
+}
+
+input:checked + .slider::before {
+  background-color: var(--primary);
+}
+
+input:checked + .slider {
+  background-color: var(--secondary-container);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--secondary-container);
+}
+
+input:checked + .slider:before {
+  transform: translateX(1.9em);
 }
 
