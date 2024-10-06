@@ -815,22 +815,58 @@ tr .yearRow {
   text-align: justify;
   margin-bottom: 40px;
 }
+
 .tags span {
   color: #777;
 }
-.tags a {
-}
+
 .tags h3 {
   font-size: 1em;
   display: inline;
   padding: 2px;
 }
+
 .tags .help {
-	text-align: center;
-	color: #555;
-	font-size: 2.0em;
-	margin: 50px;
+  text-align: center;
+  color: #555;
+  font-size: 2.0em;
+  margin: 50px;
 }
+
+.tags th {
+  padding: 15px;
+  background: #444;
+}
+
+.tags a {
+  font-size: calc(var(--weight) * 1em);
+  display: block;
+  padding: 0px 4px;
+  margin: 3px;
+  border-radius: 4px;
+  color: white;
+  background-color: #004565;
+  text-decoration: none;
+  position: relative;
+  border: 1px solid rgb(0 0 0 / 43%);
+  font-weight: bold;
+}
+
+.tags td {
+  list-style: none;
+  padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.5rem;
+}
+
+.tags a:hover {
+  background-color: black !important;
+  color: white;
+}
+
 
 /* tag bar */
 
@@ -1040,37 +1076,6 @@ tr .yearRow {
 }
 
 .yearsCal td a {
-  color: white;
-}
-
-/* tags */
-
-.tags th {
-  padding: 15px;
-  background: #444;
-}
-.tags td {
-  list-style: none;
-  padding-left: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.5rem;
-}
-.tags a {
-  font-size: calc(var(--weight) * 1em);
-  display: block;
-  padding: 0px 4px;
-  margin: 4px;
-  border-radius: 4px;
-  background-color: #444;
-  color: #333333;
-  text-decoration: none;
-  position: relative;
-}
-.tags a:hover {
-  background-color: black !important;
   color: white;
 }
 

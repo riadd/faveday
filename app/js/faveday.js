@@ -606,15 +606,18 @@
       }
 
       let results = [];
-      for (let [tag,count] of Object.entries(tagCounter))
-        results.push({
-          tag: tag, 
-          count: count, 
-          weight: 1 + Math.log(count)/5,
-          color: stringToPastelColor(tag)
-        });
+      for (let [tag,count] of Object.entries(tagCounter)) {
+        if (count <= 1) continue;
 
-      results = results.sortBy(a => a.tag);
+        results.push({
+          tag: tag,
+          count: count,
+          weight: 1, // + Math.log(count)/5,
+          color: `rgba(0,60,177,${Math.log(count) / 5})` // // stringToPastelColor(tag)
+        });
+      }
+
+      results = results.sortBy(a => a.count, true);
       
       return results;
     }
