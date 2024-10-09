@@ -329,7 +329,7 @@
 
     hasMonth(date) {
       const isMonthFound = this.all.some(s =>
-        s.date.getMonth() === date.getMonth() && s.date.getYear() === date.getYear()
+        s.date.getMonth() === date.getMonth() && s.date.getFullYear() === date.getFullYear()
       );
 
       return isMonthFound ? date.format("{yyyy}-{MM}") : null;
@@ -378,10 +378,12 @@
         scores: virtualMonthScores.isEmpty() ? [] : this.tmplScores.render({scores: virtualMonthScores}),
         years: this.years.map(y => ({year: y})),
         tags: this.getTags(monthScores),
+        
         prevYear: this.hasMonth(prevYearDate),
         prevMonth: this.hasMonth(prevMonthDate),
         nextMonth: this.hasMonth(nextMonthDate),
         nextYear: this.hasMonth(nextYearDate),
+        
         average: monthScores.average(s => s.summary).format(2),
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),

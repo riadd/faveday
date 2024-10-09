@@ -98,10 +98,10 @@
 <!--    </div>-->
 
     <div class="monthBar">
-      <a onclick="onShowMonth('{{prevYear}}')">«</a>
-      <a onclick="onShowMonth('{{prevMonth}}')">‹</a>
-      <a onclick="onShowMonth('{{nextMonth}}')">›</a>
-      <a onclick="onShowMonth('{{nextYear}}')">»</a>
+      {{#prevYear}}<a onclick="onShowMonth('{{prevYear}}')">«</a>{{/prevYear}}
+      {{#prevMonth}}<a onclick="onShowMonth('{{prevMonth}}')">‹</a>{{/prevMonth}}
+      {{#nextMonth}}<a onclick="onShowMonth('{{nextMonth}}')">›</a>{{/nextMonth}}
+      {{#nextYear}}<a onclick="onShowMonth('{{nextYear}}')">»</a>{{/nextYear}}
       <label class="switch">
         <input type="checkbox" id="showEmptyToggle">
         <span class="slider"></span>
