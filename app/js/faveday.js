@@ -382,9 +382,9 @@
         prevMonth: this.hasMonth(prevMonthDate),
         nextMonth: this.hasMonth(nextMonthDate),
         nextYear: this.hasMonth(nextYearDate),
+        average: monthScores.average(s => s.summary).format(2),
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
-        monthBar: Hogan.compile($('#tmpl-month-bar').html())
       });
 
       document.getElementById('showEmptyToggle').addEventListener('change', function() {

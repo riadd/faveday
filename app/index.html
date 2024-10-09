@@ -75,7 +75,7 @@
   <script type="text/mustache" id="tmpl-month">
     {{> header}}
 
-    <h1>{{title}}</h1>
+    <h1>{{title}} <small>Ø {{average}}</small></h1>
     {{> yearsBar}}
     {{> monthBar}}
     {{}}
@@ -97,7 +97,11 @@
 <!--      Loading Summary...-->
 <!--    </div>-->
 
-    <div id="filter">
+    <div class="monthBar">
+      <a onclick="onShowMonth('{{prevYear}}')">«</a>
+      <a onclick="onShowMonth('{{prevMonth}}')">‹</a>
+      <a onclick="onShowMonth('{{nextMonth}}')">›</a>
+      <a onclick="onShowMonth('{{nextYear}}')">»</a>
       <label class="switch">
         <input type="checkbox" id="showEmptyToggle">
         <span class="slider"></span>
@@ -409,16 +413,6 @@
       {{#years}}
         <a onclick="onShowYear({{year}})">{{year}}</a>
       {{/years}}
-    </div>
-  </script>
-
-  <!-- tmpl-month-bar -->
-  <script type="text/mustache" id="tmpl-month-bar">
-    <div class="monthBar">
-      <a onclick="onShowMonth('{{prevYear}}')">«</a>
-      <a onclick="onShowMonth('{{prevMonth}}')">‹</a>
-      <a onclick="onShowMonth('{{nextMonth}}')">›</a>
-      <a onclick="onShowMonth('{{nextYear}}')">»</a>
     </div>
   </script>
 

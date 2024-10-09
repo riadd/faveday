@@ -426,17 +426,21 @@ tr .yearRow {
 /* month bar */
 
 .monthBar {
-  margin: 30px 0 -10px;
   text-align: right;
   font-weight: bold;
   font-size: 1.2em;
+  display: flex;
 }
 
 .monthBar a {
   border-radius: 6px;
   color: #aaaaaa;
   background: #555555;
-  padding: 2px 6px;
+  /* padding: 2px 6px; */
+  width: 26px;
+  margin: 2px 4px;
+  height: 26px;
+  text-align: center;
 }
 
 /* month scores */
@@ -1261,12 +1265,6 @@ div#ai {
   background-color: #444;
   font-size: 1.1em;
   font-style: italic;
-}
-
-/* filter */
-
-#filter {
-  text-align: right;
 }
 
 /* From Uiverse.io by TimTrayler */
