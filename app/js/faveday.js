@@ -639,7 +639,7 @@
 
     showYear(yearNum) {
       let id = parseInt(yearNum);
-      let oneYear = this.all.filter(s => s.date.getFullYear() === id);
+      let oneYear = this.getScores(id)
       let byMonth = oneYear.groupBy(s => s.date.getMonth());
       
       const monthNums = Array.from({ length: 12 }, (_, index) => index); // 0..11
@@ -672,6 +672,7 @@
       
       return this.render('#tmpl-year', '#content', {
         year: id,
+        average: oneYear.average(s => s.summary).format(2),
         scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: randomScores}),
         inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: bestScores}),
         months: months,
