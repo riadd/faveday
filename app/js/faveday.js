@@ -56,6 +56,8 @@
 
   FaveDayApp = class FaveDayApp {  
     constructor() {
+      Sugar.extend();
+      
       this.showSearch = this.showSearch.bind(this);
       this.tmplScores = Hogan.compile($('#tmpl-scores').html());
       
@@ -294,11 +296,11 @@
       }).sample();
       
       let today = Date.create();
-      let toDate = today.getDate();
-      let toMonth = today.getMonth();
+      let toDay = today.getDay();
+      let toWeek = today.getISOWeek();
       
       let todayScores = this.all.filter(s =>
-        s.date.getDate() === toDate && s.date.getMonth() === toMonth
+        s.date.getDay() === toDay && s.date.getISOWeek() === toWeek
       );
       
       let diff = null;
