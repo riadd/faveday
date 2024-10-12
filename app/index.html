@@ -55,10 +55,12 @@
       <div class="comparison">{{#diff}}Month Average: {{diff}}{{/diff}}</div>
     </div>
 
-    <h2>Today</h2>
-    <table class="box scores">
-      {{{todayScores}}}
-    </table>
+    {{#hasTodayScores}}
+      <h2>Today</h2>
+      <table class="box scores">
+        {{{todayScores}}}
+      </table>
+    {{/hasTodayScores}}
 
     <h2>Inspiration <small onclick="onUpdateRandomInspiration()">⟲</i></small></h2>
 

@@ -28,10 +28,20 @@
   
     text() {
       // replace search tags
-      let re = /#\p{L}[\p{L}\d]*/gui; // p{L} is a unicode letter, \d is a digit
+      let re = /([#@])\p{L}[\p{L}\d]*/gui; // p{L} is a unicode letter, \d is a digit
       let text = this.notes.replace(re, str => {
+        let marker = str[0];
         let word = str.slice(1);
-        return `<a onclick="onShowSearch('${word}')">${this.camelCaseToSpace(word)}</a>`;
+
+        if (marker === '#') {
+          // For hashtags, use camelCaseToSpace
+          return `<a onclick="onShowSearch('${word}')">${this.camelCaseToSpace(word)}</a>`;
+          
+        } else if (marker === '@') {
+          // For mentions, only keep the first word
+          let firstWord = word.split(/(?=[A-Z])/)[0]; // Splits at uppercase letter boundaries
+          return `<a onclick="onShowSearch('${word}')" title="${this.camelCaseToSpace(word)}">${firstWord}</a>`;
+        }
       });
       
       // replace new-lines
@@ -319,6 +329,7 @@
       return this.render('#tmpl-dashboard', '#content', {
         recentScores: this.tmplScores.render({scores: recent}),
         bestScores: this.tmplScores.render({scores: bestScores}),
+        hasTodayScores: todayScores.length > 0,
         todayScores: this.tmplScores.render({scores: todayScores}),
         years: this.years.map(y => ({year: y})),
         streak: this.getMaxStreak(this.all, true),
@@ -596,7 +607,7 @@
         return `#${pastelR.toString(16).padStart(2, '0')}${pastelG.toString(16).padStart(2, '0')}${pastelB.toString(16).padStart(2, '0')}`;
       }
 
-      const re = /#\p{L}+/gui;
+      const re = /[#@]\p{L}+/gui;
       
       let tagCounter = {};
       for (let score of scores)
