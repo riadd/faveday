@@ -340,12 +340,8 @@
       });
     }
 
-    hasMonth(date) {
-      const isMonthFound = this.all.some(s =>
-        s.date.getMonth() === date.getMonth() && s.date.getFullYear() === date.getFullYear()
-      );
-
-      return isMonthFound ? date.format("{yyyy}-{MM}") : null;
+    isValidMonth(date, date1, date2) {
+      return date.isBetween(date1, date2) ? date.format("{yyyy}-{MM}") : null;
     }
 
     showMonth(yearNum, monthNum) {
@@ -387,6 +383,8 @@
       }
       
       let tags = this.getTags(monthScores); 
+      let firstDate = this.all[0].date;
+      let lastDate = this.all.last().date;
       
       this.render('#tmpl-month', '#content', {
         title: title,
@@ -396,10 +394,10 @@
         hasTags: tags.length > 0,
         tags: tags,
         
-        prevYear: this.hasMonth(prevYearDate),
-        prevMonth: this.hasMonth(prevMonthDate),
-        nextMonth: this.hasMonth(nextMonthDate),
-        nextYear: this.hasMonth(nextYearDate),
+        prevYear: this.isValidMonth(prevYearDate, firstDate, lastDate),
+        prevMonth: this.isValidMonth(prevMonthDate, firstDate, lastDate),
+        nextMonth: this.isValidMonth(nextMonthDate, firstDate, lastDate),
+        nextYear: this.isValidMonth(nextYearDate, firstDate, lastDate),
         
         average: monthScores.average(s => s.summary).format(2),
       }, {
