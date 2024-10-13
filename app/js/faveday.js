@@ -35,12 +35,12 @@
 
         if (marker === '#') {
           // For hashtags, use camelCaseToSpace
-          return `<a onclick="onShowSearch('${word}')">${this.camelCaseToSpace(word)}</a>`;
+          return `<a class="tag" onclick="onShowSearch('${word}')">${this.camelCaseToSpace(word)}</a>`;
           
         } else if (marker === '@') {
           // For mentions, only keep the first word
           let firstWord = word.split(/(?=[A-Z])/)[0]; // Splits at uppercase letter boundaries
-          return `<a onclick="onShowSearch('${word}')" title="${this.camelCaseToSpace(word)}">${firstWord}</a>`;
+          return `<a class="person" onclick="onShowSearch('${word}')" title="${this.camelCaseToSpace(word)}">${firstWord}</a>`;
         }
       });
       
