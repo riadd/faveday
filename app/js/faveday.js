@@ -386,11 +386,15 @@
         virtualMonthScores.push(score)
       }
       
+      let tags = this.getTags(monthScores); 
+      
       this.render('#tmpl-month', '#content', {
         title: title,
         scores: virtualMonthScores.isEmpty() ? [] : this.tmplScores.render({scores: virtualMonthScores}),
         years: this.years.map(y => ({year: y})),
-        tags: this.getTags(monthScores),
+        
+        hasTags: tags.length > 0,
+        tags: tags,
         
         prevYear: this.hasMonth(prevYearDate),
         prevMonth: this.hasMonth(prevMonthDate),
@@ -622,8 +626,6 @@
 
       let results = [];
       for (let [tag,count] of Object.entries(tagCounter)) {
-        if (count <= 1) continue;
-
         results.push({
           tag: tag,
           count: count,
@@ -638,7 +640,7 @@
     }
     
     showTags() {
-      let tags = this.getTags(this.all);
+      let tags = this.getTags(this.all).slice(0,250);
       
       this.pushHistory(`/tags`, 'Tags');
 

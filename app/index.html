@@ -82,18 +82,20 @@
     {{> monthBar}}
     {{}}
     
-    <table class="box tags">
-      <tr>
-        <th>Tags</th>
-      </tr>
-      <tr>
-        <td>
-          {{#tags}} 
-            <a style="--weight:{{weight}}; background-color:{{color}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
-          {{/tags}}
-        </td>
-      </tr>
-    </table>
+    {{#hasTags}}
+      <table class="box tags">
+        <tr>
+          <th>Tags</th>
+        </tr>
+        <tr>
+          <td>
+            {{#tags}} 
+              <a style="--weight:{{weight}}; background-color:{{color}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+            {{/tags}}
+          </td>
+        </tr>
+      </table>
+    {{/hasTags}}
     
 <!--    <div id="ai">-->
 <!--      Loading Summary...-->
