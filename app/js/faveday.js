@@ -788,7 +788,13 @@
     
     showEditScore(dateId) {
       if (dateId == null)
-        dateId = new Date().format("{yyyy}-{MM}-{dd}");
+      {
+        let now = new Date();
+        if (now.getHours() < 18)
+          now.addDays(-1);
+
+        dateId = now.format("{yyyy}-{MM}-{dd}");
+      }
         
       
       if ($('#editScore').is(':visible')) {
