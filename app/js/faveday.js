@@ -801,12 +801,16 @@
       
       let score = this.all.find(s => s.dateId() === dateId)
       
-      if (score == null)
+      if (score == null) {
         score = new Score(new Date(), 3, '')
+      }
 
       this.updateScoreProgress(score.notes)
-      $('#editScore .date').text(dateId);
       this.selectScoreVal(score.summary);
+      
+      let date = new Date(dateId);
+      let dateLabel = Sugar.Date.format(date, '{dd} {Month} {yyyy} ({Weekday})')
+      $('#editScore .date').text(dateLabel);
       
       let textarea = $('#editScore textarea')
       textarea.val(score.notes);
