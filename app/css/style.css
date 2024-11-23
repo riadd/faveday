@@ -102,6 +102,10 @@ a:hover {
   cursor: pointer;
 }
 
+.button {
+  cursor: pointer;
+}
+
 .clear {
   clear: both;
 }
