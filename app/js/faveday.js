@@ -842,7 +842,8 @@
     }
 
     submitScore() {
-      let dateId = $('#editScore .date').text()
+      let dateLabel = $('#editScore .date').text()
+      let dateId = new Date(dateLabel).format("{yyyy}-{MM}-{dd}")
 
       let score = this.all.find(s => s.dateId() === dateId)
       let isNew = false;
