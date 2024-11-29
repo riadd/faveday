@@ -716,26 +716,17 @@
         
         needle = needle.toLowerCase();
         
-        // score criteria
-        let ref1, ref2;
-        if (((ref1 = needle[0]) === '>' || ref1 === '<' || ref1 === '=') && needle.length === 2) {
-          let score = parseInt(needle[1]);
+        if (needle[0] === '=') {
+          let score = parseInt(needle[1], 10)
+          foundScores = foundScores.filter(s => s.summary === score);
           
-          let range = needle[0] === '>' ? (function() {
-            let results = [];
-            for (let k = score; score <= 5 ? k <= 5 : k >= 5; score <= 5 ? k++ : k--){ results.push(k); }
-            return results;
-          }).apply(this) : needle[0] === '<' ? (function() {
-            let results = [];
-            for (let k = 0; 0 <= score ? k <= score : k >= score; 0 <= score ? k++ : k--){ results.push(k); }
-            return results;
-          }).apply(this) : [score];
+        } else if (needle[0] === '>') {
+          let score = parseInt(needle[1], 10)
+          foundScores = foundScores.filter(s => s.summary >= score);
           
-          foundScores = foundScores.filter(s => s.summary, indexOf.call(range, ref2) >= 0);
-          
-        } else if (needle.last() === '.' && parseInt(needle)) {
-          let needleDate = parseInt(needle);
-          foundScores = foundScores.filter(s => s.date.getDate() === needleDate);
+        } else if (needle[0] === '<') {
+          let score = parseInt(needle[1], 10)
+          foundScores = foundScores.filter(s => s.summary <= score);
           
         } else {
           // arbitrary date criteria
