@@ -463,7 +463,11 @@
       <textarea id="editScoreText" placeholder="Notes"></textarea>
     </form>
     <div class="editScoreProperties">
-      <button class="date">28-09-2024</button>
+      <button class="date">
+        <div class="prevDay" onclick="onSelectDay(-1)">-</div>
+        <div class="thisDay">28-09-2024</div>
+        <div class="nextDay" onclick="onSelectDay(+1)">+</div>
+      </button>
       <button class="valButton" onclick="onSelectScoreVal(1)">1</button>
       <button class="valButton" onclick="onSelectScoreVal(2)">2</button>
       <button class="valButton val3" onclick="onSelectScoreVal(3)">3</button>

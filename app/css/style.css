@@ -696,6 +696,26 @@ tr .yearRow {
   margin: 4px;
 }
 
+#editScore .editScoreProperties .date {
+  width: 300px;
+  display: flex;
+  flex-direction: row;
+  padding: 8px;
+}
+
+#editScore .editScoreProperties .date .thisDay {
+  flex-grow: 3;
+}
+
+#editScore .editScoreProperties .date .prevDay, #editScore .editScoreProperties .date .nextDay {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  display: inline-block;
+  background-color: #0e90d2;
+  color: white;
+}
+
 #editScore .val0 {
 }
 

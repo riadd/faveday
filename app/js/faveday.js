@@ -787,11 +787,10 @@
         dateId = now.format("{yyyy}-{MM}-{dd}");
       }
         
-      
-      if ($('#editScore').is(':visible')) {
-        this.hideEditScore();
-        return;
-      }
+      // if ($('#editScore').is(':visible')) {
+      //   this.hideEditScore();
+      //   return;
+      // }
       
       $('#editScore').show();
       $('#content').hide();
@@ -807,7 +806,10 @@
       
       let date = new Date(dateId);
       let dateLabel = Sugar.Date.format(date, '{dd} {Month} {yyyy} ({Weekday})')
-      $('#editScore .date').text(dateLabel);
+      $('#editScore .date .thisDay').text(dateLabel);
+      
+      let nextDay = date.addDays(1)
+      let prevDay = date.addDays(-1)
       
       let textarea = $('#editScore textarea')
       textarea.val(score.notes);
@@ -831,9 +833,16 @@
       const selectedButton = buttons[val - 1];
       selectedButton.classList.add(`val${val}`);
     }
+    
+    selectDay(dayDiff) {
+      let dateLabel = $('#editScore .date .thisDay').text()
+      let date = new Date(dateLabel);
+      let nextDate = date.addDays(dayDiff) 
+      this.showEditScore(nextDate.format("{yyyy}-{MM}-{dd}"));
+    }
 
     submitScore() {
-      let dateLabel = $('#editScore .date').text()
+      let dateLabel = $('#editScore .date .thisDay').text()
       let dateId = new Date(dateLabel).format("{yyyy}-{MM}-{dd}")
 
       let score = this.all.find(s => s.dateId() === dateId)
@@ -952,7 +961,11 @@
   window.onSelectScoreVal = function (val) {
     return window.app.selectScoreVal(val)
   }
-  
+
+  window.onSelectDay = function (val) {
+    return window.app.selectDay(val)
+  }
+
   window.onShowSearch = function(id) {
     if (id != null) {
       $('#search input')[0].value = id;
