@@ -651,8 +651,8 @@
     }
 
     showYear(yearNum) {
-      let id = parseInt(yearNum);
-      let oneYear = this.getScores(id)
+      let year = parseInt(yearNum);
+      let oneYear = this.getScores(year)
       let byMonth = oneYear.groupBy(s => s.date.getMonth());
       
       const monthNums = Array.from({ length: 12 }, (_, index) => index); // 0..11
@@ -660,7 +660,20 @@
       
       let months = monthNums.map(month => {
         let scores = byMonth[month] ?? [];
-        let date = Date.create(`${id}-${parseInt(month) + 1}`);
+        let date = Date.create(`${year}-${parseInt(month) + 1}`);
+
+        let days = dayNums.map(dayNum => {
+          let date = Date.create(`${year}-${parseInt(month) + 1}-${dayNum}`);
+          
+          return {
+            val: isNaN(date) ? "X" : scores.find(s => s.date.getDate() === dayNum)?.summary ?? 0,
+            weekday: date.getDay()
+          }
+        });
+        
+        let offset = days[0].weekday // 0 is sunday
+        for (let i=0; i<offset; i++)
+          days.splice(i, 0, {val:"X", weekday:i});
         
         return {
           date: date.format('{Mon} {yyyy}'),
@@ -668,12 +681,7 @@
           link: `/month/${yearNum}/${parseInt(month) + 1}`,
           monthId: date.format('{yyyy}-{MM}'),
           monthsId: date.format('{MM}'),
-          days: dayNums.map(d => {
-            return {
-              val: scores.find(s => s.date.getDate() === d)?.summary ?? 0,
-              weekday: Date.create(`${id}-${parseInt(month) + 1}-${d}`).getDay()
-            }
-          }),
+          days: days
         }
       });
       
@@ -681,10 +689,10 @@
       let randomScores = oneYear.filter(s => s.summary >=3).sample(5);
       let bestScores = oneYear.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
 
-      this.pushHistory(`/year/${id}`, id);
+      this.pushHistory(`/year/${year}`, year);
       
       return this.render('#tmpl-year', '#content', {
-        year: id,
+        year: year,
         average: oneYear.average(s => s.summary).format(2),
         scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: randomScores}),
         inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: bestScores}),
