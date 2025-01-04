@@ -805,7 +805,7 @@
       this.selectScoreVal(score.summary);
       
       let date = new Date(dateId);
-      let dateLabel = Sugar.Date.format(date, '{dd} {Month} {yyyy} ({Weekday})')
+      let dateLabel = Sugar.Date.format(date, '{d} {Month} {yyyy} ({Weekday})')
       $('#editScore .date .thisDay').text(dateLabel);
       
       let nextDay = date.addDays(1)

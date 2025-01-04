@@ -709,7 +709,7 @@ tr .yearRow {
 
 #editScore .editScoreProperties .date .prevDay, #editScore .editScoreProperties .date .nextDay {
   width: 30px;
-  height: 30px;
+  height: 24px;
   border-radius: 4px;
   display: inline-block;
   background-color: #0e90d2;
