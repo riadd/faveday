@@ -219,8 +219,22 @@
   </script>
 
   <!-- tmpl-year -->
+  <script type="text/mustache" id="tmpl-score-bar">
+    {{#overview}}
+    <div class="scoreBar">
+      <div style="width: {{count1}}%" class="val1">&nbsp;</div>
+      <div style="width: {{count2}}%" class="val2">&nbsp;</div>
+      <div style="width: {{count3}}%" class="val3">&nbsp;</div>
+      <div style="width: {{count4}}%" class="val4">&nbsp;</div>
+      <div style="width: {{count5}}%" class="val5">&nbsp;</div>
+    </div>
+    {{/overview}}
+  </script>
+
+  <!-- tmpl-year -->
   <script type="text/mustache" id="tmpl-year">
     {{> header}}
+    {{> scoreBar}}
 
     <h1>{{year}} <small>Ø {{average}}</small></h1>
     {{> yearsBar}}

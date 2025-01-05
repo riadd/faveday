@@ -1116,6 +1116,18 @@ tr .yearRow {
   color: white;
 }
 
+/* scoreBar */
+
+.scoreBar {
+  width: 100%;
+  height: 5px;
+  background-color: white;
+}
+
+.scoreBar div {
+  float: left;
+}
+
 /* bestDays */
 
 table.bestEntries {

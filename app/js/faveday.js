@@ -240,6 +240,21 @@
         $('.empty').hide();
     }
     
+    getOverview(scores) {
+      let overview = [0,0,0,0,0]
+      
+      for (let score of scores)
+        overview[score.summary-1] += 1;
+      
+      return {
+        count1: 100*overview[0]/overview.sum(),
+        count2: 100*overview[1]/overview.sum(),
+        count3: 100*overview[2]/overview.sum(),
+        count4: 100*overview[3]/overview.sum(),
+        count5: 100*overview[4]/overview.sum(),
+      }
+    }
+    
     getMaxStreak(scores, onlyFirst= false) {
       let maxStreakCount = 0;
       let maxStreakStart = null;
@@ -698,13 +713,15 @@
         inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: bestScores}),
         months: months,
         years: this.years.map(y => ({year: y})),
-        streak: this.getMaxStreak(oneYear)
+        streak: this.getMaxStreak(oneYear),
+        overview: this.getOverview(oneYear)
       }, {
-        yearsBar: Hogan.compile($('#tmpl-years-bar').html())
+        yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
+        scoreBar: Hogan.compile($('#tmpl-score-bar').html())
       });
     }
 
-     showSearch(id) {
+    showSearch(id) {
       id = $('#search input')[0].value;
       
       if (id.length < 1) {
