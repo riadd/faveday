@@ -1120,6 +1120,10 @@ tr .yearRow {
 
 table.bestEntries {
   margin: 40px 0;
+  padding: 0;
+
+  display: inline-block;
+  overflow: auto;
 }
 
 table.bestEntries th {
