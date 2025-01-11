@@ -1197,7 +1197,6 @@ table.bestEntries tr:nth-child(n+2) td {
   background: #f30000;
   border-bottom-right-radius: 5px;
   border-bottom-left-radius: 5px;
-  margin-right: 20px;
 }
 
 #menu h1 {
@@ -1213,14 +1212,20 @@ table.bestEntries tr:nth-child(n+2) td {
   color: white;
 }
 
+.window-controls {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  right: 20px;
+  top: 10px;
+}
+
 .window-controls button {
-  -webkit-app-region: no-drag;  /* Ensures buttons are clickable, not draggable */
   padding: 5px 10px;
-  margin-left: 5px;
+  /*margin-left: 5px;*/
   cursor: pointer;
 
   background-color: #333;
-  border: 1px solid white;
+  border: 0px solid white;
   color: white;
   border-radius: 4px;
 }
