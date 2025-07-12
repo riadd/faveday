@@ -6,5 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   minimize: () => ipcRenderer.send('minimize-window'),
   maximize: () => ipcRenderer.send('maximize-window'),
   close: () => ipcRenderer.send('close-window'),
-  selectFolder: () => ipcRenderer.send('select-folder')
+  selectFolder: () => ipcRenderer.send('select-folder'),
+  getConfig: () => ipcRenderer.invoke('get-config'),
+  setBirthdate: (birthdate) => ipcRenderer.invoke('set-birthdate', birthdate)
 });

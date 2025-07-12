@@ -312,7 +312,7 @@
       );
     }
 
-    showDashboard() {
+    async showDashboard() {
       $('#search input')[0].value = "";
       let recent = this.all.slice(0, 3);
       
@@ -339,6 +339,16 @@
         diff = this.fmtDiff(curAvg - prevAvg)
       }
 
+      // Get config for birthdate
+      const config = await window.api.getConfig();
+      
+      // Calculate progress data
+      const calendarProgress = this.getCalendarYearProgress();
+      const lifeProgress = config.birthdate ? this.getLifeYearProgress(config.birthdate) : null;
+      const coverage = this.getCoverageProgress();
+      const lastHighScore = this.getDaysSinceLastScore(5);
+      const lastLowScore = this.getDaysSinceLastScore(1);
+
       this.pushHistory('/', '');
       
       return this.render('#tmpl-dashboard', '#content', {
@@ -349,7 +359,12 @@
         years: this.years.map(y => ({year: y})),
         streak: this.getMaxStreak(this.all, true),
         diff: diff,
-        footer: `Total Scores: ${this.all.length}`
+        footer: `Total Scores: ${this.all.length}`,
+        calendarProgress: calendarProgress,
+        lifeProgress: lifeProgress,
+        coverage: coverage,
+        lastHighScore: lastHighScore,
+        lastLowScore: lastLowScore
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -905,6 +920,104 @@
       // Update the progress bar
       document.getElementById('editScoreProgress').value = progressValue;
     }
+
+    getCalendarYearProgress() {
+      const now = new Date();
+      const yearStart = new Date(now.getFullYear(), 0, 1);
+      const yearEnd = new Date(now.getFullYear(), 11, 31);
+      const daysPassed = Math.floor((now - yearStart) / (1000 * 60 * 60 * 24)) + 1;
+      const totalDays = Math.floor((yearEnd - yearStart) / (1000 * 60 * 60 * 24)) + 1;
+      
+      return {
+        daysPassed: daysPassed,
+        totalDays: totalDays,
+        percentage: Math.round((daysPassed / totalDays) * 100)
+      };
+    }
+
+    getLifeYearProgress(birthdate) {
+      if (!birthdate) return null;
+      
+      const now = new Date();
+      const birth = new Date(birthdate);
+      
+      // Calculate current life year (age)
+      let lifeYear = now.getFullYear() - birth.getFullYear();
+      const monthDiff = now.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+        lifeYear--;
+      }
+      
+      // Calculate life year boundaries
+      const lifeYearStart = new Date(birth.getFullYear() + lifeYear, birth.getMonth(), birth.getDate());
+      const lifeYearEnd = new Date(birth.getFullYear() + lifeYear + 1, birth.getMonth(), birth.getDate() - 1);
+      
+      const daysPassed = Math.floor((now - lifeYearStart) / (1000 * 60 * 60 * 24)) + 1;
+      const totalDays = Math.floor((lifeYearEnd - lifeYearStart) / (1000 * 60 * 60 * 24)) + 1;
+      
+      return {
+        lifeYear: lifeYear + 1, // +1 because we count from age 1, not 0
+        daysPassed: daysPassed,
+        totalDays: totalDays,
+        percentage: Math.round((daysPassed / totalDays) * 100)
+      };
+    }
+
+    getDaysSinceLastScore(targetScore) {
+      const now = new Date();
+      const targetScores = this.all.filter(s => s.summary === targetScore);
+      
+      if (targetScores.length === 0) {
+        return null; // No scores of this type found
+      }
+      
+      const latestScore = targetScores.sort((a, b) => b.date - a.date)[0];
+      const daysDiff = Math.floor((now - latestScore.date) / (1000 * 60 * 60 * 24));
+      
+      return {
+        days: daysDiff,
+        lastDate: latestScore.dateStr()
+      };
+    }
+
+    getCoverageProgress() {
+      const now = new Date();
+      const yearStart = new Date(now.getFullYear(), 0, 1);
+      const daysPassed = Math.floor((now - yearStart) / (1000 * 60 * 60 * 24)) + 1;
+      
+      const scoresThisYear = this.getScores(now.getFullYear());
+      const entriesMade = scoresThisYear.length;
+      
+      return {
+        entriesMade: entriesMade,
+        daysPassed: daysPassed,
+        percentage: daysPassed > 0 ? Math.round((entriesMade / daysPassed) * 100) : 0
+      };
+    }
+
+    async showSettings() {
+      const config = await window.api.getConfig();
+      
+      this.pushHistory('/settings', 'Settings');
+      
+      return this.render('#tmpl-settings', '#content', {
+        birthdate: config.birthdate || '',
+        years: this.years.map(y => ({year: y}))
+      }, {
+        yearsBar: Hogan.compile($('#tmpl-years-bar').html())
+      });
+    }
+
+    async saveBirthdate() {
+      const birthdateInput = document.getElementById('birthdate-input');
+      const birthdate = birthdateInput.value;
+      
+      if (birthdate) {
+        await window.api.setBirthdate(birthdate);
+        // Refresh dashboard to show new progress
+        this.showDashboard();
+      }
+    }
   }
 
   //@showPlot()
@@ -957,8 +1070,8 @@
     return window.app.showTags();
   };
 
-  window.onShowDashboard = function() {
-    return window.app.showDashboard();
+  window.onShowDashboard = async function() {
+    return await window.app.showDashboard();
   };
 
   window.onUpdateRandomInspiration = function() {
@@ -998,6 +1111,14 @@
       $('#search input')[0].value = id;
     }
     return window.app.showSearch(id);
+  };
+
+  window.onShowSettings = async function() {
+    return await window.app.showSettings();
+  };
+
+  window.onSaveBirthdate = async function() {
+    return await window.app.saveBirthdate();
   };
 
   window.addEventListener("popstate", (event) => {
@@ -1063,6 +1184,9 @@
         break;
       case 'tags':
         window.app.showTags();
+        break;
+      case 'settings':
+        window.onShowSettings();
         break;
       default:
         window.app.showDashboard();

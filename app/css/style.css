@@ -1381,3 +1381,141 @@ input:checked + .slider:before {
   transform: translateX(1.9em);
 }
 
+/* Bento Grid Layout */
+.bento-grid {
+  border: 1px solid #222;
+  box-shadow: #222 0px 5px 10px;
+  background: #555;
+  margin: 20px 0;
+  display: table;
+  width: 100%;
+}
+
+.bento-item {
+  display: table-cell;
+  padding: 15px;
+  text-align: center;
+  vertical-align: top;
+  border-right: 1px solid #222;
+}
+
+.bento-item:last-child {
+  border-right: none;
+}
+
+.bento-item:nth-child(odd) {
+  background-color: #444;
+}
+
+.bento-item:nth-child(even) {
+  background-color: #555;
+}
+
+.bento-item h4 {
+  margin: 0 0 8px 0;
+  color: #ccc;
+  font-size: 0.85em;
+  font-weight: normal;
+}
+
+.bento-main-value {
+  font-size: 1.6em;
+  font-weight: bold;
+  color: #fff;
+  margin: 5px 0;
+}
+
+.bento-item .progress-bar {
+  height: 4px;
+  background-color: #333;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.bento-item .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-val3), var(--color-val4), var(--color-val5));
+  transition: width 0.3s ease;
+}
+
+.bento-item small {
+  color: #aaa;
+  font-size: 0.75em;
+  display: block;
+}
+
+.bento-item small a {
+  color: #60caff;
+}
+
+/* Specific bento item styles */
+.bento-item.high-score .bento-main-value {
+  color: var(--color-val5);
+}
+
+.bento-item.low-score .bento-main-value {
+  color: var(--color-val1);
+}
+
+.bento-item.coverage .progress-fill {
+  background: linear-gradient(90deg, #0e90d2, #60caff);
+}
+
+.bento-item.life-progress-setup {
+  opacity: 0.7;
+}
+
+.bento-item.life-progress-setup .bento-main-value {
+  color: #777;
+}
+
+/* Settings section */
+.settings-section {
+  margin: 20px 0;
+}
+
+.settings-section h3 {
+  margin: 0 0 15px 0;
+  color: #eee;
+  font-size: 1.1em;
+}
+
+.setting-item {
+  margin: 15px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setting-item label {
+  min-width: 250px;
+  font-size: 0.9em;
+  color: #ccc;
+}
+
+.setting-item input[type="date"] {
+  padding: 5px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: #444;
+  color: #eee;
+}
+
+.setting-item button {
+  padding: 5px 15px;
+  border: none;
+  border-radius: 4px;
+  background-color: #0e90d2;
+  color: white;
+  cursor: pointer;
+}
+
+.setting-item button:hover {
+  background-color: #0c7ab8;
+}
+
+.setting-explanation {
+  margin: 10px 0;
+  color: #888;
+}
+

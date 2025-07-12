@@ -32,6 +32,16 @@ ipcMain.on('select-folder', async (event) => {
   return await loadScores(config.filesPath);
 });
 
+ipcMain.handle('get-config', async () => {
+  return config;
+});
+
+ipcMain.handle('set-birthdate', async (event, birthdate) => {
+  config.birthdate = birthdate;
+  saveConfig();
+  return config;
+});
+
 async function selectFolder() {
   const folder = await dialog.showOpenDialog({
     properties: ['openDirectory'],
@@ -222,6 +232,7 @@ function loadConfig() {
   // Return default window size if no config is found
   config = {
     filesPath: null,
+    birthdate: null, // User's birthdate in YYYY-MM-DD format
     windowState: {
       width: 800,
       height: 600,

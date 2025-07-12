@@ -55,6 +55,65 @@
       <div class="comparison">{{#diff}}Month Average: {{diff}}{{/diff}}</div>
     </div>
 
+    <div class="bento-grid">
+      {{#calendarProgress}}
+      <div class="bento-item calendar-progress">
+        <h4>📅 Calendar Year</h4>
+        <div class="bento-main-value">{{daysPassed}}/{{totalDays}}</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{percentage}}%"></div>
+        </div>
+        <small>{{percentage}}% of year passed</small>
+      </div>
+      {{/calendarProgress}}
+      
+      {{#lifeProgress}}
+      <div class="bento-item life-progress">
+        <h4>🎂 Life Year {{lifeYear}}</h4>
+        <div class="bento-main-value">{{daysPassed}}/{{totalDays}}</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{percentage}}%"></div>
+        </div>
+        <small>{{percentage}}% of life year passed</small>
+      </div>
+      {{/lifeProgress}}
+      
+      {{^lifeProgress}}
+      <div class="bento-item life-progress-setup">
+        <h4>🎂 Life Year</h4>
+        <div class="bento-main-value">-/-</div>
+        <small><a onclick="onShowSettings()">Set birthdate</a></small>
+      </div>
+      {{/lifeProgress}}
+      
+      {{#coverage}}
+      <div class="bento-item coverage">
+        <h4>📊 Coverage</h4>
+        <div class="bento-main-value">{{entriesMade}}/{{daysPassed}}</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{percentage}}%"></div>
+        </div>
+        <small>{{percentage}}% days tracked</small>
+      </div>
+      {{/coverage}}
+      
+      {{#lastHighScore}}
+      <div class="bento-item high-score">
+        <h4>⭐ Last 5+ Score</h4>
+        <div class="bento-main-value">{{days}}</div>
+        <small>days ago ({{lastDate}})</small>
+      </div>
+      {{/lastHighScore}}
+      
+      {{#lastLowScore}}
+      <div class="bento-item low-score">
+        <h4>😔 Last 1 Score</h4>
+        <div class="bento-main-value">{{days}}</div>
+        <small>days ago ({{lastDate}})</small>
+      </div>
+      {{/lastLowScore}}
+    </div>
+
     {{#hasTodayScores}}
       <h2>Today</h2>
       <table class="box scores">
@@ -403,6 +462,30 @@
         {{{insp}}}
       </table>
     {{/inspiration}}
+  </script>
+
+  <!-- tmpl-settings -->
+  <script type="text/mustache" id="tmpl-settings">
+    <h1>Settings</h1>
+    {{> yearsBar}}
+
+    <div class="box settings-section">
+      <h3>Personal Information</h3>
+      
+      <div class="setting-item">
+        <label for="birthdate-input">Birthdate (for life year progress):</label>
+        <input type="date" id="birthdate-input" value="{{birthdate}}" />
+        <button onclick="onSaveBirthdate()">Save</button>
+      </div>
+      
+      <div class="setting-explanation">
+        <small>Your birthdate is used to calculate progress within your current "life year" (from birthday to birthday). This data is stored locally on your device.</small>
+      </div>
+    </div>
+
+    <div id="footer">
+      <a onclick="onShowDashboard()">← Back to Dashboard</a>
+    </div>
   </script>
 
   <!-- tmpl-years -->
