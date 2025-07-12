@@ -637,9 +637,11 @@
           value: s.format(2),
           isMax: s === maxSeason
         })),
-        streak: this.getMaxStreak(this.all)
+        streak: this.getMaxStreak(this.all),
+        overview: this.getOverview(this.all)
       }, {
-        yearsBar: Hogan.compile($('#tmpl-years-bar').html())
+        yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
+        scoreBar: Hogan.compile($('#tmpl-score-bar').html())
       });
     }
 
