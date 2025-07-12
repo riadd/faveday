@@ -348,6 +348,7 @@
       const coverage = this.getCoverageProgress();
       const lastHighScore = this.getDaysSinceLastScore(5);
       const lastLowScore = this.getDaysSinceLastScore(1);
+      const thirtyDayStats = this.getThirtyDayComparisons();
 
       this.pushHistory('/', '');
       
@@ -364,7 +365,8 @@
         lifeProgress: lifeProgress,
         coverage: coverage,
         lastHighScore: lastHighScore,
-        lastLowScore: lastLowScore
+        lastLowScore: lastLowScore,
+        thirtyDayStats: thirtyDayStats
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -995,6 +997,84 @@
       };
     }
 
+    getThirtyDayComparisons() {
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      const sixtyDaysAgo = new Date(now);
+      sixtyDaysAgo.setDate(now.getDate() - 60);
+
+      // Current 30 days
+      const currentPeriod = this.all.filter(s => s.date >= thirtyDaysAgo && s.date <= now);
+      
+      // Previous 30 days (31-60 days ago)
+      const previousPeriod = this.all.filter(s => s.date >= sixtyDaysAgo && s.date < thirtyDaysAgo);
+
+      // Word count comparison
+      const currentWordCount = currentPeriod.reduce((sum, score) => sum + (score.notes ? score.notes.split(/\s+/).length : 0), 0);
+      const previousWordCount = previousPeriod.reduce((sum, score) => sum + (score.notes ? score.notes.split(/\s+/).length : 0), 0);
+      const currentAvgWords = currentPeriod.length > 0 ? Math.round(currentWordCount / 30) : 0;
+      const previousAvgWords = previousPeriod.length > 0 ? Math.round(previousWordCount / 30) : 0;
+      const wordsDiff = currentAvgWords - previousAvgWords;
+
+      // Entry count comparison
+      const currentEntries = currentPeriod.length;
+      const previousEntries = previousPeriod.length;
+      const entriesDiff = currentEntries - previousEntries;
+
+      // Average score comparison
+      const currentAvgScore = currentPeriod.length > 0 ? currentPeriod.reduce((sum, s) => sum + s.summary, 0) / currentPeriod.length : 0;
+      const previousAvgScore = previousPeriod.length > 0 ? previousPeriod.reduce((sum, s) => sum + s.summary, 0) / previousPeriod.length : 0;
+      const scoreDiff = currentAvgScore - previousAvgScore;
+
+      // Most used tag in recent 30 days
+      const tagCounts = {};
+      currentPeriod.forEach(score => {
+        const tags = score.notes.match(/[#@]\p{L}+/gui) || [];
+        tags.forEach(tag => {
+          const cleanTag = tag.slice(1).toLowerCase();
+          tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
+        });
+      });
+      
+      const topTag = Object.entries(tagCounts).length > 0 
+        ? Object.entries(tagCounts).sort((a, b) => b[1] - a[1])[0] 
+        : null;
+
+      const formatTrend = (diff, trend) => {
+        if (diff === 0) return '';
+        const arrow = trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→';
+        const sign = diff > 0 ? '+' : '';
+        return ` ${arrow} ${sign}${diff}`;
+      };
+
+      return {
+        words: {
+          current: currentAvgWords,
+          previous: previousAvgWords,
+          diff: wordsDiff,
+          trend: wordsDiff > 0 ? 'up' : wordsDiff < 0 ? 'down' : 'same',
+          trendDisplay: formatTrend(wordsDiff, wordsDiff > 0 ? 'up' : wordsDiff < 0 ? 'down' : 'same')
+        },
+        entries: {
+          current: currentEntries,
+          previous: previousEntries,
+          diff: entriesDiff,
+          trend: entriesDiff > 0 ? 'up' : entriesDiff < 0 ? 'down' : 'same',
+          trendDisplay: formatTrend(entriesDiff, entriesDiff > 0 ? 'up' : entriesDiff < 0 ? 'down' : 'same')
+        },
+        score: {
+          current: Math.round(currentAvgScore * 10) / 10,
+          previous: Math.round(previousAvgScore * 10) / 10,
+          diff: Math.round(scoreDiff * 10) / 10,
+          trend: scoreDiff > 0 ? 'up' : scoreDiff < 0 ? 'down' : 'same',
+          trendDisplay: formatTrend(Math.round(scoreDiff * 10) / 10, scoreDiff > 0 ? 'up' : scoreDiff < 0 ? 'down' : 'same'),
+          trendEmoji: scoreDiff > 0 ? '📈' : scoreDiff < 0 ? '📉' : '➡️'
+        },
+        topTag: topTag ? { tag: topTag[0], count: topTag[1] } : null
+      };
+    }
+
     async showSettings() {
       const config = await window.api.getConfig();
       
@@ -1002,6 +1082,7 @@
       
       return this.render('#tmpl-settings', '#content', {
         birthdate: config.birthdate || '',
+        currentFolder: config.filesPath || 'Not set',
         years: this.years.map(y => ({year: y}))
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())

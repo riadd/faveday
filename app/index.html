@@ -112,6 +112,44 @@
         <small>days ago ({{lastDate}})</small>
       </div>
       {{/lastLowScore}}
+      
+      <!-- 30-day comparison widgets -->
+      {{#thirtyDayStats}}
+      <div class="bento-item">
+        <h4>📝 Avg Words/Day</h4>
+        <div class="bento-main-value">{{words.current}}<span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></div>
+        <small>vs {{words.previous}} last month</small>
+      </div>
+      
+      <div class="bento-item">
+        <h4>📊 Total Entries</h4>
+        <div class="bento-main-value">{{entries.current}}<span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span></div>
+        <small>vs {{entries.previous}} last month</small>
+      </div>
+      
+      <div class="bento-item">
+        <h4>⭐ Avg Score</h4>
+        <div class="bento-main-value">{{score.current}}<span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></div>
+        <small>vs {{score.previous}} last month</small>
+      </div>
+      
+      {{#topTag}}
+      <div class="bento-item">
+        <h4>🏷️ Top Tag</h4>
+        <div class="bento-main-value">{{tag}}</div>
+        <small>{{count}} times this month</small>
+      </div>
+      {{/topTag}}
+      
+      {{^topTag}}
+      <div class="bento-item">
+        <h4>🏷️ Top Tag</h4>
+        <div class="bento-main-value">-</div>
+        <small>No tags used yet</small>
+      </div>
+      {{/topTag}}
+      
+      {{/thirtyDayStats}}
     </div>
 
     {{#hasTodayScores}}
@@ -128,7 +166,7 @@
     </table>
     
     <div id="footer">
-      {{footer}} • <a onclick="onSelectFolder()">Select Folder</a>
+      {{footer}} • <a onclick="onShowSettings()">Settings</a>
     </div>
   </script>
 
@@ -468,6 +506,20 @@
   <script type="text/mustache" id="tmpl-settings">
     <h1>Settings</h1>
     {{> yearsBar}}
+
+    <div class="box settings-section">
+      <h3>Data Storage</h3>
+      
+      <div class="setting-item">
+        <label>Current data folder:</label>
+        <span class="folder-path">{{currentFolder}}</span>
+        <button onclick="onSelectFolder()">Change Folder</button>
+      </div>
+      
+      <div class="setting-explanation">
+        <small>Your journal entries are stored as text files in this folder. You can change this location or sync it with cloud storage services like Dropbox.</small>
+      </div>
+    </div>
 
     <div class="box settings-section">
       <h3>Personal Information</h3>

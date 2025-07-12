@@ -1383,65 +1383,68 @@ input:checked + .slider:before {
 
 /* Bento Grid Layout */
 .bento-grid {
-  border: 1px solid #222;
-  box-shadow: #222 0px 5px 10px;
-  background: #555;
-  margin: 20px 0;
-  display: table;
-  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 20px;
+  margin: 30px 0;
 }
 
 .bento-item {
-  display: table-cell;
-  padding: 15px;
+  border: 1px solid #222;
+  box-shadow: #222 0px 8px 16px;
+  background: #555;
+  padding: 25px 20px;
   text-align: center;
-  vertical-align: top;
-  border-right: 1px solid #222;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.bento-item:last-child {
-  border-right: none;
-}
-
-.bento-item:nth-child(odd) {
-  background-color: #444;
-}
-
-.bento-item:nth-child(even) {
-  background-color: #555;
+.bento-item:hover {
+  transform: translateY(-2px);
+  box-shadow: #222 0px 12px 24px;
 }
 
 .bento-item h4 {
-  margin: 0 0 8px 0;
-  color: #ccc;
-  font-size: 0.85em;
-  font-weight: normal;
+  margin: 0 0 15px 0;
+  color: #ddd;
+  font-size: 1.0em;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .bento-main-value {
-  font-size: 1.6em;
-  font-weight: bold;
+  font-size: 2.8em;
+  font-weight: 900;
   color: #fff;
-  margin: 5px 0;
+  margin: 10px 0;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .bento-item .progress-bar {
-  height: 4px;
+  height: 6px;
   background-color: #333;
   overflow: hidden;
-  margin: 6px 0;
+  margin: 15px 0;
+  border-radius: 3px;
 }
 
 .bento-item .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--color-val3), var(--color-val4), var(--color-val5));
   transition: width 0.3s ease;
+  border-radius: 3px;
 }
 
 .bento-item small {
-  color: #aaa;
-  font-size: 0.75em;
-  display: block;
+  color: #bbb;
+  font-size: 0.9em;
+  font-weight: 500;
+  margin-top: 8px;
 }
 
 .bento-item small a {
@@ -1449,12 +1452,20 @@ input:checked + .slider:before {
 }
 
 /* Specific bento item styles */
+.bento-item.high-score {
+  background: linear-gradient(135deg, #2d5016, #555);
+}
+
 .bento-item.high-score .bento-main-value {
-  color: var(--color-val5);
+  color: #90ee90;
+}
+
+.bento-item.low-score {
+  background: linear-gradient(135deg, #5c1e1e, #555);
 }
 
 .bento-item.low-score .bento-main-value {
-  color: var(--color-val1);
+  color: #ff6b6b;
 }
 
 .bento-item.coverage .progress-fill {
@@ -1462,11 +1473,56 @@ input:checked + .slider:before {
 }
 
 .bento-item.life-progress-setup {
-  opacity: 0.7;
+  opacity: 0.8;
+  background: linear-gradient(135deg, #444, #555);
 }
 
 .bento-item.life-progress-setup .bento-main-value {
-  color: #777;
+  color: #999;
+}
+
+/* Trend indicators */
+.trend-up {
+  color: #90ee90 !important;
+  background: linear-gradient(135deg, #1a4d1a, #2d5016);
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.trend-down {
+  color: #fff !important;
+  background: linear-gradient(135deg, #cc4444, #ff6b6b);
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.trend-same {
+  color: #fff !important;
+  background: #666;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.trend-indicator {
+  font-size: 0.7em;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+/* Special styling for trend widgets */
+.bento-item.trend-up-widget {
+  background: linear-gradient(135deg, #1a4d1a, #2d5016);
+}
+
+.bento-item.trend-down-widget {
+  background: linear-gradient(135deg, #5c1e1e, #722626);
+}
+
+.bento-item.trend-same-widget {
+  background: linear-gradient(135deg, #444, #555);
 }
 
 /* Settings section */
@@ -1517,5 +1573,19 @@ input:checked + .slider:before {
 .setting-explanation {
   margin: 10px 0;
   color: #888;
+}
+
+.folder-path {
+  font-family: monospace;
+  background-color: #333;
+  padding: 5px 8px;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 0.9em;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 

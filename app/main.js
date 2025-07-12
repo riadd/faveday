@@ -2,6 +2,7 @@
 
 const electron = require('electron');
 const path = require('path')
+const os = require('os')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -18,7 +19,16 @@ ipcMain.handle('load-scores', async () => {
   }
   else
   {
-    config.filesPath = await selectFolder();
+    // Set default folder to user's Documents/FaveDay
+    const defaultPath = path.join(os.homedir(), 'Documents', 'FaveDay');
+    
+    // Create default directory if it doesn't exist
+    if (!fs.existsSync(defaultPath)) {
+      fs.mkdirSync(defaultPath, { recursive: true });
+    }
+    
+    config.filesPath = defaultPath;
+    saveConfig();
     return await loadScores(config.filesPath);
   }
 });
