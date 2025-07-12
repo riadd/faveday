@@ -27,9 +27,9 @@ ipcMain.handle('save-scores', async (event, scores) => {
   saveScores(config.filesPath, scores)
 });
 
-// TODO implement this
 ipcMain.on('select-folder', async (event) => {
-  await selectFolder();
+  config.filesPath = await selectFolder();
+  return await loadScores(config.filesPath);
 });
 
 async function selectFolder() {

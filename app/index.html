@@ -76,6 +76,7 @@
   <!-- tmpl-month -->
   <script type="text/mustache" id="tmpl-month">
     {{> header}}
+    {{> scoreBar}}
 
     <h1>{{title}} <small>Ø {{average}}</small></h1>
     {{> yearsBar}}
@@ -442,7 +443,10 @@
 </head>
 
 <body  onload="onAppStart()">
-  <div id="loading">Loading files...</div>
+  <div id="loading">
+    Loading files...
+    <button onclick="onSelectFolder()">Select Folder</button>
+  </div>
 
   <div id="topArea">
     <div id="top-area-content">

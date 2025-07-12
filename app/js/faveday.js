@@ -415,8 +415,10 @@
         nextYear: this.isValidMonth(nextYearDate, firstDate, lastDate),
         
         average: monthScores.average(s => s.summary).format(2),
+        overview: this.getOverview(monthScores)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
+        scoreBar: Hogan.compile($('#tmpl-score-bar').html())
       });
 
       document.getElementById('showEmptyToggle').addEventListener('change', function() {
