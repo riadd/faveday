@@ -59,22 +59,16 @@
       {{#calendarProgress}}
       <div class="bento-item calendar-progress">
         <h4>📅 Calendar Year</h4>
-        <div class="bento-main-value">{{daysPassed}}/{{totalDays}}</div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: {{percentage}}%"></div>
-        </div>
-        <small>{{percentage}}% of year passed</small>
+        <div class="bento-main-value">{{percentage}}%</div>
+        <small>{{daysPassed}}/{{totalDays}} days</small>
       </div>
       {{/calendarProgress}}
       
       {{#lifeProgress}}
       <div class="bento-item life-progress">
         <h4>🎂 Age {{age}}</h4>
-        <div class="bento-main-value">{{daysPassed}}/{{totalDays}}</div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: {{percentage}}%"></div>
-        </div>
-        <small>{{percentage}}% to age {{nextAge}}</small>
+        <div class="bento-main-value">{{percentage}}%</div>
+        <small>{{daysPassed}}/{{totalDays}} to {{nextAge}}</small>
       </div>
       {{/lifeProgress}}
       
@@ -89,11 +83,8 @@
       {{#coverage}}
       <div class="bento-item coverage">
         <h4>📊 Coverage</h4>
-        <div class="bento-main-value">{{entriesMade}}/{{daysPassed}}</div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: {{percentage}}%"></div>
-        </div>
-        <small>{{percentage}}% days tracked</small>
+        <div class="bento-main-value">{{percentage}}%</div>
+        <small>{{entriesMade}}/{{daysPassed}} tracked</small>
       </div>
       {{/coverage}}
       
@@ -101,7 +92,7 @@
       <div class="bento-item high-score">
         <h4>⭐ Last 5+ Score</h4>
         <div class="bento-main-value">{{days}}</div>
-        <small>days ago ({{lastDate}})</small>
+        <small>days ago on {{lastDate}}</small>
       </div>
       {{/lastHighScore}}
       
@@ -109,35 +100,35 @@
       <div class="bento-item low-score">
         <h4>😔 Last 1 Score</h4>
         <div class="bento-main-value">{{days}}</div>
-        <small>days ago ({{lastDate}})</small>
+        <small>days ago on {{lastDate}}</small>
       </div>
       {{/lastLowScore}}
       
       <!-- 30-day comparison widgets -->
       {{#thirtyDayStats}}
-      <div class="bento-item">
+      <div class="bento-item trend-{{words.trend}}-widget">
         <h4>📝 Avg Words/Day</h4>
-        <div class="bento-main-value">{{words.current}}<span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></div>
-        <small>vs {{words.previous}} last month</small>
+        <div class="bento-main-value">{{words.current}}</div>
+        <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
       </div>
       
-      <div class="bento-item">
+      <div class="bento-item trend-{{entries.trend}}-widget">
         <h4>📊 Total Entries</h4>
-        <div class="bento-main-value">{{entries.current}}<span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span></div>
-        <small>vs {{entries.previous}} last month</small>
+        <div class="bento-main-value">{{entries.current}}</div>
+        <small>vs {{entries.previous}} past 30 days <span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span></small>
       </div>
       
-      <div class="bento-item">
+      <div class="bento-item trend-{{score.trend}}-widget">
         <h4>⭐ Avg Score</h4>
-        <div class="bento-main-value">{{score.current}}<span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></div>
-        <small>vs {{score.previous}} last month</small>
+        <div class="bento-main-value">{{score.current}}</div>
+        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
       </div>
       
       {{#topTag}}
       <div class="bento-item">
         <h4>🏷️ Top Tag</h4>
         <div class="bento-main-value">{{tag}}</div>
-        <small>{{count}} times this month</small>
+        <small>{{count}} times past 30 days</small>
       </div>
       {{/topTag}}
       

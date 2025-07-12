@@ -1402,12 +1402,12 @@ input:checked + .slider:before {
   border: 1px solid #222;
   box-shadow: #222 0px 8px 16px;
   background: #555;
-  padding: 25px 20px;
-  text-align: center;
+  padding: 15px;
   min-height: 120px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
+  position: relative;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -1417,67 +1417,55 @@ input:checked + .slider:before {
 }
 
 .bento-item h4 {
-  margin: 0 0 15px 0;
+  margin: 0;
   color: #ddd;
-  font-size: 1.0em;
+  font-size: 1.1em;
   font-weight: 600;
   letter-spacing: 0.5px;
+  position: absolute;
+  top: 15px;
+  left: 15px;
 }
 
 .bento-main-value {
-  font-size: 2.2em;
+  font-size: 3.5em;
   font-weight: 900;
   color: #fff;
-  margin: 10px 0;
   line-height: 1;
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  text-align: center;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', 'Monaco', monospace;
+  letter-spacing: -0.01em;
 }
 
-.bento-item .progress-bar {
-  height: 6px;
-  background-color: #333;
-  overflow: hidden;
-  margin: 15px 0;
-  border-radius: 3px;
-}
-
-.bento-item .progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-val3), var(--color-val4), var(--color-val5));
-  transition: width 0.3s ease;
-  border-radius: 3px;
-}
 
 .bento-item small {
   color: #bbb;
-  font-size: 0.9em;
+  font-size: 1.0em;
   font-weight: 500;
-  margin-top: 8px;
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  text-align: right;
+  max-width: 80%;
+  white-space: nowrap;
 }
 
 .bento-item small a {
   color: #60caff;
 }
 
-/* Specific bento item styles */
+/* Specific bento item styles with consistent good/bad gradients */
 .bento-item.high-score {
-  background: linear-gradient(135deg, #2d5016, #555);
-}
-
-.bento-item.high-score .bento-main-value {
-  color: #90ee90;
+  background: linear-gradient(135deg, #3d5f3d, #555);
 }
 
 .bento-item.low-score {
-  background: linear-gradient(135deg, #5c1e1e, #555);
-}
-
-.bento-item.low-score .bento-main-value {
-  color: #ff6b6b;
-}
-
-.bento-item.coverage .progress-fill {
-  background: linear-gradient(90deg, #0e90d2, #60caff);
+  background: linear-gradient(135deg, #5f3d3d, #555);
 }
 
 .bento-item.life-progress-setup {
@@ -1486,47 +1474,40 @@ input:checked + .slider:before {
 }
 
 .bento-item.life-progress-setup .bento-main-value {
-  color: #999;
+  background: linear-gradient(45deg, #999, #777);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Trend indicators */
+/* Trend indicators - now smaller and for bottom right */
 .trend-up {
-  color: #90ee90 !important;
-  background: linear-gradient(135deg, #1a4d1a, #2d5016);
-  padding: 2px 6px;
-  border-radius: 12px;
-  font-weight: bold;
+  color: #90ee90;
+  font-weight: 600;
 }
 
 .trend-down {
-  color: #fff !important;
-  background: linear-gradient(135deg, #cc4444, #ff6b6b);
-  padding: 2px 6px;
-  border-radius: 12px;
-  font-weight: bold;
+  color: #ff6b6b;
+  font-weight: 600;
 }
 
 .trend-same {
-  color: #fff !important;
-  background: #666;
-  padding: 2px 6px;
-  border-radius: 12px;
-  font-weight: bold;
+  color: #ccc;
+  font-weight: 600;
 }
 
 .trend-indicator {
-  font-size: 0.7em;
-  margin-left: 8px;
-  display: inline-block;
+  font-size: 0.75em;
+  margin-left: 4px;
 }
 
-/* Special styling for trend widgets */
+/* Dynamic trend widget backgrounds */
 .bento-item.trend-up-widget {
-  background: linear-gradient(135deg, #1a4d1a, #2d5016);
+  background: linear-gradient(135deg, #3d5f3d, #555);
 }
 
 .bento-item.trend-down-widget {
-  background: linear-gradient(135deg, #5c1e1e, #722626);
+  background: linear-gradient(135deg, #5f3d3d, #555);
 }
 
 .bento-item.trend-same-widget {
