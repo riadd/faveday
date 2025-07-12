@@ -599,14 +599,44 @@
         bestMonths.push(this.all.filter(d => d.date.getMonth() === i).average(s => s.summary));
       }
 
+      let bestSeasons = [];
+      for (let i = 0; i < 4; i++) {
+        // Season mapping: 0=Winter, 1=Spring, 2=Summer, 3=Autumn
+        let seasonMonths;
+        switch(i) {
+          case 0: seasonMonths = [11, 0, 1]; break; // Winter: Dec, Jan, Feb
+          case 1: seasonMonths = [2, 3, 4]; break;  // Spring: Mar, Apr, May
+          case 2: seasonMonths = [5, 6, 7]; break;  // Summer: Jun, Jul, Aug
+          case 3: seasonMonths = [8, 9, 10]; break; // Autumn: Sep, Oct, Nov
+        }
+        
+        let seasonScores = this.all.filter(d => seasonMonths.includes(d.date.getMonth()));
+        bestSeasons.push(seasonScores.average(s => s.summary));
+      }
+
+      // Find maximum values for highlighting
+      const maxDay = Math.max(...bestDays);
+      const maxMonth = Math.max(...bestMonths);
+      const maxSeason = Math.max(...bestSeasons);
+
       this.pushHistory('/years', 'Years');
       
       return this.render('#tmpl-years', '#content', {
         scores: allYears.reverse(),
         inspiration: inspiration.filter(i => i.insp != null).reverse(),
         years: this.years.map(y => ({year: y})),
-        bestDays: bestDays.map(s => s.format(2)),
-        bestMonths: bestMonths.map(s => s.format(2)),
+        bestDays: bestDays.map((s, i) => ({
+          value: s.format(2),
+          isMax: s === maxDay
+        })),
+        bestMonths: bestMonths.map((s, i) => ({
+          value: s.format(2),
+          isMax: s === maxMonth
+        })),
+        bestSeasons: bestSeasons.map((s, i) => ({
+          value: s.format(2),
+          isMax: s === maxSeason
+        })),
         streak: this.getMaxStreak(this.all)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
@@ -958,7 +988,8 @@
       const totalDays = Math.floor((lifeYearEnd - lifeYearStart) / (1000 * 60 * 60 * 24)) + 1;
       
       return {
-        lifeYear: lifeYear + 1, // +1 because we count from age 1, not 0
+        age: lifeYear, // Actual current age
+        nextAge: lifeYear + 1, // Next age they will turn
         daysPassed: daysPassed,
         totalDays: totalDays,
         percentage: Math.round((daysPassed / totalDays) * 100)

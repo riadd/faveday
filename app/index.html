@@ -69,18 +69,18 @@
       
       {{#lifeProgress}}
       <div class="bento-item life-progress">
-        <h4>🎂 Life Year {{lifeYear}}</h4>
+        <h4>🎂 Age {{age}}</h4>
         <div class="bento-main-value">{{daysPassed}}/{{totalDays}}</div>
         <div class="progress-bar">
           <div class="progress-fill" style="width: {{percentage}}%"></div>
         </div>
-        <small>{{percentage}}% of life year passed</small>
+        <small>{{percentage}}% to age {{nextAge}}</small>
       </div>
       {{/lifeProgress}}
       
       {{^lifeProgress}}
       <div class="bento-item life-progress-setup">
-        <h4>🎂 Life Year</h4>
+        <h4>🎂 Age</h4>
         <div class="bento-main-value">-/-</div>
         <small><a onclick="onShowSettings()">Set birthdate</a></small>
       </div>
@@ -456,40 +456,54 @@
     
     <table class="box bestEntries">
       <tr>
-        <th>Monday</th>
-        <th>Tuesday</th>
-        <th>Wednesday</th>
-        <th>Thursday</th>
-        <th>Friday</th>
-        <th>Saturday</th>
-        <th>Sunday</th>
+        <th>💼 Monday</th>
+        <th>💼 Tuesday</th>
+        <th>💼 Wednesday</th>
+        <th>💼 Thursday</th>
+        <th>💼 Friday</th>
+        <th>🎉 Saturday</th>
+        <th>😴 Sunday</th>
       </tr>
       <tr>
           {{#bestDays}}
-            <td>{{.}}</td>
+            <td{{#isMax}} class="highlight-max"{{/isMax}}>{{value}}</td>
           {{/bestDays}}
       </tr>
     </table>
     
     <table class="box bestEntries">
       <tr>
-        <th>Jan</th>
-        <th>Feb</th>
-        <th>Mar</th>
-        <th>Apr</th>
-        <th>May</th>
-        <th>Jun</th>
-        <th>Jul</th>
-        <th>Aug</th>
-        <th>Sep</th>
-        <th>Oct</th>
-        <th>Nov</th>
-        <th>Dec</th>
+        <th>❄️ Jan</th>
+        <th>💕 Feb</th>
+        <th>🌱 Mar</th>
+        <th>🌸 Apr</th>
+        <th>🌺 May</th>
+        <th>☀️ Jun</th>
+        <th>🏖️ Jul</th>
+        <th>🌞 Aug</th>
+        <th>🍂 Sep</th>
+        <th>🎃 Oct</th>
+        <th>🦃 Nov</th>
+        <th>🎄 Dec</th>
       </tr>
       <tr>
           {{#bestMonths}}
-            <td>{{.}}</td>
+            <td{{#isMax}} class="highlight-max"{{/isMax}}>{{value}}</td>
           {{/bestMonths}}
+      </tr>
+    </table>
+    
+    <table class="box bestEntries">
+      <tr>
+        <th>❄️ Winter</th>
+        <th>🌸 Spring</th>
+        <th>☀️ Summer</th>
+        <th>🍂 Autumn</th>
+      </tr>
+      <tr>
+          {{#bestSeasons}}
+            <td{{#isMax}} class="highlight-max"{{/isMax}}>{{value}}</td>
+          {{/bestSeasons}}
       </tr>
     </table>
 
