@@ -748,21 +748,21 @@
       }
     }
     
-    getTags(scores) {
-      // Simple, clean implementation for tags page
+    getTags(scores, sortBy = 'count') {
+      // Use cached tag statistics instead of recalculating
       const re = /([#@])\p{L}[\p{L}\d]*/gui;
       
-      let tagCounter = {};
-      let personTags = new Set(); // Track person tags
+      let currentTagCounts = {};
+      let personTags = new Set();
       
-      // Count tags and detect person usage
+      // Only count current tags in the scores (for filtering purposes)
       for (let score of scores) {
         let matches = score.notes.match(re);
         if (matches) {
           matches.forEach(match => {
             let marker = match[0];
             let tagName = match.slice(1).toLowerCase();
-            tagCounter[tagName] = (tagCounter[tagName] || 0) + 1;
+            currentTagCounts[tagName] = (currentTagCounts[tagName] || 0) + 1;
             
             if (marker === '@') {
               personTags.add(tagName);
@@ -771,12 +771,41 @@
         }
       }
 
-      // Build clean results
+      // Build results using cached data
       let results = [];
-      for (let [tagName, count] of Object.entries(tagCounter)) {
+      for (let tagName of Object.keys(currentTagCounts)) {
         const cachedStats = this.tagCache[tagName];
-        const isPerson = personTags.has(tagName) || (cachedStats?.isPerson);
+        const currentCount = currentTagCounts[tagName];
+        
+        // Determine if it's a person tag (from current usage or cache)
+        const isPerson = personTags.has(tagName) || (cachedStats?.isPerson) || false;
         const isRecent = cachedStats?.recentActivity || false;
+        
+        // Use cached statistics when available, fallback to current data
+        const totalUses = cachedStats?.totalUses || currentCount;
+        const avgScore = cachedStats?.avgScore || 0;
+        
+        // For date sorting, calculate from current scores if cache doesn't have dates yet
+        let firstUsage = null;
+        let lastUsage = null;
+        
+        if (cachedStats?.firstUsage && cachedStats?.lastUsage) {
+          firstUsage = new Date(cachedStats.firstUsage);
+          lastUsage = new Date(cachedStats.lastUsage);
+        } else {
+          // Fallback: calculate from current scores if cache missing dates
+          for (let score of scores) {
+            let matches = score.notes.match(/[#@]\p{L}+/gui) || [];
+            for (let match of matches) {
+              if (match.slice(1).toLowerCase() === tagName) {
+                if (!firstUsage || score.date < firstUsage) firstUsage = score.date;
+                if (!lastUsage || score.date > lastUsage) lastUsage = score.date;
+              }
+            }
+          }
+        }
+        const peakYear = cachedStats?.peakYear || 'unknown';
+        const peakYearCount = cachedStats?.peakYearCount || 0;
         
         // Simple CSS classes
         let classes = '';
@@ -789,16 +818,14 @@
         classes = classes.trim();
         
         // Data attributes for popup
-        let dataAttrs = '';
-        if (cachedStats) {
-          dataAttrs = `data-tag="${tagName}" data-uses="${cachedStats.totalUses}" data-avg="${cachedStats.avgScore.toFixed(1)}" data-peak="${cachedStats.peakYear}" data-peak-count="${cachedStats.peakYearCount}" data-is-person="${isPerson}"`;
-        } else {
-          dataAttrs = `data-tag="${tagName}" data-uses="${count}" data-avg="0" data-peak="unknown" data-peak-count="0" data-is-person="${isPerson}"`;
-        }
+        const dataAttrs = `data-tag="${tagName}" data-uses="${totalUses}" data-avg="${avgScore.toFixed(1)}" data-peak="${peakYear}" data-peak-count="${peakYearCount}" data-is-person="${isPerson}"`;
         
         results.push({
           tag: tagName,
-          count: count,
+          count: totalUses,
+          avgScore: avgScore,
+          firstUsage: firstUsage,
+          lastUsage: lastUsage,
           weight: 1, // No weight-based sizing
           color: '', // No inline color
           classes: classes,
@@ -806,17 +833,45 @@
         });
       }
 
-      return results.sort((a, b) => b.count - a.count);
+      // Sort based on selected criteria
+      switch (sortBy) {
+        case 'avgScore':
+          return results.sort((a, b) => b.avgScore - a.avgScore);
+        case 'firstUsage':
+          return results.sort((a, b) => {
+            if (!a.firstUsage && !b.firstUsage) return 0;
+            if (!a.firstUsage) return 1;
+            if (!b.firstUsage) return -1;
+            return a.firstUsage - b.firstUsage;
+          });
+        case 'lastUsage':
+          return results.sort((a, b) => {
+            if (!a.lastUsage && !b.lastUsage) return 0;
+            if (!a.lastUsage) return 1;
+            if (!b.lastUsage) return -1;
+            return b.lastUsage - a.lastUsage;
+          });
+        case 'count':
+        default:
+          return results.sort((a, b) => b.count - a.count);
+      }
     }
     
-    showTags() {
-      let tags = this.getTags(this.all).slice(0,250);
+    showTags(sortBy = 'count') {
+      let tags = this.getTags(this.all, sortBy).slice(0,250);
       
       this.pushHistory(`/tags`, 'Tags');
 
       return this.render('#tmpl-tags', '#content', {
         years: this.years.map(y => ({year: y})),
-        tags: tags
+        tags: tags,
+        sortBy: sortBy,
+        sortOptions: {
+          count: sortBy === 'count',
+          avgScore: sortBy === 'avgScore', 
+          firstUsage: sortBy === 'firstUsage',
+          lastUsage: sortBy === 'lastUsage'
+        }
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -1295,6 +1350,10 @@
 
   window.onShowTags = function() {
     return window.app.showTags();
+  };
+
+  window.onShowTagsWithSort = function(sortBy) {
+    return window.app.showTags(sortBy);
   };
 
   window.onShowDashboard = async function() {

@@ -88,6 +88,27 @@
       </div>
       {{/coverage}}
       
+      <!-- 30-day comparison widgets -->
+      {{#thirtyDayStats}}
+      <div class="bento-item trend-{{score.trend}}-widget">
+        <h4>⭐ Avg Score</h4>
+        <div class="bento-main-value">{{score.current}}</div>
+        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
+      </div>
+      
+      <div class="bento-item trend-{{entries.trend}}-widget">
+        <h4>📊 Total Entries</h4>
+        <div class="bento-main-value">{{entries.current}}</div>
+        <small>vs {{entries.previous}} past 30 days <span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span></small>
+      </div>
+      
+      <div class="bento-item trend-{{words.trend}}-widget">
+        <h4>📝 Avg Words/Day</h4>
+        <div class="bento-main-value">{{words.current}}</div>
+        <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
+      </div>
+      {{/thirtyDayStats}}
+      
       {{#lastHighScore}}
       <div class="bento-item">
         <h4>⭐ Last 5+ Score</h4>
@@ -104,26 +125,7 @@
       </div>
       {{/lastLowScore}}
       
-      <!-- 30-day comparison widgets -->
       {{#thirtyDayStats}}
-      <div class="bento-item trend-{{words.trend}}-widget">
-        <h4>📝 Avg Words/Day</h4>
-        <div class="bento-main-value">{{words.current}}</div>
-        <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
-      </div>
-      
-      <div class="bento-item trend-{{entries.trend}}-widget">
-        <h4>📊 Total Entries</h4>
-        <div class="bento-main-value">{{entries.current}}</div>
-        <small>vs {{entries.previous}} past 30 days <span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span></small>
-      </div>
-      
-      <div class="bento-item trend-{{score.trend}}-widget">
-        <h4>⭐ Avg Score</h4>
-        <div class="bento-main-value">{{score.current}}</div>
-        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
-      </div>
-      
       {{#topTag}}
       <div class="bento-item">
         <h4>🏷️ Top Tag</h4>
@@ -139,12 +141,11 @@
         <small>No tags used yet</small>
       </div>
       {{/topTag}}
-      
       {{/thirtyDayStats}}
     </div>
 
     {{#hasTodayScores}}
-      <h2>Today {{#anniversaryStats}}<small>({{count}} anniversary days, Ø {{avgScore}})</small>{{/anniversaryStats}}</h2>
+      <h2>Today {{#anniversaryStats}}<small>Ø {{avgScore}}</small>{{/anniversaryStats}}</h2>
       <table class="box scores">
         {{{todayScores}}}
       </table>
@@ -179,7 +180,7 @@
         <tr>
           <td>
             {{#tags}} 
-              <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" title={{count}} {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+              <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
             {{/tags}}
           </td>
         </tr>
@@ -292,7 +293,7 @@
       <tr>
         <td>
           {{#tags}} 
-            <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" title={{count}} {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+            <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
           {{/tags}}
         </td>
       </tr>
@@ -555,12 +556,20 @@
 
     <table class="box tags">
       <tr>
-        <th>Tags</th>
+        <th>
+          <span class="tags-header-text">Tags</span>
+          <span class="sort-controls-inline">
+            <a onclick="onShowTagsWithSort('count')" class="sort-btn {{#sortOptions.count}}sort-active{{/sortOptions.count}}">Usage</a>
+            <a onclick="onShowTagsWithSort('avgScore')" class="sort-btn {{#sortOptions.avgScore}}sort-active{{/sortOptions.avgScore}}">Score</a>
+            <a onclick="onShowTagsWithSort('firstUsage')" class="sort-btn {{#sortOptions.firstUsage}}sort-active{{/sortOptions.firstUsage}}">Oldest</a>
+            <a onclick="onShowTagsWithSort('lastUsage')" class="sort-btn {{#sortOptions.lastUsage}}sort-active{{/sortOptions.lastUsage}}">Newest</a>
+          </span>
+        </th>
       </tr>
       <tr>
         <td>
           {{#tags}} 
-            <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" title={{count}} {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">
+            <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">
               {{tag}}
             </a> 
           {{/tags}}

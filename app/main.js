@@ -166,7 +166,9 @@ async function calculateTagCache(dirPath, scores) {
           scores: [],
           yearStats: {},
           hasPersonUsage: false,
-          recentActivity: false
+          recentActivity: false,
+          firstUsage: null,
+          lastUsage: null
         };
       }
       
@@ -175,6 +177,15 @@ async function calculateTagCache(dirPath, scores) {
       tag.scores.push(score.summary);
       tag.hasPersonUsage = tag.hasPersonUsage || isPersonTag;
       tag.recentActivity = tag.recentActivity || (year >= currentYear - 1);
+      
+      // Track first and last usage dates
+      const scoreDate = score.date;
+      if (!tag.firstUsage || scoreDate < tag.firstUsage) {
+        tag.firstUsage = scoreDate;
+      }
+      if (!tag.lastUsage || scoreDate > tag.lastUsage) {
+        tag.lastUsage = scoreDate;
+      }
       
       // Track usage by year
       if (!tag.yearStats[year]) {
