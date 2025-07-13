@@ -40,7 +40,7 @@
         } else if (marker === '@') {
           // For mentions, only keep the first word
           let firstWord = word.split(/(?=[A-Z])/)[0]; // Splits at uppercase letter boundaries
-          return `<a class="person" onclick="onShowSearch('${word}')" title="${this.camelCaseToSpace(word)}">${firstWord}</a>`;
+          return `<a class="person" onclick="onShowSearch('${word}')">${firstWord}</a>`;
         }
       });
       
@@ -66,14 +66,15 @@
         
         let dataAttrs = '';
         if (tagStats) {
-          dataAttrs = `data-tag="${tagKey}" data-uses="${tagStats.totalUses}" data-avg="${tagStats.avgScore.toFixed(1)}" data-peak="${tagStats.peakYear}" data-peak-count="${tagStats.peakYearCount}" data-is-person="${isPerson}"`;
+          const yearStats = tagStats.yearStats || {};
+          dataAttrs = `data-tag="${tagKey}" data-uses="${tagStats.totalUses}" data-avg="${tagStats.avgScore.toFixed(1)}" data-peak="${tagStats.peakYear}" data-peak-count="${tagStats.peakYearCount}" data-is-person="${isPerson}" data-year-stats='${JSON.stringify(yearStats)}'`;
         }
 
         if (marker === '#') {
           return `<a class="${classes}" ${dataAttrs} onclick="onShowSearch('${word}')">${this.camelCaseToSpace(word)}</a>`;
         } else if (marker === '@') {
           let firstWord = word.split(/(?=[A-Z])/)[0];
-          return `<a class="${classes}" ${dataAttrs} onclick="onShowSearch('${word}')" title="${this.camelCaseToSpace(word)}">${firstWord}</a>`;
+          return `<a class="${classes}" ${dataAttrs} onclick="onShowSearch('${word}')">${firstWord}</a>`;
         }
       });
       
@@ -818,7 +819,8 @@
         classes = classes.trim();
         
         // Data attributes for popup
-        const dataAttrs = `data-tag="${tagName}" data-uses="${totalUses}" data-avg="${avgScore.toFixed(1)}" data-peak="${peakYear}" data-peak-count="${peakYearCount}" data-is-person="${isPerson}"`;
+        const yearStats = cachedStats?.yearStats || {};
+        const dataAttrs = `data-tag="${tagName}" data-uses="${totalUses}" data-avg="${avgScore.toFixed(1)}" data-peak="${peakYear}" data-peak-count="${peakYearCount}" data-is-person="${isPerson}" data-year-stats='${JSON.stringify(yearStats)}'`;
         
         results.push({
           tag: tagName,
@@ -1497,6 +1499,51 @@
       const popupEl = createPopup();
       const icon = tagData.isPerson ? '👤' : '🏷️';
       
+      // Generate sparkline from year stats
+      let sparklineHtml = '';
+      try {
+        const yearStatsData = element.dataset.yearStats || '{}';
+        const yearStats = JSON.parse(yearStatsData);
+        // Get full year range from app instance (available as window.app)
+        const allYears = window.app && window.app.years ? window.app.years : [];
+        
+        // Debug logging
+        console.log('Sparkline debug:', {
+          tagName: tagData.name,
+          yearStatsData: yearStatsData,
+          yearStats: yearStats,
+          allYears: allYears,
+          hasData: Object.keys(yearStats).length > 0
+        });
+        
+        if (allYears.length > 0) {
+          const yearValues = Object.values(yearStats);
+          const maxUses = yearValues.length > 0 ? Math.max(...yearValues) : 1;
+          
+          sparklineHtml = `
+            <div class="sparkline-container">
+              <span class="sparkline-label">Years:</span>
+              <div class="sparkline">
+                ${allYears.map(year => {
+                  const uses = yearStats[year] || 0;
+                  if (uses === 0) {
+                    // Empty year - show as small dot
+                    return `<div class="sparkline-dot" title="${year}: 0 uses"></div>`;
+                  } else {
+                    // Has usage - show as bar
+                    const height = Math.max(3, Math.round((uses / maxUses) * 12));
+                    return `<div class="sparkline-bar" style="height: ${height}px" title="${year}: ${uses} uses"></div>`;
+                  }
+                }).join('')}
+              </div>
+            </div>`;
+        }
+      } catch (e) {
+        console.error('Sparkline error:', e);
+        // Show debug info in sparkline
+        sparklineHtml = `<div class="sparkline-container"><span style="color: #f00; font-size: 9px;">Debug: ${e.message}</span></div>`;
+      }
+
       popupEl.innerHTML = `
         <div class="popup-header">
           <span class="tag-icon">${icon}</span>
@@ -1512,6 +1559,7 @@
             <span class="stat-value">${tagData.avg}</span>
           </div>
         </div>
+        ${sparklineHtml}
         <div class="peak-year ${tagData.isPerson ? 'person' : ''}">
           Peak: ${tagData.peak} (${tagData.peakCount} uses)
         </div>
