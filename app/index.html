@@ -179,7 +179,7 @@
         <tr>
           <td>
             {{#tags}} 
-              <a style="--weight:{{weight}}; background-color:{{color}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+              <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" title={{count}} {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
             {{/tags}}
           </td>
         </tr>
@@ -292,7 +292,7 @@
       <tr>
         <td>
           {{#tags}} 
-            <a style="--weight:{{weight}}; background-color:{{color}}" title={{count}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+            <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" title={{count}} {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
           {{/tags}}
         </td>
       </tr>
@@ -560,7 +560,7 @@
       <tr>
         <td>
           {{#tags}} 
-            <a style="--weight:{{weight}}; background-color:{{color}}" title={{count}} onclick="onShowSearch('{{tag}}')">
+            <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" title={{count}} {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">
               {{tag}}
             </a> 
           {{/tags}}

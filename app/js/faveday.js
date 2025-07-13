@@ -48,6 +48,38 @@
       return text.replace(/\n/g, "<br>");
     }
 
+    enhancedText(tagCache) {
+      // Enhanced version with tag cache data
+      let re = /([#@])\p{L}[\p{L}\d]*/gui;
+      let text = this.notes.replace(re, str => {
+        let marker = str[0];
+        let word = str.slice(1);
+        let tagKey = word.toLowerCase();
+        
+        // Get tag stats from cache if available
+        let tagStats = tagCache?.[tagKey];
+        let isRecent = tagStats?.recentActivity || false;
+        let isPerson = tagStats?.isPerson || marker === '@';
+        
+        let classes = isPerson ? 'person' : 'tag';
+        if (isRecent) classes += ' recent';
+        
+        let dataAttrs = '';
+        if (tagStats) {
+          dataAttrs = `data-tag="${tagKey}" data-uses="${tagStats.totalUses}" data-avg="${tagStats.avgScore.toFixed(1)}" data-peak="${tagStats.peakYear}" data-peak-count="${tagStats.peakYearCount}" data-is-person="${isPerson}"`;
+        }
+
+        if (marker === '#') {
+          return `<a class="${classes}" ${dataAttrs} onclick="onShowSearch('${word}')">${this.camelCaseToSpace(word)}</a>`;
+        } else if (marker === '@') {
+          let firstWord = word.split(/(?=[A-Z])/)[0];
+          return `<a class="${classes}" ${dataAttrs} onclick="onShowSearch('${word}')" title="${this.camelCaseToSpace(word)}">${firstWord}</a>`;
+        }
+      });
+      
+      return text.replace(/\n/g, "<br>");
+    }
+
     camelCaseToSpace(str) {
       // Ignore sequences of uppercase letters by ensuring a lowercase letter precedes the uppercase to be spaced
       return str.replace(/([a-z])([A-Z][a-z])/g, '$1 $2')
@@ -79,6 +111,7 @@
       });
 
       this.showEmpty = false;
+      this.tagCache = {};
 
       this.loadScores();
     }
@@ -146,6 +179,9 @@
       this.all = []
       for (let rawScore of data)
         this.all.push(new Score(rawScore.date, rawScore.summary, rawScore.notes))
+      
+      // Load tag cache
+      this.tagCache = await window.api.getTagCache();
         
       this.onScoreAdded();
     }
@@ -162,6 +198,8 @@
       }
 
       await window.api.saveScores(rawScores);
+      // Reload tag cache after saving
+      this.tagCache = await window.api.getTagCache();
     }
 
     setupDemoUser() {
@@ -218,6 +256,32 @@
       var view;
       view = Hogan.compile($(templateId).html());
       return $(viewId).html(view.render(atts, partials));
+    }
+
+    enhanceScoresForDisplay(scores) {
+      // Add enhanced text with tag cache data to scores
+      if (!scores || !Array.isArray(scores)) {
+        console.warn('enhanceScoresForDisplay called with non-array:', scores);
+        return [];
+      }
+      
+      return scores.map(score => {
+        return {
+          // Copy all existing properties that the template needs
+          date: score.date,
+          summary: score.summary,
+          notes: score.notes,
+          dateStr: score.dateStr(),
+          monthId: score.monthId(),
+          weekday: score.weekday(),
+          styleClass: score.styleClass(),
+          summaryText: score.summaryText(),
+          dateId: score.dateId(),
+          empty: score.empty(),
+          // Use enhanced text instead of regular text
+          text: score.enhancedText ? score.enhancedText(this.tagCache) : score.text()
+        };
+      });
     }
 
     toggleScoreDialogue() {
@@ -314,11 +378,23 @@
 
     async showDashboard() {
       $('#search input')[0].value = "";
+      
+      // Safety check for this.all
+      if (!this.all || !Array.isArray(this.all)) {
+        console.warn('No scores loaded yet');
+        return;
+      }
+      
       let recent = this.all.slice(0, 3);
       
-      let bestScores = this.all.filter(function(s) {
+      let filteredBestScores = this.all.filter(function(s) {
         return s.summary === 5;
-      }).sample();
+      });
+      let bestScores = filteredBestScores.length > 0 ? filteredBestScores.sample() : [];
+      // Ensure bestScores is always an array
+      if (!Array.isArray(bestScores)) {
+        bestScores = bestScores ? [bestScores] : [];
+      }
       
       let today = Date.create();
       let toDay = today.getDay();
@@ -353,10 +429,10 @@
       this.pushHistory('/', '');
       
       return this.render('#tmpl-dashboard', '#content', {
-        recentScores: this.tmplScores.render({scores: recent}),
-        bestScores: this.tmplScores.render({scores: bestScores}),
+        recentScores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(recent)}),
+        bestScores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(bestScores)}),
         hasTodayScores: todayScores.length > 0,
-        todayScores: this.tmplScores.render({scores: todayScores}),
+        todayScores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(todayScores)}),
         years: this.years.map(y => ({year: y})),
         streak: this.getMaxStreak(this.all, true),
         diff: diff,
@@ -420,7 +496,7 @@
       
       this.render('#tmpl-month', '#content', {
         title: title,
-        scores: virtualMonthScores.isEmpty() ? [] : this.tmplScores.render({scores: virtualMonthScores}),
+        scores: virtualMonthScores.isEmpty() ? [] : this.tmplScores.render({scores: this.enhanceScoresForDisplay(virtualMonthScores)}),
         years: this.years.map(y => ({year: y})),
         
         hasTags: tags.length > 0,
@@ -490,16 +566,19 @@
         average: monthScores.average(s => s.summary).format(2),
         months: allMonths.reverse(),
         years: this.years.map(y => ({year: y})),
-        scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: randomScores}),
-        inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: bestScores}),
+        scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: this.enhanceScoresForDisplay(randomScores)}),
+        inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: this.enhanceScoresForDisplay(bestScores)}),
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
       });
     }
 
     updateRandomInspiration() {
-      const bestScores = this.all.filter(s => s.summary === 5).sample();
-      return $('#bestScores').html(this.tmplScores.render({ scores: bestScores }));
+      let bestScores = this.all.filter(s => s.summary === 5).sample();
+      if (!Array.isArray(bestScores)) {
+        bestScores = bestScores ? [bestScores] : [];
+      }
+      return $('#bestScores').html(this.tmplScores.render({ scores: this.enhanceScoresForDisplay(bestScores) }));
     }
 
     showYears() {
@@ -542,7 +621,7 @@
           .sample(2)
           .sortBy(s => s.date, true);
 
-        return inspiration.isEmpty() ? null : this.tmplScores.render({ scores: inspiration });
+        return inspiration.isEmpty() ? null : this.tmplScores.render({ scores: this.enhanceScoresForDisplay(inspiration) });
       };
 
       let byYear = this.all.groupBy(s => s.date.getFullYear());
@@ -678,26 +757,51 @@
         return `#${pastelR.toString(16).padStart(2, '0')}${pastelG.toString(16).padStart(2, '0')}${pastelB.toString(16).padStart(2, '0')}`;
       }
 
-      const re = /[#@]\p{L}+/gui;
+      const re = /([#@])\p{L}[\p{L}\d]*/gui;
       
       let tagCounter = {};
+      let tagMarkers = {}; // Track which marker was used for each tag
+      
       for (let score of scores)
       {
         let newTags = score.notes.match(re);
         if (newTags != null)
           newTags.forEach(word => {
+            let marker = word[0];
             let tag = word.slice(1).toLowerCase();
             tagCounter[tag] = (tagCounter[tag] || 0) + 1;
+            // Remember if this tag was ever used with @
+            if (marker === '@') {
+              tagMarkers[tag] = true;
+            }
           });
       }
 
       let results = [];
       for (let [tag,count] of Object.entries(tagCounter)) {
+        const tagStats = this.tagCache[tag];
+        const isPerson = tagStats?.isPerson || tagMarkers[tag] || false;
+        const isRecent = tagStats?.recentActivity || false;
+        
+        let classes = 'enhanced-tag';
+        if (isPerson) classes += ' person';
+        if (isRecent) classes += ' recent';
+        
+        let dataAttrs = '';
+        if (tagStats) {
+          dataAttrs = `data-tag="${tag}" data-uses="${tagStats.totalUses}" data-avg="${tagStats.avgScore.toFixed(1)}" data-peak="${tagStats.peakYear}" data-peak-count="${tagStats.peakYearCount}" data-is-person="${isPerson}"`;
+        } else {
+          // Fallback data even if tagStats is missing
+          dataAttrs = `data-tag="${tag}" data-uses="${count}" data-avg="0" data-peak="unknown" data-peak-count="0" data-is-person="${isPerson}"`;
+        }
+        
         results.push({
           tag: tag,
           count: count,
           weight: 1, // + Math.log(count)/5,
-          color: `rgba(0,60,177,${Math.log(count) / 5})` // // stringToPastelColor(tag)
+          color: `rgba(0,60,177,${Math.log(count) / 5})`, // // stringToPastelColor(tag)
+          classes: classes,
+          dataAttrs: dataAttrs
         });
       }
 
@@ -763,8 +867,8 @@
       return this.render('#tmpl-year', '#content', {
         year: year,
         average: oneYear.average(s => s.summary).format(2),
-        scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: randomScores}),
-        inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: bestScores}),
+        scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: this.enhanceScoresForDisplay(randomScores)}),
+        inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: this.enhanceScoresForDisplay(bestScores)}),
         months: months,
         years: this.years.map(y => ({year: y})),
         streak: this.getMaxStreak(oneYear),
@@ -832,7 +936,7 @@
       this.render('#tmpl-search', '#content', {
         count: foundScores.length,
         average: foundScores.average(s => s.summary).format(2),
-        scores: this.tmplScores.render({scores: foundScores}),
+        scores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(foundScores)}),
         years: this.years.map(y => ({year: y})),
         hits: hits.filter(hit => hit.count > 0),
         streak: this.getMaxStreak(foundScores),
@@ -1279,6 +1383,127 @@
 
     // Handle initial route on app startup
     handleRoute();
+    
+    // Initialize tag hover popups
+    initializeTagPopups();
+  }
+
+  // Tag hover popup functionality
+  function initializeTagPopups() {
+    let popup = null;
+    let hideTimeout = null;
+    
+    // Create popup element
+    function createPopup() {
+      if (popup && document.body.contains(popup)) return popup;
+      
+      popup = document.createElement('div');
+      popup.className = 'tag-popup';
+      document.body.appendChild(popup);
+      return popup;
+    }
+    
+    // Show popup for tag
+    function showTagPopup(element, event) {
+      // Only show popup if element has tag data
+      if (!element.dataset || !element.dataset.tag || !element.dataset.uses) return;
+      
+      const tagData = {
+        name: element.dataset.tag,
+        uses: element.dataset.uses,
+        avg: element.dataset.avg,
+        peak: element.dataset.peak,
+        peakCount: element.dataset.peakCount,
+        isPerson: element.dataset.isPerson === 'true'
+      };
+      
+      const popupEl = createPopup();
+      const icon = tagData.isPerson ? '👤' : '🏷️';
+      
+      // Clean the data to remove quotes
+      const cleanName = String(tagData.name).replace(/['"]/g, '');
+      const cleanUses = String(tagData.uses).replace(/['"]/g, '');
+      const cleanAvg = String(tagData.avg).replace(/['"]/g, '');
+      const cleanPeak = String(tagData.peak).replace(/['"]/g, '');
+      const cleanPeakCount = String(tagData.peakCount).replace(/['"]/g, '');
+      
+      popupEl.innerHTML = `
+        <div class="popup-header">
+          <span class="tag-icon">${icon}</span>
+          <span>${cleanName}</span>
+        </div>
+        <div class="popup-stats">
+          <div class="stat-item">
+            <span class="stat-label">Uses:</span>
+            <span class="stat-value">${cleanUses}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Avg Score:</span>
+            <span class="stat-value">${cleanAvg}</span>
+          </div>
+        </div>
+        <div class="peak-year ${tagData.isPerson ? 'person' : ''}">
+          Peak: ${cleanPeak} (${cleanPeakCount} uses)
+        </div>
+      `;
+      
+      // Position popup
+      const rect = element.getBoundingClientRect();
+      popupEl.style.left = `${rect.left + window.scrollX}px`;
+      popupEl.style.top = `${rect.bottom + window.scrollY + 5}px`;
+      
+      // Clear hide timeout and show popup
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
+      popupEl.classList.add('visible');
+    }
+    
+    // Hide popup
+    function hideTagPopup() {
+      if (popup && popup.classList) {
+        popup.classList.remove('visible');
+      }
+    }
+    
+    // Event delegation for dynamic content
+    document.addEventListener('mouseenter', (event) => {
+      try {
+        const element = event.target;
+        if (element && element.classList && 
+            (element.classList.contains('tag') || element.classList.contains('person')) && 
+            element.dataset && element.dataset.tag) {
+          showTagPopup(element, event);
+        }
+      } catch (e) {
+        console.error('Tag popup mouseenter error:', e);
+      }
+    }, true);
+    
+    document.addEventListener('mouseleave', (event) => {
+      try {
+        const element = event.target;
+        if (element && element.classList && 
+            (element.classList.contains('tag') || element.classList.contains('person')) && 
+            element.dataset && element.dataset.tag) {
+          hideTimeout = setTimeout(hideTagPopup, 200);
+        }
+      } catch (e) {
+        console.error('Tag popup mouseleave error:', e);
+      }
+    }, true);
+    
+    // Hide popup when clicking elsewhere
+    document.addEventListener('click', (event) => {
+      try {
+        if (popup && popup.contains && event.target && !popup.contains(event.target)) {
+          hideTagPopup();
+        }
+      } catch (e) {
+        console.error('Tag popup click error:', e);
+      }
+    });
   }
   
   function handleRoute() {

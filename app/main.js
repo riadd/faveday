@@ -14,7 +14,13 @@ const fs = require('fs');
 ipcMain.handle('load-scores', async () => {
   if (config.filesPath != null)
   {
-    return await loadScores(config.filesPath);
+    const scores = await loadScores(config.filesPath);
+    // Check if cache exists, if not create it
+    const cacheFile = `${config.filesPath}/tag-cache.json`;
+    if (!fs.existsSync(cacheFile)) {
+      await calculateTagCache(config.filesPath, scores);
+    }
+    return scores;
     //  TODO verify that it worked
   }
   else
@@ -29,12 +35,20 @@ ipcMain.handle('load-scores', async () => {
     
     config.filesPath = defaultPath;
     saveConfig();
-    return await loadScores(config.filesPath);
+    const scores = await loadScores(config.filesPath);
+    await calculateTagCache(config.filesPath, scores);
+    return scores;
   }
 });
 
 ipcMain.handle('save-scores', async (event, scores) => {
-  saveScores(config.filesPath, scores)
+  saveScores(config.filesPath, scores);
+  // Recalculate tag cache when scores are saved
+  await calculateTagCache(config.filesPath, scores);
+});
+
+ipcMain.handle('get-tag-cache', async () => {
+  return await loadTagCache(config.filesPath);
 });
 
 ipcMain.on('select-folder', async (event) => {
@@ -128,6 +142,92 @@ async function saveScores(dirPath, scores) {
   }
 
   console.log(`saved ${scores.length} entries`);
+}
+
+async function calculateTagCache(dirPath, scores) {
+  console.log('Calculating tag cache...');
+  
+  const tagStats = {};
+  const currentYear = new Date().getFullYear();
+  
+  // Extract and analyze all tags
+  for (const score of scores) {
+    const tags = score.notes.match(/[#@]\p{L}+/gui) || [];
+    const year = score.date.getFullYear();
+    
+    for (const rawTag of tags) {
+      const isPersonTag = rawTag.startsWith('@');
+      const tagName = rawTag.slice(1).toLowerCase();
+      
+      if (!tagStats[tagName]) {
+        tagStats[tagName] = {
+          name: tagName,
+          totalUses: 0,
+          scores: [],
+          yearStats: {},
+          hasPersonUsage: false,
+          recentActivity: false
+        };
+      }
+      
+      const tag = tagStats[tagName];
+      tag.totalUses++;
+      tag.scores.push(score.summary);
+      tag.hasPersonUsage = tag.hasPersonUsage || isPersonTag;
+      tag.recentActivity = tag.recentActivity || (year >= currentYear - 1);
+      
+      // Track usage by year
+      if (!tag.yearStats[year]) {
+        tag.yearStats[year] = 0;
+      }
+      tag.yearStats[year]++;
+    }
+  }
+  
+  // Calculate derived statistics
+  for (const tag of Object.values(tagStats)) {
+    tag.avgScore = tag.scores.length > 0 ? tag.scores.reduce((a, b) => a + b, 0) / tag.scores.length : 0;
+    
+    // Find peak year
+    let maxYear = null;
+    let maxCount = 0;
+    for (const [year, count] of Object.entries(tag.yearStats)) {
+      if (count > maxCount) {
+        maxCount = count;
+        maxYear = year;
+      }
+    }
+    tag.peakYear = maxYear;
+    tag.peakYearCount = maxCount;
+    
+    // Determine if it's likely a person tag
+    tag.isPerson = tag.hasPersonUsage;
+    
+    // Clean up scores array to save space
+    delete tag.scores;
+  }
+  
+  // Save cache to file
+  const cacheFile = `${dirPath}/tag-cache.json`;
+  fs.writeFileSync(cacheFile, JSON.stringify(tagStats, null, 2), 'utf-8');
+  console.log(`Tag cache saved with ${Object.keys(tagStats).length} tags`);
+  
+  return tagStats;
+}
+
+async function loadTagCache(dirPath) {
+  const cacheFile = `${dirPath}/tag-cache.json`;
+  
+  try {
+    if (fs.existsSync(cacheFile)) {
+      const data = fs.readFileSync(cacheFile, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading tag cache:', error);
+  }
+  
+  return {};
 }
 
 const configFilePath = path.join(app.getPath('userData'), 'faveday-config.json');
