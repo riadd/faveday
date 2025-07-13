@@ -58,7 +58,7 @@
     <div class="bento-grid">
       {{#calendarProgress}}
       <div class="bento-item calendar-progress">
-        <h4>📅 Calendar Year</h4>
+        <h4>📅 Year {{year}}</h4>
         <div class="bento-main-value">{{percentage}}%</div>
         <small>{{daysPassed}}/{{totalDays}} days</small>
       </div>
@@ -89,7 +89,7 @@
       {{/coverage}}
       
       {{#lastHighScore}}
-      <div class="bento-item high-score">
+      <div class="bento-item">
         <h4>⭐ Last 5+ Score</h4>
         <div class="bento-main-value">{{days}}</div>
         <small>days ago on {{lastDate}}</small>
@@ -97,7 +97,7 @@
       {{/lastHighScore}}
       
       {{#lastLowScore}}
-      <div class="bento-item low-score">
+      <div class="bento-item">
         <h4>😔 Last 1 Score</h4>
         <div class="bento-main-value">{{days}}</div>
         <small>days ago on {{lastDate}}</small>
@@ -144,7 +144,7 @@
     </div>
 
     {{#hasTodayScores}}
-      <h2>Today</h2>
+      <h2>Today {{#anniversaryStats}}<small>({{count}} anniversary days, Ø {{avgScore}})</small>{{/anniversaryStats}}</h2>
       <table class="box scores">
         {{{todayScores}}}
       </table>

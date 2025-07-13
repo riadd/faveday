@@ -400,9 +400,23 @@
       let toDay = today.getDay();
       let toWeek = today.getISOWeek();
       
+      // Get scores for this exact day of the week and week
       let todayScores = this.all.filter(s =>
         s.date.getDay() === toDay && s.date.getISOWeek() === toWeek
       );
+      
+      // Get anniversary days (same month and day across all years)
+      let anniversaryScores = this.all.filter(s =>
+        s.date.getMonth() === today.getMonth() && s.date.getDate() === today.getDate()
+      );
+      
+      let anniversaryStats = null;
+      if (anniversaryScores.length > 0) {
+        anniversaryStats = {
+          count: anniversaryScores.length,
+          avgScore: anniversaryScores.average(s => s.summary).format(2)
+        };
+      }
       
       let diff = null;
       let prevMonthScores = this.getScores(today.getFullYear(), today.getMonth()) // month-1
@@ -433,6 +447,7 @@
         bestScores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(bestScores)}),
         hasTodayScores: todayScores.length > 0,
         todayScores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(todayScores)}),
+        anniversaryStats: anniversaryStats,
         years: this.years.map(y => ({year: y})),
         streak: this.getMaxStreak(this.all, true),
         diff: diff,
@@ -734,78 +749,66 @@
     }
     
     getTags(scores) {
-      function stringToPastelColor(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-          hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-
-        const pastel = (hash & 0x00FFFFFF)
-          .toString(16)
-          .toUpperCase();
-
-        const hex = "#" + ("000000" + pastel).slice(-6);
-        const r = parseInt(hex.substring(1, 3), 16);
-        const g = parseInt(hex.substring(3, 5), 16);
-        const b = parseInt(hex.substring(5, 7), 16);
-
-        // Convert to pastel by increasing the luminance
-        const pastelR = Math.round((r + 255) / 2);
-        const pastelG = Math.round((g + 255) / 2);
-        const pastelB = Math.round((b + 255) / 2);
-
-        return `#${pastelR.toString(16).padStart(2, '0')}${pastelG.toString(16).padStart(2, '0')}${pastelB.toString(16).padStart(2, '0')}`;
-      }
-
+      // Extract all tags from scores using the same regex as the notes
       const re = /([#@])\p{L}[\p{L}\d]*/gui;
       
       let tagCounter = {};
       let tagMarkers = {}; // Track which marker was used for each tag
       
-      for (let score of scores)
-      {
-        let newTags = score.notes.match(re);
-        if (newTags != null)
-          newTags.forEach(word => {
-            let marker = word[0];
-            let tag = word.slice(1).toLowerCase();
-            tagCounter[tag] = (tagCounter[tag] || 0) + 1;
-            // Remember if this tag was ever used with @
+      // Count all tag occurrences
+      for (let score of scores) {
+        let matches = score.notes.match(re);
+        if (matches) {
+          matches.forEach(match => {
+            let marker = match[0];
+            let tagName = match.slice(1).toLowerCase();
+            tagCounter[tagName] = (tagCounter[tagName] || 0) + 1;
+            
+            // Track if this tag was ever used with @ (person marker)
             if (marker === '@') {
-              tagMarkers[tag] = true;
+              tagMarkers[tagName] = true;
             }
           });
+        }
       }
 
+      // Build results array with proper styling and data attributes
       let results = [];
-      for (let [tag,count] of Object.entries(tagCounter)) {
-        const tagStats = this.tagCache[tag];
-        const isPerson = tagStats?.isPerson || tagMarkers[tag] || false;
-        const isRecent = tagStats?.recentActivity || false;
+      for (let [tagName, count] of Object.entries(tagCounter)) {
+        // Get cached stats for this tag
+        const cachedStats = this.tagCache[tagName];
         
-        let classes = 'enhanced-tag';
-        if (isPerson) classes += ' person';
-        if (isRecent) classes += ' recent';
+        // Determine if this is a person tag
+        const isPerson = cachedStats?.isPerson || tagMarkers[tagName] || false;
+        const isRecent = cachedStats?.recentActivity || false;
         
-        let dataAttrs = '';
-        if (tagStats) {
-          dataAttrs = `data-tag="${tag}" data-uses="${tagStats.totalUses}" data-avg="${tagStats.avgScore.toFixed(1)}" data-peak="${tagStats.peakYear}" data-peak-count="${tagStats.peakYearCount}" data-is-person="${isPerson}"`;
+        // Build CSS classes for styling
+        let cssClasses = 'enhanced-tag';
+        if (isPerson) cssClasses += ' person';
+        if (isRecent) cssClasses += ' recent';
+        
+        // Build data attributes for popup functionality
+        let dataAttributes = '';
+        if (cachedStats) {
+          // Use cached statistics
+          dataAttributes = `data-tag="${tagName}" data-uses="${cachedStats.totalUses}" data-avg="${cachedStats.avgScore.toFixed(1)}" data-peak="${cachedStats.peakYear}" data-peak-count="${cachedStats.peakYearCount}" data-is-person="${isPerson}"`;
         } else {
-          // Fallback data even if tagStats is missing
-          dataAttrs = `data-tag="${tag}" data-uses="${count}" data-avg="0" data-peak="unknown" data-peak-count="0" data-is-person="${isPerson}"`;
+          // Fallback to basic count data
+          dataAttributes = `data-tag="${tagName}" data-uses="${count}" data-avg="0" data-peak="unknown" data-peak-count="0" data-is-person="${isPerson}"`;
         }
         
         results.push({
-          tag: tag,
+          tag: tagName,
           count: count,
-          weight: 1, // + Math.log(count)/5,
-          color: `rgba(0,60,177,${Math.log(count) / 5})`, // // stringToPastelColor(tag)
-          classes: classes,
-          dataAttrs: dataAttrs
+          weight: 1 + Math.log(count) / 5, // Weight for font sizing
+          color: '', // Empty string so template doesn't add inline styles
+          classes: cssClasses,
+          dataAttrs: dataAttributes
         });
       }
 
-      results = results.sortBy(a => a.count, true);
+      // Sort by count (most used first)
+      results.sort((a, b) => b.count - a.count);
       
       return results;
     }
@@ -1070,6 +1073,7 @@
       const totalDays = Math.floor((yearEnd - yearStart) / (1000 * 60 * 60 * 24)) + 1;
       
       return {
+        year: now.getFullYear(),
         daysPassed: daysPassed,
         totalDays: totalDays,
         percentage: Math.round((daysPassed / totalDays) * 100)
@@ -1124,16 +1128,22 @@
 
     getCoverageProgress() {
       const now = new Date();
-      const yearStart = new Date(now.getFullYear(), 0, 1);
-      const daysPassed = Math.floor((now - yearStart) / (1000 * 60 * 60 * 24)) + 1;
+      const threeSixtyFiveDaysAgo = new Date(now);
+      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
       
-      const scoresThisYear = this.getScores(now.getFullYear());
-      const entriesMade = scoresThisYear.length;
+      // Get the earliest score date to determine actual range
+      const firstScoreDate = this.all.length > 0 ? this.all[this.all.length - 1].date : now;
+      const rangeStart = threeSixtyFiveDaysAgo > firstScoreDate ? threeSixtyFiveDaysAgo : firstScoreDate;
+      
+      const daysPassed = Math.floor((now - rangeStart) / (1000 * 60 * 60 * 24)) + 1;
+      
+      // Count entries in the last 365 days (or since first entry)
+      const entriesInRange = this.all.filter(score => score.date >= rangeStart).length;
       
       return {
-        entriesMade: entriesMade,
+        entriesMade: entriesInRange,
         daysPassed: daysPassed,
-        percentage: daysPassed > 0 ? Math.round((entriesMade / daysPassed) * 100) : 0
+        percentage: daysPassed > 0 ? Math.round((entriesInRange / daysPassed) * 100) : 0
       };
     }
 
@@ -1406,7 +1416,15 @@
     // Show popup for tag
     function showTagPopup(element, event) {
       // Only show popup if element has tag data
-      if (!element.dataset || !element.dataset.tag || !element.dataset.uses) return;
+      if (!element.dataset || !element.dataset.tag) {
+        console.log('No tag data found for element:', element);
+        return;
+      }
+      
+      if (!element.dataset.uses) {
+        console.log('No uses data found for tag:', element.dataset.tag, element.dataset);
+        return;
+      }
       
       const tagData = {
         name: element.dataset.tag,
