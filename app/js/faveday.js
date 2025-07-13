@@ -647,8 +647,11 @@
 
     pushHistory(url, title) {
       document.title = (title.length > 0) ? `Faveday - ${title}` : 'Faveday';
-      if (!window.poppingState) 
+      // Only push to history if we're not currently handling a popstate event
+      // and if the current URL is different from the one we're trying to push
+      if (!window.poppingState && window.location.pathname !== url) {
         history.pushState({}, '', url);
+      }
     }
     
     getTags(scores) {
@@ -1236,11 +1239,9 @@
   };
 
   window.addEventListener("popstate", (event) => {
-    if (event.state) {
-      window.poppingState = true;
-      handleRoute();
-      window.poppingState = false;
-    }
+    window.poppingState = true;
+    handleRoute();
+    window.poppingState = false;
   });
 
   // Call onAppStart when the window 
@@ -1275,35 +1276,59 @@
         window.app.hideEditScore();
       }
     });
+
+    // Handle initial route on app startup
+    handleRoute();
   }
   
   function handleRoute() {
-    let path = document.location.pathname.slice(1).split('/');
+    try {
+      // Ensure app is loaded before routing
+      if (!window.app) {
+        return;
+      }
+      
+      // Handle Electron file:// URLs which include drive letters
+      let pathname = document.location.pathname;
+      // Remove the drive letter part if present (e.g., "C:/year/2014" -> "/year/2014")
+      if (pathname.match(/^\/[A-Z]:\//)) {
+        pathname = pathname.substring(3); // Remove "/C:" part
+      }
+      let path = pathname.slice(1).split('/');
 
-    switch (path[0]) {
-      case 'year':
-        window.app.showYear(Number(path[1]));
-        break;
-      case 'years':
-        window.app.showYears();
-        break;
-      case 'search':
-        window.onShowSearch(path[1]); // why two functions for this
-        break;
-      case 'month':
-        window.app.showMonth(path[1], path[2]);
-        break;
-      case 'months':
-        window.app.showMonths(path[1]);
-        break;
-      case 'tags':
-        window.app.showTags();
-        break;
-      case 'settings':
-        window.onShowSettings();
-        break;
-      default:
+      switch (path[0]) {
+        case 'year':
+          window.app.showYear(Number(path[1]));
+          break;
+        case 'years':
+          window.app.showYears();
+          break;
+        case 'search':
+          // Use wrapper function to maintain search input synchronization
+          window.onShowSearch(path[1]);
+          break;
+        case 'month':
+          window.app.showMonth(path[1], path[2]);
+          break;
+        case 'months':
+          window.app.showMonths(path[1]);
+          break;
+        case 'tags':
+          window.app.showTags();
+          break;
+        case 'settings':
+          // Use wrapper function to handle async properly
+          window.onShowSettings();
+          break;
+        default:
+          window.app.showDashboard();
+      }
+    } catch (error) {
+      console.error('Route handling error:', error);
+      // Fallback to dashboard if routing fails
+      if (window.app) {
         window.app.showDashboard();
+      }
     }
   }
 
