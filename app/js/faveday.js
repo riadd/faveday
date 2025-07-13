@@ -749,13 +749,13 @@
     }
     
     getTags(scores) {
-      // Extract all tags from scores using the same regex as the notes
+      // Simple, clean implementation for tags page
       const re = /([#@])\p{L}[\p{L}\d]*/gui;
       
       let tagCounter = {};
-      let tagMarkers = {}; // Track which marker was used for each tag
+      let personTags = new Set(); // Track person tags
       
-      // Count all tag occurrences
+      // Count tags and detect person usage
       for (let score of scores) {
         let matches = score.notes.match(re);
         if (matches) {
@@ -764,53 +764,49 @@
             let tagName = match.slice(1).toLowerCase();
             tagCounter[tagName] = (tagCounter[tagName] || 0) + 1;
             
-            // Track if this tag was ever used with @ (person marker)
             if (marker === '@') {
-              tagMarkers[tagName] = true;
+              personTags.add(tagName);
             }
           });
         }
       }
 
-      // Build results array with proper styling and data attributes
+      // Build clean results
       let results = [];
       for (let [tagName, count] of Object.entries(tagCounter)) {
-        // Get cached stats for this tag
         const cachedStats = this.tagCache[tagName];
-        
-        // Determine if this is a person tag
-        const isPerson = cachedStats?.isPerson || tagMarkers[tagName] || false;
+        const isPerson = personTags.has(tagName) || (cachedStats?.isPerson);
         const isRecent = cachedStats?.recentActivity || false;
         
-        // Build CSS classes for styling
-        let cssClasses = 'enhanced-tag';
-        if (isPerson) cssClasses += ' person';
-        if (isRecent) cssClasses += ' recent';
-        
-        // Build data attributes for popup functionality
-        let dataAttributes = '';
-        if (cachedStats) {
-          // Use cached statistics
-          dataAttributes = `data-tag="${tagName}" data-uses="${cachedStats.totalUses}" data-avg="${cachedStats.avgScore.toFixed(1)}" data-peak="${cachedStats.peakYear}" data-peak-count="${cachedStats.peakYearCount}" data-is-person="${isPerson}"`;
+        // Simple CSS classes
+        let classes = '';
+        if (isPerson) {
+          classes += 'person ';
         } else {
-          // Fallback to basic count data
-          dataAttributes = `data-tag="${tagName}" data-uses="${count}" data-avg="0" data-peak="unknown" data-peak-count="0" data-is-person="${isPerson}"`;
+          classes += 'tag '; // Topic tags need the 'tag' class for popup detection!
+        }
+        if (isRecent) classes += 'recent ';
+        classes = classes.trim();
+        
+        // Data attributes for popup
+        let dataAttrs = '';
+        if (cachedStats) {
+          dataAttrs = `data-tag="${tagName}" data-uses="${cachedStats.totalUses}" data-avg="${cachedStats.avgScore.toFixed(1)}" data-peak="${cachedStats.peakYear}" data-peak-count="${cachedStats.peakYearCount}" data-is-person="${isPerson}"`;
+        } else {
+          dataAttrs = `data-tag="${tagName}" data-uses="${count}" data-avg="0" data-peak="unknown" data-peak-count="0" data-is-person="${isPerson}"`;
         }
         
         results.push({
           tag: tagName,
           count: count,
-          weight: 1 + Math.log(count) / 5, // Weight for font sizing
-          color: '', // Empty string so template doesn't add inline styles
-          classes: cssClasses,
-          dataAttrs: dataAttributes
+          weight: 1, // No weight-based sizing
+          color: '', // No inline color
+          classes: classes,
+          dataAttrs: dataAttrs
         });
       }
 
-      // Sort by count (most used first)
-      results.sort((a, b) => b.count - a.count);
-      
-      return results;
+      return results.sort((a, b) => b.count - a.count);
     }
     
     showTags() {
@@ -1416,13 +1412,7 @@
     // Show popup for tag
     function showTagPopup(element, event) {
       // Only show popup if element has tag data
-      if (!element.dataset || !element.dataset.tag) {
-        console.log('No tag data found for element:', element);
-        return;
-      }
-      
-      if (!element.dataset.uses) {
-        console.log('No uses data found for tag:', element.dataset.tag, element.dataset);
+      if (!element.dataset || !element.dataset.tag || !element.dataset.uses) {
         return;
       }
       
@@ -1435,33 +1425,36 @@
         isPerson: element.dataset.isPerson === 'true'
       };
       
+      // Format name properly for person tags  
+      const formatName = (name, isPerson) => {
+        if (!isPerson) return name;
+        // Convert camelCase to proper name format: danielZiller -> Daniel Ziller
+        return name.replace(/([a-z])([A-Z])/g, '$1 $2')
+                   .split(' ')
+                   .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                   .join(' ');
+      };
+      
       const popupEl = createPopup();
       const icon = tagData.isPerson ? '👤' : '🏷️';
-      
-      // Clean the data to remove quotes
-      const cleanName = String(tagData.name).replace(/['"]/g, '');
-      const cleanUses = String(tagData.uses).replace(/['"]/g, '');
-      const cleanAvg = String(tagData.avg).replace(/['"]/g, '');
-      const cleanPeak = String(tagData.peak).replace(/['"]/g, '');
-      const cleanPeakCount = String(tagData.peakCount).replace(/['"]/g, '');
       
       popupEl.innerHTML = `
         <div class="popup-header">
           <span class="tag-icon">${icon}</span>
-          <span>${cleanName}</span>
+          <span>${formatName(tagData.name, tagData.isPerson)}</span>
         </div>
         <div class="popup-stats">
           <div class="stat-item">
             <span class="stat-label">Uses:</span>
-            <span class="stat-value">${cleanUses}</span>
+            <span class="stat-value">${tagData.uses}</span>
           </div>
           <div class="stat-item">
             <span class="stat-label">Avg Score:</span>
-            <span class="stat-value">${cleanAvg}</span>
+            <span class="stat-value">${tagData.avg}</span>
           </div>
         </div>
         <div class="peak-year ${tagData.isPerson ? 'person' : ''}">
-          Peak: ${cleanPeak} (${cleanPeakCount} uses)
+          Peak: ${tagData.peak} (${tagData.peakCount} uses)
         </div>
       `;
       
