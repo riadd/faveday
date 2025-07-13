@@ -8,7 +8,7 @@ const os = require('os')
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, globalShortcut } = require('electron');
 const fs = require('fs');
 
 ipcMain.handle('load-scores', async () => {
@@ -163,6 +163,13 @@ function createWindow() {
   mainWindow.setMenu(null);
   //mainWindow.webContents.openDevTools();
 
+  // Add F12 key handler when the web contents are ready
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12') {
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
+
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
     // Dereference the window object, usually you would store windows
@@ -174,10 +181,26 @@ function createWindow() {
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  createWindow();
+  
+  // Register F12 to toggle DevTools
+  const ret = globalShortcut.register('F12', () => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
+  
+  if (!ret) {
+    console.log('F12 registration failed');
+  }
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
+  // Unregister all global shortcuts
+  globalShortcut.unregisterAll();
+  
   // On OS X it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
