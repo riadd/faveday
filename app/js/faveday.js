@@ -1015,6 +1015,24 @@
         count: foundScores.filter(s => s.date.getFullYear() === y).length
       }));
       
+      // Create chart data for all years (including empty ones)
+      const maxHits = Math.max(...hits.map(h => h.count), 1);
+      const yearChart = this.years.map(year => {
+        const yearScores = foundScores.filter(s => s.date.getFullYear() === year);
+        const count = yearScores.length;
+        const avgScore = count > 0 ? yearScores.average(s => s.summary) : 0;
+        const percentage = foundScores.length > 0 ? Math.round((count / foundScores.length) * 100) : 0;
+        
+        return {
+          year: year,
+          count: count,
+          avgScore: avgScore,
+          percentage: percentage,
+          hasResults: count > 0,
+          height: count > 0 ? Math.max(3, Math.round((count / maxHits) * 40)) : 0
+        };
+      });
+      
       this.render('#tmpl-search', '#content', {
         count: foundScores.length,
         hasResults: foundScores.length > 0,
@@ -1022,6 +1040,9 @@
         scores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(foundScores)}),
         years: this.years.map(y => ({year: y})),
         hits: hits.filter(hit => hit.count > 0),
+        yearChart: yearChart,
+        firstYear: this.years[0],
+        lastYear: this.years[this.years.length - 1],
         streak: foundScores.length > 0 ? this.getMaxStreak(foundScores) : {count: 0, start: "", end: ""},
         tags: foundScores.length > 0 ? this.getTags(foundScores) : []
       }, {
@@ -1604,6 +1625,55 @@
       popupEl.classList.add('visible');
     }
     
+    // Show chart popup for year bars/dots
+    function showChartPopup(element, event) {
+      const year = element.dataset.year;
+      const count = parseInt(element.dataset.count);
+      const avgScore = parseFloat(element.dataset.avgScore);
+      const percentage = parseInt(element.dataset.percentage);
+      
+      const popupEl = createPopup();
+      const icon = count > 0 ? '📊' : '📍';
+      
+      let statsContent = '';
+      if (count > 0) {
+        statsContent = `
+          <div class="stat-item">
+            <span class="stat-label">Results:</span>
+            <span class="stat-value">${count} (${percentage}%)</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Avg Score:</span>
+            <span class="stat-value">${avgScore.toFixed(1)}</span>
+          </div>
+        `;
+      } else {
+        statsContent = '<div class="chart-empty-note">No matches found this year</div>';
+      }
+      
+      popupEl.innerHTML = `
+        <div class="popup-header">
+          <span class="tag-icon">${icon}</span>
+          <span>${year}</span>
+        </div>
+        <div class="popup-stats">
+          ${statsContent}
+        </div>
+      `;
+      
+      // Position popup
+      const rect = element.getBoundingClientRect();
+      popupEl.style.left = `${rect.left + window.scrollX + (rect.width / 2) - 70}px`;
+      popupEl.style.top = `${rect.top + window.scrollY - 80}px`;
+      
+      // Clear hide timeout and show popup
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
+      popupEl.classList.add('visible');
+    }
+    
     // Hide popup
     function hideTagPopup() {
       if (popup && popup.classList) {
@@ -1619,9 +1689,11 @@
             (element.classList.contains('tag') || element.classList.contains('person')) && 
             element.dataset && element.dataset.tag) {
           showTagPopup(element, event);
+        } else if (element && element.dataset && element.dataset.chartPopup) {
+          showChartPopup(element, event);
         }
       } catch (e) {
-        console.error('Tag popup mouseenter error:', e);
+        console.error('Popup mouseenter error:', e);
       }
     }, true);
     
@@ -1631,10 +1703,38 @@
         if (element && element.classList && 
             (element.classList.contains('tag') || element.classList.contains('person')) && 
             element.dataset && element.dataset.tag) {
-          hideTimeout = setTimeout(hideTagPopup, 200);
+          hideTimeout = setTimeout(hideTagPopup, 300);
+        } else if (element && element.dataset && element.dataset.chartPopup) {
+          hideTimeout = setTimeout(hideTagPopup, 300);
         }
       } catch (e) {
-        console.error('Tag popup mouseleave error:', e);
+        console.error('Popup mouseleave error:', e);
+      }
+    }, true);
+    
+    // Keep popup visible when hovering over it
+    document.addEventListener('mouseenter', (event) => {
+      try {
+        const element = event.target;
+        if (element && element.classList && element.classList.contains('tag-popup')) {
+          if (hideTimeout) {
+            clearTimeout(hideTimeout);
+            hideTimeout = null;
+          }
+        }
+      } catch (e) {
+        console.error('Popup hover error:', e);
+      }
+    }, true);
+    
+    document.addEventListener('mouseleave', (event) => {
+      try {
+        const element = event.target;
+        if (element && element.classList && element.classList.contains('tag-popup')) {
+          hideTimeout = setTimeout(hideTagPopup, 100);
+        }
+      } catch (e) {
+        console.error('Popup leave error:', e);
       }
     }, true);
     

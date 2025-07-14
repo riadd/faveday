@@ -273,21 +273,21 @@
     {{> yearsBar}}
 
     {{#hasResults}}
-    {{#hits.length}}
-    <table class="box bestEntries">
-      <tr>
-        {{#hits}}
-          <th>{{year}}</th>
-        {{/hits}}
-      </tr>
-      
-      <tr>
-        {{#hits}}
-            <td>{{count}}</td>          
-        {{/hits}}
-      </tr>
-    </table>
-    {{/hits.length}}
+    <div class="box years-chart-box">
+      <div class="years-chart-header">Results by Year <span class="year-range">{{firstYear}}–{{lastYear}}</span></div>
+      <div class="years-chart-container">
+        <div class="years-chart">
+          {{#yearChart}}
+            {{#hasResults}}
+              <div class="year-bar" style="height: {{height}}px" data-year="{{year}}" data-count="{{count}}" data-avg-score="{{avgScore}}" data-percentage="{{percentage}}" data-chart-popup="true"></div>
+            {{/hasResults}}
+            {{^hasResults}}
+              <div class="year-dot" data-year="{{year}}" data-count="0" data-chart-popup="true"></div>
+            {{/hasResults}}
+          {{/yearChart}}
+        </div>
+      </div>
+    </div>
     
     {{#tags.length}}
     <table class="box tags">
