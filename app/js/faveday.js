@@ -104,11 +104,30 @@
       this.showSearch = this.showSearch.bind(this);
       this.tmplScores = Hogan.compile($('#tmpl-scores').html());
       
-      $('#search input').keyup(() => {
+      // Handle Enter key separately
+      $('#search input').keydown((event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          this.showSearch();
+          return;
+        }
+      });
+      
+      $('#search input').keyup((event) => {
+        // Clear existing timeout
         if (this.searchTime != null) {
           window.clearTimeout(this.searchTime);
         }
-        return this.searchTime = window.setTimeout(this.showSearch, 500);
+        
+        const searchValue = event.target.value;
+        
+        // Only trigger real-time search for 4+ characters
+        if (searchValue.length >= 4) {
+          this.searchTime = window.setTimeout(this.showSearch, 500);
+        } else if (searchValue.length === 0) {
+          // If search is cleared, show dashboard
+          this.showDashboard();
+        }
       });
 
       this.showEmpty = false;
@@ -936,7 +955,13 @@
     }
 
     showSearch(id) {
-      id = $('#search input')[0].value;
+      const searchInput = $('#search input')[0];
+      if (!searchInput) {
+        console.error('Search input not found');
+        return this.showDashboard();
+      }
+      
+      id = searchInput.value;
       
       if (id.length < 1) {
         return this.showDashboard();
@@ -974,7 +999,7 @@
             foundScores = foundScores.filter(s => s.date.is(needle));
             
           // text criteria
-          } else if (needle.length > 2) {
+          } else if (needle.length > 0) {
             const needleLower = needle.toLowerCase();
             const regex = new RegExp(`\\b${needleLower}`, 'i'); // 'i' makes it case-insensitive
             foundScores = foundScores.filter(s => regex.test(s.notes));
