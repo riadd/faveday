@@ -1016,12 +1016,13 @@
       
       this.render('#tmpl-search', '#content', {
         count: foundScores.length,
-        average: foundScores.average(s => s.summary).format(2),
+        hasResults: foundScores.length > 0,
+        average: foundScores.length > 0 ? foundScores.average(s => s.summary).format(2) : "0.00",
         scores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(foundScores)}),
         years: this.years.map(y => ({year: y})),
         hits: hits.filter(hit => hit.count > 0),
-        streak: this.getMaxStreak(foundScores),
-        tags: this.getTags(foundScores)
+        streak: foundScores.length > 0 ? this.getMaxStreak(foundScores) : {count: 0, start: "", end: ""},
+        tags: foundScores.length > 0 ? this.getTags(foundScores) : []
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });

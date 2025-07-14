@@ -272,6 +272,8 @@
     <h1>{{count}} Results <small>Ø {{average}}</small></h1>
     {{> yearsBar}}
 
+    {{#hasResults}}
+    {{#hits.length}}
     <table class="box bestEntries">
       <tr>
         {{#hits}}
@@ -285,7 +287,9 @@
         {{/hits}}
       </tr>
     </table>
+    {{/hits.length}}
     
+    {{#tags.length}}
     <table class="box tags">
       <tr>
         <th>Tags</th>
@@ -298,6 +302,7 @@
         </td>
       </tr>
     </table>
+    {{/tags.length}}
 
     <table class="box scores">
       {{{scores}}}
@@ -306,6 +311,13 @@
     <div id="streak" class="box">
       <div>🔥 Current Streak:  {{streak.count}} <span>{{streak.start}} - {{streak.end}}</span></div>
     </div>
+    {{/hasResults}}
+    
+    {{^hasResults}}
+    <div class="box">
+      <p style="text-align: center; color: #333; padding: 2em;">No entries found matching your search.</p>
+    </div>
+    {{/hasResults}}
   </script>
 
   <!-- tmpl-year -->
