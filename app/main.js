@@ -158,10 +158,12 @@ async function calculateTagCache(dirPath, scores) {
     for (const rawTag of tags) {
       const isPersonTag = rawTag.startsWith('@');
       const tagName = rawTag.slice(1).toLowerCase();
+      const originalName = rawTag.slice(1); // Preserve original casing
       
       if (!tagStats[tagName]) {
         tagStats[tagName] = {
           name: tagName,
+          originalName: originalName, // Store original casing
           totalUses: 0,
           scores: [],
           yearStats: {},

@@ -67,7 +67,8 @@
         let dataAttrs = '';
         if (tagStats) {
           const yearStats = tagStats.yearStats || {};
-          dataAttrs = `data-tag="${tagKey}" data-uses="${tagStats.totalUses}" data-avg="${tagStats.avgScore.toFixed(1)}" data-peak="${tagStats.peakYear}" data-peak-count="${tagStats.peakYearCount}" data-is-person="${isPerson}" data-year-stats='${JSON.stringify(yearStats)}'`;
+          const originalName = tagStats.originalName || tagKey;
+          dataAttrs = `data-tag="${tagKey}" data-original-name="${originalName}" data-uses="${tagStats.totalUses}" data-avg="${tagStats.avgScore.toFixed(1)}" data-peak="${tagStats.peakYear}" data-peak-count="${tagStats.peakYearCount}" data-is-person="${isPerson}" data-year-stats='${JSON.stringify(yearStats)}'`;
         }
 
         if (marker === '#') {
@@ -82,10 +83,10 @@
     }
 
     camelCaseToSpace(str) {
-      // Ignore sequences of uppercase letters by ensuring a lowercase letter precedes the uppercase to be spaced
-      return str.replace(/([a-z])([A-Z][a-z])/g, '$1 $2')
-        // Handle the edge case where the string starts with lowercase followed by uppercase (e.g., "jMemorize")
-        .replace(/^(.)([A-Z][a-z])/g, '$1 $2');
+      // Handle sequences like "CallOfTheCovenant" -> "Call Of The Covenant"
+      return str.replace(/([a-z])([A-Z])/g, '$1 $2')
+        // Handle sequences like "XMLHttpRequest" -> "XML Http Request"  
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
     }
   
     styleClass() {
@@ -1504,7 +1505,7 @@
       }
       
       const tagData = {
-        name: element.dataset.tag,
+        name: element.dataset.originalName || element.dataset.tag,
         uses: element.dataset.uses,
         avg: element.dataset.avg,
         peak: element.dataset.peak,
@@ -1515,11 +1516,10 @@
       // Format name properly for person tags  
       const formatName = (name, isPerson) => {
         if (!isPerson) return name;
-        // Convert camelCase to proper name format: danielZiller -> Daniel Ziller
+        
+        // For person tags, use camelCase splitting on the original casing
         return name.replace(/([a-z])([A-Z])/g, '$1 $2')
-                   .split(' ')
-                   .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                   .join(' ');
+                  .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
       };
       
       const popupEl = createPopup();
