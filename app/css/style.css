@@ -1765,28 +1765,52 @@ input:checked + .slider:before {
 
 /* Years chart styling for search results */
 .years-chart-box {
-  background: #1a202c;
-  border: 1px solid #2d3748;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  border: 1px solid #222;
+  box-shadow: #222 0px 8px 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.years-chart-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.5) 50%, transparent 100%);
 }
 
 .years-chart-header {
   font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 12px;
-  color: #f7fafc;
-  text-shadow: none;
+  font-size: 15px;
+  margin-bottom: 15px;
+  color: #f8fafc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.years-chart-header::before {
+  content: '📈';
+  font-size: 16px;
 }
 
 .year-range {
   font-weight: normal;
   font-size: 11px;
-  color: #a0aec0;
-  margin-left: 8px;
+  color: #94a3b8;
+  margin-left: auto;
+  background: rgba(51, 65, 85, 0.6);
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(71, 85, 105, 0.4);
 }
 
 .years-chart-container {
-  padding: 10px;
+  padding: 15px 20px 20px 20px;
 }
 
 .years-chart {
@@ -1808,6 +1832,10 @@ input:checked + .slider:before {
   justify-content: flex-end;
 }
 
+.year-bar:hover, .year-dot:hover {
+  cursor: pointer;
+}
+
 .year-bar {
   background: #4299e1;
   border-radius: 2px 2px 0 0;
@@ -1822,15 +1850,16 @@ input:checked + .slider:before {
 }
 
 .year-dot {
-  height: 3px;
+  height: 2px;
   background: #4a5568;
-  border-radius: 50%;
+  border-radius: 0;
   transition: all 0.2s ease;
+  margin: 0 1px;
 }
 
 .year-dot:hover {
   background: #718096;
-  transform: scale(1.2);
+  height: 4px;
 }
 
 /* Chart popup styling */
@@ -1840,6 +1869,136 @@ input:checked + .slider:before {
   font-style: italic;
   margin-top: 4px;
   text-align: center;
+}
+
+.chart-click-hint {
+  font-size: 9px;
+  color: #4299e1;
+  font-style: italic;
+  margin-top: 6px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+/* Year separator styling for search results */
+.year-section {
+  margin-bottom: 30px;
+}
+
+.year-separator {
+  display: flex;
+  align-items: center;
+  margin: 25px 0 15px 0;
+  gap: 15px;
+}
+
+.year-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #4299e1 50%, transparent 100%);
+  opacity: 0.6;
+}
+
+.year-badge {
+  background: linear-gradient(135deg, #2b6cb0 0%, #4299e1 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.year-number {
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.year-count {
+  font-size: 10px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+/* Journey Tags Box Styling */
+.journey-tags-box {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border: 1px solid #718096;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  margin-bottom: 25px;
+}
+
+.journey-section {
+  margin-bottom: 15px;
+  padding: 0 15px;
+}
+
+.journey-section:last-child {
+  margin-bottom: 15px;
+}
+
+.journey-section:first-child {
+  padding-top: 0;
+  margin-top: 15px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.section-icon {
+  font-size: 14px;
+}
+
+.section-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #e2e8f0;
+  flex: 1;
+}
+
+
+.tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.journey-tag {
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+/* Journey tags inherit their base styling from existing tag classes */
+.journey-tags-box .person {
+  background: #3b4f7a !important;
+  color: #dbeafe;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+}
+
+.journey-tags-box .person:hover {
+  background: #4c63a8 !important;
+  transform: translateY(-1px);
+}
+
+.journey-tags-box .tag {
+  background: #2d5a4a !important;
+  color: #d1fae5;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+}
+
+.journey-tags-box .tag:hover {
+  background: #3f7560 !important;
+  transform: translateY(-1px);
 }
 
 /* Tags header styling */

@@ -879,6 +879,21 @@
       }
     }
     
+    getGroupedTags(scores, sortBy = 'count') {
+      // Get all tags and separate by type
+      const allTags = this.getTags(scores, sortBy);
+      
+      const companions = allTags.filter(tag => tag.classes.includes('person')).slice(0, 8);
+      const landmarks = allTags.filter(tag => !tag.classes.includes('person')).slice(0, 12);
+      
+      return {
+        companions: companions,
+        landmarks: landmarks,
+        hasCompanions: companions.length > 0,
+        hasLandmarks: landmarks.length > 0
+      };
+    }
+    
     showTags(sortBy = 'count') {
       let tags = this.getTags(this.all, sortBy).slice(0,250);
       
@@ -1033,18 +1048,36 @@
         };
       });
       
+      // Group scores by year for better organization
+      const scoresByYear = foundScores.length > 0 ? foundScores.groupBy(s => s.date.getFullYear()) : {};
+      const yearGroups = [];
+      
+      // Create year groups in reverse chronological order (newest first)
+      for (let year of this.years.slice().reverse()) {
+        const yearScores = scoresByYear[year] || [];
+        if (yearScores.length > 0) {
+          yearGroups.push({
+            year: year,
+            count: yearScores.length,
+            scores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(yearScores)})
+          });
+        }
+      }
+      
       this.render('#tmpl-search', '#content', {
         count: foundScores.length,
         hasResults: foundScores.length > 0,
         average: foundScores.length > 0 ? foundScores.average(s => s.summary).format(2) : "0.00",
         scores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(foundScores)}),
+        yearGroups: yearGroups,
         years: this.years.map(y => ({year: y})),
         hits: hits.filter(hit => hit.count > 0),
         yearChart: yearChart,
         firstYear: this.years[0],
         lastYear: this.years[this.years.length - 1],
         streak: foundScores.length > 0 ? this.getMaxStreak(foundScores) : {count: 0, start: "", end: ""},
-        tags: foundScores.length > 0 ? this.getTags(foundScores) : []
+        tags: foundScores.length > 0 ? this.getTags(foundScores) : [],
+        tagGroups: foundScores.length > 0 ? this.getGroupedTags(foundScores) : null
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -1646,6 +1679,7 @@
             <span class="stat-label">Avg Score:</span>
             <span class="stat-value">${avgScore.toFixed(1)}</span>
           </div>
+          <div class="chart-click-hint">Click to jump to ${year}</div>
         `;
       } else {
         statsContent = '<div class="chart-empty-note">No matches found this year</div>';
@@ -1738,14 +1772,39 @@
       }
     }, true);
     
-    // Hide popup when clicking elsewhere
+    // Handle clicks on chart elements
     document.addEventListener('click', (event) => {
       try {
+        const element = event.target;
+        
+        // Check if clicking on a chart element
+        if (element && element.dataset && element.dataset.chartPopup) {
+          const year = element.dataset.year;
+          const yearSection = document.getElementById(`year-${year}`);
+          
+          if (yearSection) {
+            // Smooth scroll to the year section
+            yearSection.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            });
+            
+            // Brief highlight animation
+            yearSection.style.transition = 'background-color 0.3s ease';
+            yearSection.style.backgroundColor = 'rgba(66, 153, 225, 0.1)';
+            setTimeout(() => {
+              yearSection.style.backgroundColor = '';
+            }, 800);
+          }
+          return;
+        }
+        
+        // Hide popup when clicking elsewhere
         if (popup && popup.contains && event.target && !popup.contains(event.target)) {
           hideTagPopup();
         }
       } catch (e) {
-        console.error('Tag popup click error:', e);
+        console.error('Chart click error:', e);
       }
     });
   }
