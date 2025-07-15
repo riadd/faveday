@@ -27,7 +27,7 @@
     {{#scores}}
       <tr class="score {{empty}}">
         <td class="date">
-          <a onclick="onShowMonth('{{monthId}}')">
+          <a onclick="onShowMonth('{{monthId}}')" data-date-id="{{dateId}}">
             <span>{{dateStr}}</span>
             <small>{{weekday}}</small>
           </a>
@@ -690,4 +690,11 @@
   <!-- /new score form -->
 
   <div id="content"></div>
+
+  <!-- Tag Suggestion Popup -->
+  <div id="tag-suggestion-popup" class="tag-suggestion-popup">
+    <div class="suggestion-options" id="suggestion-options">
+      <!-- Options will be populated by JavaScript -->
+    </div>
+  </div>
 </body>

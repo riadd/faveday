@@ -2035,4 +2035,110 @@ input:checked + .slider:before {
   font-weight: 500;
 }
 
+/* Tag Suggestions */
+.tag-suggestion {
+  cursor: pointer;
+  padding: 1px 3px;
+  margin: 0 1px;
+  border-radius: 2px;
+  text-decoration: none;
+  border: 1px dashed #888;
+  color: inherit;
+  background: transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tag-suggestion:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #aaa;
+  transform: translateY(-1px);
+}
+
+.tag-suggestion.person {
+  border-color: #ff59a4;
+}
+
+.tag-suggestion.person:hover {
+  background: rgba(255, 89, 164, 0.2);
+  border-color: #ff59a4;
+}
+
+.tag-suggestion.topic {
+  border-color: #60caff;
+}
+
+.tag-suggestion.topic:hover {
+  background: rgba(96, 202, 255, 0.2);
+  border-color: #60caff;
+}
+
+/* Tag Suggestion Popup */
+.tag-suggestion-popup {
+  position: fixed;
+  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  z-index: 1000;
+  min-width: 200px;
+  font-size: 12px;
+  color: #eee;
+  display: none;
+  backdrop-filter: blur(10px);
+}
+
+.tag-suggestion-popup.visible {
+  display: block;
+}
+
+
+.tag-suggestion-popup .suggestion-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tag-suggestion-popup .suggestion-button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag-suggestion-popup .suggestion-button.person {
+  background: linear-gradient(135deg, #ff59a4, #d1477a);
+  color: white;
+}
+
+.tag-suggestion-popup .suggestion-button.person:hover {
+  background: linear-gradient(135deg, #ff6bb3, #e05588);
+  transform: translateY(-1px);
+}
+
+.tag-suggestion-popup .suggestion-button.topic {
+  background: linear-gradient(135deg, #6b8db5, #5a80a8);
+  color: white;
+}
+
+.tag-suggestion-popup .suggestion-button.topic:hover {
+  background: linear-gradient(135deg, #7a9bc6, #6990b9);
+  transform: translateY(-1px);
+}
+
+.tag-suggestion-popup .suggestion-button .button-icon {
+  font-size: 14px;
+}
+
+.tag-suggestion-popup .suggestion-button .button-text {
+  flex: 1;
+  text-align: left;
+}
+
 

@@ -49,37 +49,86 @@
     }
 
     enhancedText(tagCache) {
-      // Enhanced version with tag cache data
-      let re = /([#@])\p{L}[\p{L}\d]*/gui;
-      let text = this.notes.replace(re, str => {
-        let marker = str[0];
-        let word = str.slice(1);
-        let tagKey = word.toLowerCase();
+      // Clean approach: analyze raw text, then render everything in one pass
+      const rawText = this.notes;
+      
+      // Constants
+      const MIN_TAG_USES = 3;
+      const MIN_WORD_LENGTH = 2;
+      
+      // STEP 1: Find all existing tags in raw text
+      const existingTags = [];
+      const tagRegex = /([#@])\p{L}[\p{L}\d]*/gui;
+      let match;
+      while ((match = tagRegex.exec(rawText)) !== null) {
+        existingTags.push({
+          full: match[0],
+          marker: match[1], 
+          word: match[0].slice(1),
+          start: match.index,
+          end: match.index + match[0].length
+        });
+      }
+      
+      // STEP 2: Find potential suggestions using helper methods
+      let suggestions = [];
+      if (tagCache) {
+        const suggestedWords = new Set(); // Shared between both methods to prevent conflicts
+        const personSuggestions = this.findPersonSuggestions(rawText, existingTags, tagCache, MIN_TAG_USES, MIN_WORD_LENGTH, suggestedWords);
+        const topicSuggestions = this.findTopicSuggestions(rawText, existingTags, tagCache, MIN_TAG_USES, MIN_WORD_LENGTH, suggestedWords);
+        suggestions = [...personSuggestions, ...topicSuggestions];
+      }
+      
+      // STEP 3: Render everything in order of position
+      const allElements = [
+        ...existingTags.map(tag => ({...tag, type: 'existing'})),
+        ...suggestions // Keep original type ('person', etc.)
+      ].sort((a, b) => a.start - b.start);
+      
+      // Build final HTML
+      let result = '';
+      let lastPos = 0;
+      
+      allElements.forEach(element => {
+        // Add text before this element
+        result += rawText.slice(lastPos, element.start);
         
-        // Get tag stats from cache if available
-        let tagStats = tagCache?.[tagKey];
-        let isRecent = tagStats?.recentActivity || false;
-        let isPerson = tagStats?.isPerson || marker === '@';
-        
-        let classes = isPerson ? 'person' : 'tag';
-        if (isRecent) classes += ' recent';
-        
-        let dataAttrs = '';
-        if (tagStats) {
-          const yearStats = tagStats.yearStats || {};
-          const originalName = tagStats.originalName || tagKey;
-          dataAttrs = `data-tag="${tagKey}" data-original-name="${originalName}" data-uses="${tagStats.totalUses}" data-avg="${tagStats.avgScore.toFixed(1)}" data-peak="${tagStats.peakYear}" data-peak-count="${tagStats.peakYearCount}" data-is-person="${isPerson}" data-year-stats='${JSON.stringify(yearStats)}'`;
-        }
+        if (element.type === 'existing') {
+          // Render existing tag with metadata
+          const tagKey = element.word.toLowerCase();
+          const tagStats = tagCache?.[tagKey];
+          const isRecent = tagStats?.recentActivity || false;
+          const isPerson = tagStats?.isPerson || element.marker === '@';
+          
+          let classes = isPerson ? 'person' : 'tag';
+          if (isRecent) classes += ' recent';
+          
+          let dataAttrs = '';
+          if (tagStats) {
+            const yearStats = tagStats.yearStats || {};
+            const originalName = tagStats.originalName || tagKey;
+            dataAttrs = `data-tag="${tagKey}" data-original-name="${originalName}" data-uses="${tagStats.totalUses}" data-avg="${tagStats.avgScore.toFixed(1)}" data-peak="${tagStats.peakYear}" data-peak-count="${tagStats.peakYearCount}" data-is-person="${isPerson}" data-year-stats='${JSON.stringify(yearStats)}'`;
+          }
 
-        if (marker === '#') {
-          return `<a class="${classes}" ${dataAttrs} onclick="onShowSearch('${word}')">${this.camelCaseToSpace(word)}</a>`;
-        } else if (marker === '@') {
-          let firstWord = word.split(/(?=[A-Z])/)[0];
-          return `<a class="${classes}" ${dataAttrs} onclick="onShowSearch('${word}')">${firstWord}</a>`;
+          if (element.marker === '#') {
+            result += `<a class="${classes}" ${dataAttrs} onclick="onShowSearch('${element.word}')">${this.camelCaseToSpace(element.word)}</a>`;
+          } else {
+            const firstWord = element.word.split(/(?=[A-Z])/)[0];
+            result += `<a class="${classes}" ${dataAttrs} onclick="onShowSearch('${element.word}')">${firstWord}</a>`;
+          }
+        } else {
+          // Render suggestion
+          const firstNameAttr = element.firstName ? ` data-first-name="${element.firstName}"` : '';
+          result += `<span class="tag-suggestion ${element.type}" data-original-text="${element.text}" data-suggested-tag="${element.suggestedTag}"${firstNameAttr} onclick="onShowTagSuggestion(this)">${element.text}</span>`;
         }
+        
+        lastPos = element.end;
       });
       
-      return text.replace(/\n/g, "<br>");
+      // Add remaining text
+      result += rawText.slice(lastPos);
+      
+      return result.replace(/\n/g, "<br>");
     }
 
     camelCaseToSpace(str) {
@@ -88,6 +137,98 @@
         // Handle sequences like "XMLHttpRequest" -> "XML Http Request"  
         .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
     }
+
+    // Helper method to check if suggestion overlaps with existing tags
+    checkOverlap(suggestionStart, suggestionEnd, existingTags) {
+      return existingTags.some(tag => 
+        (suggestionStart >= tag.start && suggestionStart < tag.end) ||
+        (suggestionEnd > tag.start && suggestionEnd <= tag.end)
+      );
+    }
+
+    // Helper method to create word matching regex
+    createWordRegex(word) {
+      return new RegExp(`\\b(${word})\\b(?![\\w@#])`, 'i');
+    }
+
+    // Extract person suggestions from raw text
+    findPersonSuggestions(rawText, existingTags, tagCache, minUses, minWordLength, suggestedWords = new Set()) {
+      const suggestions = [];
+      
+      const personTags = Object.keys(tagCache).filter(tag => 
+        tagCache[tag].isPerson && tagCache[tag].totalUses >= minUses
+      );
+      
+      personTags.forEach(tagKey => {
+        const tagData = tagCache[tagKey];
+        const fullName = tagData.originalName || tagKey;
+        const firstName = fullName.split(/(?=[A-Z])/)[0];
+        
+        if (firstName.length > minWordLength && !suggestedWords.has(firstName.toLowerCase())) {
+          const nameMatch = this.createWordRegex(firstName).exec(rawText);
+          
+          if (nameMatch && !this.checkOverlap(nameMatch.index, nameMatch.index + nameMatch[0].length, existingTags)) {
+            suggestions.push({
+              text: nameMatch[0],
+              start: nameMatch.index,
+              end: nameMatch.index + nameMatch[0].length,
+              suggestedTag: `@${fullName}`,
+              firstName: firstName,
+              type: 'person'
+            });
+            suggestedWords.add(firstName.toLowerCase());
+          }
+        }
+      });
+      
+      return suggestions;
+    }
+
+    // Extract topic suggestions from raw text  
+    findTopicSuggestions(rawText, existingTags, tagCache, minUses, minWordLength, suggestedWords = new Set()) {
+      const suggestions = [];
+      
+      const topicTags = Object.keys(tagCache).filter(tag => 
+        !tagCache[tag].isPerson && tagCache[tag].totalUses >= minUses
+      );
+      
+      topicTags.forEach(tagKey => {
+        const tagData = tagCache[tagKey];
+        const fullName = tagData.originalName || tagKey;
+        const searchWords = [];
+        
+        // Add the full tag name (lowercase)
+        searchWords.push(fullName.toLowerCase());
+        
+        // Add camelCase parts if applicable
+        if (/[A-Z]/.test(fullName)) {
+          const parts = fullName.split(/(?=[A-Z])/).filter(part => part.length > minWordLength);
+          searchWords.push(...parts.map(part => part.toLowerCase()));
+        }
+        
+        // Try to match each search word
+        for (const searchWord of searchWords) {
+          if (searchWord.length > minWordLength && !suggestedWords.has(searchWord)) {
+            const wordMatch = this.createWordRegex(searchWord).exec(rawText);
+            
+            if (wordMatch && !this.checkOverlap(wordMatch.index, wordMatch.index + wordMatch[0].length, existingTags)) {
+              suggestions.push({
+                text: wordMatch[0],
+                start: wordMatch.index,
+                end: wordMatch.index + wordMatch[0].length,
+                suggestedTag: `#${fullName}`,
+                type: 'topic'
+              });
+              suggestedWords.add(searchWord);
+              break; // Only suggest once per tag
+            }
+          }
+        }
+      });
+      
+      return suggestions;
+    }
+
   
     styleClass() {
       return this.summary == null ? 'val0' : 'val' + this.summary;
@@ -1474,6 +1615,163 @@
       document.getElementById('diagnostics-results').style.display = 'block';
       document.getElementById('diagnostics-content').innerHTML = html;
     }
+
+    showTagSuggestion(element) {
+      const popup = document.getElementById('tag-suggestion-popup');
+      const optionsContainer = document.getElementById('suggestion-options');
+      
+      const originalText = element.getAttribute('data-original-text');
+      const suggestedTag = element.getAttribute('data-suggested-tag');
+      const firstName = element.getAttribute('data-first-name');
+      const isPersonSuggestion = element.classList.contains('person');
+      
+      // Clear previous options
+      optionsContainer.innerHTML = '';
+      
+      if (isPersonSuggestion) {
+        // For person suggestions, show multiple options for the same first name if available
+        if (firstName) {
+          const personTags = Object.keys(this.tagCache).filter(tag => 
+            this.tagCache[tag].isPerson && 
+            (this.tagCache[tag].originalName || tag).toLowerCase().startsWith(firstName.toLowerCase())
+          );
+          
+          personTags.forEach(personTag => {
+            const fullName = this.tagCache[personTag].originalName || personTag;
+            const button = document.createElement('button');
+            button.className = 'suggestion-button person';
+            button.innerHTML = `
+              <span class="button-icon">👤</span>
+              <span class="button-text">Convert to @${fullName}</span>
+            `;
+            button.onclick = () => {
+              this.convertToTag(originalText, `@${fullName}`, element);
+              this.hideTagSuggestion();
+            };
+            optionsContainer.appendChild(button);
+          });
+        } else {
+          // Just show the single suggested person tag
+          const button = document.createElement('button');
+          button.className = 'suggestion-button person';
+          button.innerHTML = `
+            <span class="button-icon">👤</span>
+            <span class="button-text">Convert to ${suggestedTag}</span>
+          `;
+          button.onclick = () => {
+            this.convertToTag(originalText, suggestedTag, element);
+            this.hideTagSuggestion();
+          };
+          optionsContainer.appendChild(button);
+        }
+      } else {
+        // For topic suggestions, show single option
+        const button = document.createElement('button');
+        button.className = 'suggestion-button topic';
+        button.innerHTML = `
+          <span class="button-icon">🏷️</span>
+          <span class="button-text">Convert to ${suggestedTag}</span>
+        `;
+        button.onclick = () => {
+          this.convertToTag(originalText, suggestedTag, element);
+          this.hideTagSuggestion();
+        };
+        optionsContainer.appendChild(button);
+      }
+      
+      // Position popup near the element
+      const rect = element.getBoundingClientRect();
+      popup.style.position = 'fixed';
+      popup.style.left = rect.left + 'px';
+      popup.style.top = (rect.bottom + 5) + 'px';
+      popup.classList.add('visible');
+      
+      // Hide popup when clicking outside
+      setTimeout(() => {
+        document.addEventListener('click', this.hideTagSuggestionOnClickOutside.bind(this));
+      }, 100);
+    }
+
+    hideTagSuggestion() {
+      const popup = document.getElementById('tag-suggestion-popup');
+      popup.classList.remove('visible');
+      document.removeEventListener('click', this.hideTagSuggestionOnClickOutside.bind(this));
+    }
+
+    hideTagSuggestionOnClickOutside(event) {
+      const popup = document.getElementById('tag-suggestion-popup');
+      if (!popup.contains(event.target) && !event.target.classList.contains('tag-suggestion')) {
+        this.hideTagSuggestion();
+      }
+    }
+
+    async convertToTag(originalText, newTag, element) {
+      const parentRow = element.closest('tr');
+      const notesCell = parentRow?.querySelector('.notes');
+      
+      if (!notesCell) {
+        console.error('No notes cell found for tag conversion');
+        return;
+      }
+      
+      // Find the score entry that contains this element
+      const dateElement = parentRow.querySelector('.date a');
+      let targetScore = null;
+      
+      if (dateElement) {
+        const dateId = dateElement.getAttribute('data-date-id');
+        
+        if (dateId) {
+          targetScore = this.all.find(score => score.dateId() === dateId);
+        } else {
+          // Fallback to text matching for older entries
+          const dateText = dateElement.textContent.replace(/\s+/g, ' ').trim();
+          targetScore = this.all.find(score => score.dateStr() === dateText);
+        }
+      }
+      
+      if (!targetScore) {
+        console.error('No target score found for tag conversion');
+        return;
+      }
+      
+      // Update the score data
+      targetScore.notes = targetScore.notes.replace(
+        new RegExp(`\\b${originalText}\\b`, 'g'), 
+        newTag
+      );
+      
+      // Immediately update the visual display
+      notesCell.innerHTML = targetScore.enhancedText(this.tagCache);
+      
+      // Save in background and refresh tag cache
+      try {
+        await this.saveScores();
+        this.tagCache = await window.api.getTagCache();
+        // Final update with fresh cache data
+        notesCell.innerHTML = targetScore.enhancedText(this.tagCache);
+      } catch (error) {
+        console.error('Error saving converted tag:', error);
+      }
+    }
+
+    refreshCurrentView() {
+      // Refresh the current view based on the current route
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('month')) {
+        const monthId = currentPath.split('/').pop();
+        this.showMonth(monthId);
+      } else if (currentPath.includes('year')) {
+        const yearId = currentPath.split('/').pop();
+        this.showYear(yearId);
+      } else if (currentPath.includes('search')) {
+        const searchTerm = currentPath.split('/').pop();
+        this.showSearch(searchTerm);
+      } else {
+        this.showDashboard();
+      }
+    }
+
   }
 
   //@showPlot()
@@ -1585,6 +1883,18 @@
     window.app.runDiagnostics();
   };
 
+  window.onShowTagSuggestion = function(element) {
+    if (window.app && window.app.showTagSuggestion) {
+      window.app.showTagSuggestion(element);
+    } else {
+      console.error('window.app or showTagSuggestion method not found!', {app: window.app});
+    }
+  };
+
+  window.onConvertToTag = function(originalText, newTag, element) {
+    window.app.convertToTag(originalText, newTag, element);
+  };
+
   window.addEventListener("popstate", (event) => {
     window.poppingState = true;
     handleRoute();
@@ -1682,14 +1992,6 @@
         // Get full year range from app instance (available as window.app)
         const allYears = window.app && window.app.years ? window.app.years : [];
         
-        // Debug logging
-        console.log('Sparkline debug:', {
-          tagName: tagData.name,
-          yearStatsData: yearStatsData,
-          yearStats: yearStats,
-          allYears: allYears,
-          hasData: Object.keys(yearStats).length > 0
-        });
         
         if (allYears.length > 0) {
           const yearValues = Object.values(yearStats);
@@ -1790,10 +2092,16 @@
         </div>
       `;
       
-      // Position popup
+      // Position popup below the chart element and near mouse
       const rect = element.getBoundingClientRect();
+      
+      // Get the chart container to position below the entire chart
+      const chartContainer = element.closest('.years-chart-container');
+      const containerRect = chartContainer ? chartContainer.getBoundingClientRect() : rect;
+      
+      // Position below the chart container, centered on the clicked element
       popupEl.style.left = `${rect.left + window.scrollX + (rect.width / 2) - 70}px`;
-      popupEl.style.top = `${rect.top + window.scrollY - 80}px`;
+      popupEl.style.top = `${containerRect.bottom + window.scrollY + 10}px`;
       
       // Clear hide timeout and show popup
       if (hideTimeout) {
