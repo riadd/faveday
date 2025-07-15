@@ -575,6 +575,24 @@
       </div>
     </div>
 
+    <div class="box settings-section">
+      <h3>Data Diagnostics</h3>
+      
+      <div class="setting-item">
+        <label>Check for data integrity issues:</label>
+        <button onclick="onRunDiagnostics()">Run Diagnostics</button>
+      </div>
+      
+      <div id="diagnostics-results" style="display: none;">
+        <h4>Diagnostic Results:</h4>
+        <div id="diagnostics-content"></div>
+      </div>
+      
+      <div class="setting-explanation">
+        <small>This will scan your entries for duplicate dates, missing scores, invalid dates, and other data integrity issues.</small>
+      </div>
+    </div>
+
     <div id="footer">
       <a onclick="onShowDashboard()">← Back to Dashboard</a>
     </div>

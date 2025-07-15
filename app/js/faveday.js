@@ -510,10 +510,12 @@
 
       let virtualMonthScores = []
       for (let dateNum=1; dateNum<=31; dateNum++) {
-        let score = monthScores.find(s => 
+        // Find the last entry for this date (most recent if multiple exist)
+        let matches = monthScores.filter(s => 
           s.date.getFullYear() === yearNum &&
           s.date.getMonth() === monthNum-1 &&
           s.date.getDate() === dateNum);
+        let score = matches.length > 0 ? matches[matches.length - 1] : null;
         
         if (score == null)
         {
@@ -1115,7 +1117,9 @@
       $('#editScore').show();
       $('#content').hide();
       
-      let score = this.all.find(s => s.dateId() === dateId)
+      // Find the last entry for this date (most recent if multiple exist)
+      let matches = this.all.filter(s => s.dateId() === dateId)
+      let score = matches.length > 0 ? matches[matches.length - 1] : null
       
       if (score == null) {
         score = new Score(new Date(), 3, '')
@@ -1383,6 +1387,93 @@
         this.showDashboard();
       }
     }
+
+    runDiagnostics() {
+      const results = [];
+      const dateMap = new Map();
+      
+      // Check for duplicate dates
+      this.all.forEach(entry => {
+        const dateId = entry.dateId();
+        if (dateMap.has(dateId)) {
+          dateMap.get(dateId).push(entry);
+        } else {
+          dateMap.set(dateId, [entry]);
+        }
+      });
+      
+      // Find duplicates
+      const duplicates = [];
+      dateMap.forEach((entries, dateId) => {
+        if (entries.length > 1) {
+          duplicates.push({ dateId, count: entries.length, entries });
+        }
+      });
+      
+      // Check for missing scores
+      const missingScores = this.all.filter(entry => 
+        entry.summary === null || entry.summary === undefined
+      );
+      
+      // Check for invalid dates
+      const invalidDates = this.all.filter(entry => {
+        const date = entry.date;
+        return isNaN(date.getTime()) || 
+               date.getFullYear() < 1900 || 
+               date.getFullYear() > 2100;
+      });
+      
+      // Check for entries with no notes
+      const emptyNotes = this.all.filter(entry => 
+        !entry.notes || entry.notes.trim() === ''
+      );
+      
+      // Generate report
+      let html = '<div style="font-family: monospace; font-size: 12px; line-height: 1.4;">';
+      
+      if (duplicates.length > 0) {
+        html += '<div style="color: #ff6b6b; margin-bottom: 15px;"><strong>🔴 Duplicate Dates:</strong></div>';
+        duplicates.forEach(dup => {
+          html += `<div style="margin-left: 20px; margin-bottom: 5px;">`;
+          html += `<strong>${dup.dateId}</strong> - ${dup.count} entries<br>`;
+          dup.entries.forEach((entry, idx) => {
+            html += `<span style="margin-left: 20px;">Entry ${idx + 1}: Score ${entry.summary || 'null'}, Notes: "${entry.notes.substring(0, 50)}..."</span><br>`;
+          });
+          html += '</div>';
+        });
+      }
+      
+      if (missingScores.length > 0) {
+        html += '<div style="color: #ffa500; margin-bottom: 15px;"><strong>🟡 Missing Scores:</strong></div>';
+        missingScores.forEach(entry => {
+          html += `<div style="margin-left: 20px;">${entry.dateId()} - Score: ${entry.summary}</div>`;
+        });
+      }
+      
+      if (invalidDates.length > 0) {
+        html += '<div style="color: #ff6b6b; margin-bottom: 15px;"><strong>🔴 Invalid Dates:</strong></div>';
+        invalidDates.forEach(entry => {
+          html += `<div style="margin-left: 20px;">Date: ${entry.date}, Score: ${entry.summary}</div>`;
+        });
+      }
+      
+      if (emptyNotes.length > 0) {
+        html += '<div style="color: #87ceeb; margin-bottom: 15px;"><strong>🔵 Empty Notes:</strong></div>';
+        emptyNotes.forEach(entry => {
+          html += `<div style="margin-left: 20px;">${entry.dateId()} - Score: ${entry.summary}</div>`;
+        });
+      }
+      
+      if (duplicates.length === 0 && missingScores.length === 0 && invalidDates.length === 0 && emptyNotes.length === 0) {
+        html += '<div style="color: #90ee90;"><strong>✅ All Good!</strong><br>No data integrity issues found.</div>';
+      }
+      
+      html += '</div>';
+      
+      // Show results
+      document.getElementById('diagnostics-results').style.display = 'block';
+      document.getElementById('diagnostics-content').innerHTML = html;
+    }
   }
 
   //@showPlot()
@@ -1488,6 +1579,10 @@
 
   window.onSaveBirthdate = async function() {
     return await window.app.saveBirthdate();
+  };
+
+  window.onRunDiagnostics = function() {
+    window.app.runDiagnostics();
   };
 
   window.addEventListener("popstate", (event) => {
