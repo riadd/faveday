@@ -293,10 +293,6 @@
     <div class="box journey-tags-box">
       {{#hasCompanions}}
       <div class="journey-section companions-section">
-        <div class="section-header">
-          <span class="section-icon">👥</span>
-          <span class="section-title">Travel Companions</span>
-        </div>
         <div class="tags-grid companions-grid">
           {{#companions}}
             <a class="{{classes}} journey-tag" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a>
@@ -307,10 +303,6 @@
       
       {{#hasLandmarks}}
       <div class="journey-section landmarks-section">
-        <div class="section-header">
-          <span class="section-icon">🏔️</span>
-          <span class="section-title">Points of Interest</span>
-        </div>
         <div class="tags-grid landmarks-grid">
           {{#landmarks}}
             <a class="{{classes}} journey-tag" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a>
