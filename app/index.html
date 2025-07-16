@@ -271,7 +271,17 @@
 
   <!-- tmpl-search -->
   <script type="text/mustache" id="tmpl-search">
-    <h1>{{count}} Results <small>Ø {{average}}</small></h1>
+    <div class="search-header">
+      <h1>{{count}} Results <small>Ø {{average}}</small></h1>
+      <div class="search-type-toggle">
+        <span class="toggle-label">Tags only</span>
+        <label class="switch">
+          <input type="checkbox" id="tags-only-toggle" {{#tagsOnly}}checked{{/tagsOnly}} onchange="onToggleSearchType(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    
     {{> yearsBar}}
 
     {{#hasResults}}

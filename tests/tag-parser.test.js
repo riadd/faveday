@@ -357,6 +357,59 @@ describe('Tag Parser Tests', () => {
       assert.strictEqual(suggestions[0].start, 0);
       assert.strictEqual(suggestions[0].end, 10);
     });
+
+    it('should not suggest insignificant camelCase parts', () => {
+      const mockCacheWithLongTags = {
+        'godofwar': {
+          isPerson: false,
+          totalUses: 10,
+          originalName: 'GodOfWar'
+        },
+        'callofduty': {
+          isPerson: false,
+          totalUses: 8,
+          originalName: 'CallOfDuty'
+        }
+      };
+      
+      const text = 'Playing war games and duty calls today';
+      const existingTags = [];
+      
+      const suggestions = parser.findTopicSuggestions(text, existingTags, mockCacheWithLongTags, 3, 2);
+      
+      // Should not suggest "war" -> #GodOfWar or "duty" -> #CallOfDuty
+      // because these are insignificant parts (< 50% of full tag length)
+      assert.strictEqual(suggestions.length, 0);
+    });
+
+    it('should suggest significant camelCase parts', () => {
+      const mockCacheWithSignificantParts = {
+        'javascript': {
+          isPerson: false,
+          totalUses: 10,
+          originalName: 'javaScript'
+        },
+        'webdev': {
+          isPerson: false,
+          totalUses: 8,
+          originalName: 'webDev'
+        }
+      };
+      
+      const text = 'Learning java and web programming today';
+      const existingTags = [];
+      
+      const suggestions = parser.findTopicSuggestions(text, existingTags, mockCacheWithSignificantParts, 3, 2);
+      
+      // Should suggest "java" -> #javaScript (first part) and "web" -> #webDev (50%+ of length)
+      assert.strictEqual(suggestions.length, 2);
+      
+      const javaSuggestion = suggestions.find(s => s.text === 'java');
+      assert.strictEqual(javaSuggestion.suggestedTag, '#javaScript');
+      
+      const webSuggestion = suggestions.find(s => s.text === 'web');
+      assert.strictEqual(webSuggestion.suggestedTag, '#webDev');
+    });
   });
 
   describe('First Occurrence Behavior', () => {

@@ -185,10 +185,19 @@ class TagParser {
       // Add the full tag name (lowercase)
       searchWords.push(fullName.toLowerCase());
       
-      // Add camelCase parts if applicable
+      // Add camelCase parts if applicable, but only significant ones
       if (/[A-Z]/.test(fullName)) {
         const parts = fullName.split(/(?=[A-Z])/).filter(part => part.length > minWordLength);
-        searchWords.push(...parts.map(part => part.toLowerCase()));
+        
+        // Only suggest camelCase parts that are significant relative to the full tag
+        const significantParts = parts.filter(part => {
+          // Keep first part (main concept) or parts that are at least 50% of total length
+          const isFirstPart = parts.indexOf(part) === 0;
+          const isSignificantLength = part.length >= fullName.length * 0.5;
+          return isFirstPart || isSignificantLength;
+        });
+        
+        searchWords.push(...significantParts.map(part => part.toLowerCase()));
       }
       
       // Try to match each search word

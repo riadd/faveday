@@ -1405,6 +1405,26 @@ input:checked + .slider:before {
   transform: translateX(1.9em);
 }
 
+/* Search Header */
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-type-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-label {
+  font-size: 14px;
+  color: #ccc;
+  font-weight: normal;
+}
+
 /* Bento Grid Layout */
 .bento-grid {
   display: grid;

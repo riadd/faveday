@@ -205,6 +205,7 @@
       });
 
       this.showEmpty = false;
+      this.tagsOnly = false;
       this.tagCache = {};
 
       this.loadScores();
@@ -1091,9 +1092,16 @@
             
           // text criteria
           } else if (needle.length > 0) {
-            const needleLower = needle.toLowerCase();
-            const regex = new RegExp(`\\b${needleLower}`, 'i'); // 'i' makes it case-insensitive
-            foundScores = foundScores.filter(s => regex.test(s.notes));
+            if (this.tagsOnly) {
+              // Tag-only search: look for #needle or @needle
+              const tagRegex = new RegExp(`[#@]${needle.toLowerCase()}\\b`, 'i');
+              foundScores = foundScores.filter(s => tagRegex.test(s.notes.toLowerCase()));
+            } else {
+              // Regular text search
+              const needleLower = needle.toLowerCase();
+              const regex = new RegExp(`\\b${needleLower}`, 'i'); // 'i' makes it case-insensitive
+              foundScores = foundScores.filter(s => regex.test(s.notes));
+            }
             
             keywords.push(needle);
           }
@@ -1152,7 +1160,8 @@
         lastYear: this.years[this.years.length - 1],
         streak: foundScores.length > 0 ? this.getMaxStreak(foundScores) : {count: 0, start: "", end: ""},
         tags: foundScores.length > 0 ? this.getTags(foundScores) : [],
-        tagGroups: foundScores.length > 0 ? this.getGroupedTags(foundScores) : null
+        tagGroups: foundScores.length > 0 ? this.getGroupedTags(foundScores) : null,
+        tagsOnly: this.tagsOnly
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -1801,6 +1810,11 @@
       $('#search input')[0].value = id;
     }
     return window.app.showSearch(id);
+  };
+
+  window.onToggleSearchType = function(checked) {
+    window.app.tagsOnly = checked;
+    return window.app.showSearch();
   };
 
   window.onShowSettings = async function() {
