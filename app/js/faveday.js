@@ -153,12 +153,12 @@
 
     // Extract person suggestions from raw text
     findPersonSuggestions(rawText, existingTags, tagCache, minUses, minWordLength, suggestedWords = new Set()) {
-      return this.getTagParser().findPersonSuggestions(rawText, existingTags, tagCache, minUses, minWordLength);
+      return this.getTagParser().findPersonSuggestions(rawText, existingTags, tagCache, minUses, minWordLength, suggestedWords);
     }
 
     // Extract topic suggestions from raw text  
     findTopicSuggestions(rawText, existingTags, tagCache, minUses, minWordLength, suggestedWords = new Set()) {
-      return this.getTagParser().findTopicSuggestions(rawText, existingTags, tagCache, minUses, minWordLength);
+      return this.getTagParser().findTopicSuggestions(rawText, existingTags, tagCache, minUses, minWordLength, suggestedWords);
     }
 
   
@@ -211,8 +211,16 @@
       this.loadScores();
     }
     
-    fmtDiff(val) {
-      return (val > 0) ? `▲ ${val.format(2)}` : `▼ ${-val.format(2)}`;
+    fmtDiff(val, currentVal) {
+      if (val === 0) return '';
+      
+      // Calculate percentage change
+      const percentageChange = currentVal > 0 ? Math.round((val / currentVal) * 100) : 0;
+      const sign = val > 0 ? '+' : '';
+      const arrow = val > 0 ? '▲' : '▼';
+      const absPercentage = Math.abs(percentageChange);
+      
+      return `${arrow} ${sign}${absPercentage}%`;
     }
     
     showSummary(scores) {
@@ -339,6 +347,63 @@
       $('#loading').hide();
       
       handleRoute();
+    }
+
+    onScoreAddedAndNavigateBack() {
+      // Update the data like onScoreAdded but navigate back instead of handling current route
+      this.all.sort((a, b) => b.date - a.date); // sort in descending order
+      
+      let minYear = this.all.last().date.getFullYear();
+      let maxYear = this.all.first().date.getFullYear();
+      
+      this.years = [];
+      for (let year = minYear; year <= maxYear; year++) {
+        this.years.push(year);
+      }
+
+      $('#topArea').show();
+      $('#loading').hide();
+      
+      // Navigate back to previous page instead of handling current route
+      if (window.history.length > 1) {
+        history.back();
+      } else {
+        // Fallback to dashboard if no history
+        this.showDashboard();
+      }
+    }
+
+    showToaster(message, type = 'success', duration = 3000) {
+      const toaster = document.getElementById('toaster');
+      const toasterMessage = document.getElementById('toaster-message');
+      
+      if (!toaster || !toasterMessage) {
+        console.error('Toaster elements not found');
+        return;
+      }
+
+      // Update message
+      toasterMessage.textContent = message;
+      
+      // Update styling based on type
+      if (type === 'success') {
+        toaster.style.background = 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)';
+        toaster.querySelector('.toaster-icon').textContent = '✓';
+      } else if (type === 'error') {
+        toaster.style.background = 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)';
+        toaster.querySelector('.toaster-icon').textContent = '✗';
+      } else if (type === 'info') {
+        toaster.style.background = 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)';
+        toaster.querySelector('.toaster-icon').textContent = 'ℹ';
+      }
+      
+      // Show toaster
+      toaster.classList.add('show');
+      
+      // Hide after duration
+      setTimeout(() => {
+        toaster.classList.remove('show');
+      }, duration);
     }
 
     showError() {
@@ -521,7 +586,7 @@
         
         let prevAvg = prevMonthScores.average(s => s.summary)
         let curAvg = curMonthScores.average(s => s.summary)
-        diff = this.fmtDiff(curAvg - prevAvg)
+        diff = this.fmtDiff(curAvg - prevAvg, prevAvg)
       }
 
       // Get config for birthdate
@@ -1166,15 +1231,35 @@
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
       
-      // this feels hacky
+      // Apply search highlighting while preserving tag suggestions
       let notesElem = $('.notes');
       for (let k = 0; k < notesElem.length; k++) {
         let elem = notesElem[k];
 
         for (let n = 0; n < keywords.length; n++) {
           let keyword = keywords[n];
-          const regex = new RegExp(`(${keyword})`, 'ig');
-          $(elem).html(elem.innerHTML.replace(regex, "<em>$1</em>"));
+          
+          // Create a more sophisticated regex that avoids matching inside tag suggestions
+          // We need to avoid matching content inside elements with class "tag-suggestion"
+          const textNodes = this.getTextNodesWithoutTagSuggestions(elem);
+          
+          textNodes.forEach(textNode => {
+            const text = textNode.textContent;
+            const regex = new RegExp(`(${keyword})`, 'ig');
+            
+            if (regex.test(text)) {
+              // Create a temporary container to hold the highlighted content
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = text.replace(regex, "<em>$1</em>");
+              
+              // Replace the text node with the highlighted content
+              const fragment = document.createDocumentFragment();
+              while (tempDiv.firstChild) {
+                fragment.appendChild(tempDiv.firstChild);
+              }
+              textNode.parentNode.replaceChild(fragment, textNode);
+            }
+          });
         }
       }
 
@@ -1269,8 +1354,13 @@
       
       console.log(`${isNew ? 'added' : 'edited'} score (${this.currentVal}): ${notes}`)
       
+      // Format date for toaster notification
+      const formattedDate = score.date.format("{Month} {dd}{S}");
+      const action = isNew ? 'added' : 'updated';
+      this.showToaster(`Date ${formattedDate} ${action}.`);
+      
       this.hideEditScore();
-      this.onScoreAdded();
+      this.onScoreAddedAndNavigateBack();
       this.saveScores()
     }
     
@@ -1351,19 +1441,39 @@
       const threeSixtyFiveDaysAgo = new Date(now);
       threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
       
+      // Calculate for previous year (730 days ago to 365 days ago)
+      const sevenThirtyDaysAgo = new Date(now);
+      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
+      
       // Get the earliest score date to determine actual range
       const firstScoreDate = this.all.length > 0 ? this.all[this.all.length - 1].date : now;
-      const rangeStart = threeSixtyFiveDaysAgo > firstScoreDate ? threeSixtyFiveDaysAgo : firstScoreDate;
       
-      const daysPassed = Math.floor((now - rangeStart) / (1000 * 60 * 60 * 24)) + 1;
+      // Current year range
+      const currentRangeStart = threeSixtyFiveDaysAgo > firstScoreDate ? threeSixtyFiveDaysAgo : firstScoreDate;
+      const currentDaysPassed = Math.floor((now - currentRangeStart) / (1000 * 60 * 60 * 24)) + 1;
+      const currentEntriesInRange = this.all.filter(score => score.date >= currentRangeStart).length;
+      const currentPercentage = currentDaysPassed > 0 ? Math.round((currentEntriesInRange / currentDaysPassed) * 100) : 0;
       
-      // Count entries in the last 365 days (or since first entry)
-      const entriesInRange = this.all.filter(score => score.date >= rangeStart).length;
+      // Previous year range
+      const previousRangeStart = sevenThirtyDaysAgo > firstScoreDate ? sevenThirtyDaysAgo : firstScoreDate;
+      const previousYearEntries = this.all.filter(score => 
+        score.date >= previousRangeStart && score.date < threeSixtyFiveDaysAgo
+      ).length;
+      const previousYearDays = Math.floor((threeSixtyFiveDaysAgo - previousRangeStart) / (1000 * 60 * 60 * 24));
+      const previousPercentage = previousYearDays > 0 ? Math.round((previousYearEntries / previousYearDays) * 100) : 0;
+      
+      // Calculate delta
+      const delta = currentPercentage - previousPercentage;
+      const deltaDisplay = delta === 0 ? '' : 
+        delta > 0 ? `↗ +${delta}%` : `↘ ${delta}%`;
       
       return {
-        entriesMade: entriesInRange,
-        daysPassed: daysPassed,
-        percentage: daysPassed > 0 ? Math.round((entriesInRange / daysPassed) * 100) : 0
+        entriesMade: currentEntriesInRange,
+        daysPassed: currentDaysPassed,
+        percentage: currentPercentage,
+        previousPercentage: previousPercentage,
+        delta: delta,
+        deltaDisplay: deltaDisplay
       };
     }
 
@@ -1411,11 +1521,16 @@
         ? Object.entries(tagCounts).sort((a, b) => b[1] - a[1])[0] 
         : null;
 
-      const formatTrend = (diff, trend) => {
+      const formatTrend = (diff, trend, currentVal) => {
         if (diff === 0) return '';
         const arrow = trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→';
         const sign = diff > 0 ? '+' : '';
-        return ` ${arrow} ${sign}${diff}`;
+        
+        // Calculate percentage change
+        const percentageChange = currentVal > 0 ? Math.round((diff / currentVal) * 100) : 0;
+        const absPercentage = Math.abs(percentageChange);
+        
+        return ` ${arrow} ${sign}${absPercentage}%`;
       };
 
       return {
@@ -1424,21 +1539,21 @@
           previous: previousAvgWords,
           diff: wordsDiff,
           trend: wordsDiff > 0 ? 'up' : wordsDiff < 0 ? 'down' : 'same',
-          trendDisplay: formatTrend(wordsDiff, wordsDiff > 0 ? 'up' : wordsDiff < 0 ? 'down' : 'same')
+          trendDisplay: formatTrend(wordsDiff, wordsDiff > 0 ? 'up' : wordsDiff < 0 ? 'down' : 'same', previousAvgWords)
         },
         entries: {
           current: currentEntries,
           previous: previousEntries,
           diff: entriesDiff,
           trend: entriesDiff > 0 ? 'up' : entriesDiff < 0 ? 'down' : 'same',
-          trendDisplay: formatTrend(entriesDiff, entriesDiff > 0 ? 'up' : entriesDiff < 0 ? 'down' : 'same')
+          trendDisplay: formatTrend(entriesDiff, entriesDiff > 0 ? 'up' : entriesDiff < 0 ? 'down' : 'same', previousEntries)
         },
         score: {
           current: Math.round(currentAvgScore * 10) / 10,
           previous: Math.round(previousAvgScore * 10) / 10,
           diff: Math.round(scoreDiff * 10) / 10,
           trend: scoreDiff > 0 ? 'up' : scoreDiff < 0 ? 'down' : 'same',
-          trendDisplay: formatTrend(Math.round(scoreDiff * 10) / 10, scoreDiff > 0 ? 'up' : scoreDiff < 0 ? 'down' : 'same'),
+          trendDisplay: formatTrend(Math.round(scoreDiff * 10) / 10, scoreDiff > 0 ? 'up' : scoreDiff < 0 ? 'down' : 'same', Math.round(previousAvgScore * 10) / 10),
           trendEmoji: scoreDiff > 0 ? '📈' : scoreDiff < 0 ? '📉' : '➡️'
         },
         topTag: topTag ? { tag: topTag[0], count: topTag[1] } : null
@@ -1557,9 +1672,37 @@
       document.getElementById('diagnostics-content').innerHTML = html;
     }
 
+    getTextNodesWithoutTagSuggestions(element) {
+      const textNodes = [];
+      
+      function collectTextNodes(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          textNodes.push(node);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          // Skip tag suggestion elements to preserve their functionality
+          if (node.classList && node.classList.contains('tag-suggestion')) {
+            return;
+          }
+          
+          // Recursively collect text nodes from child elements
+          for (let child of node.childNodes) {
+            collectTextNodes(child);
+          }
+        }
+      }
+      
+      collectTextNodes(element);
+      return textNodes;
+    }
+
     showTagSuggestion(element) {
       const popup = document.getElementById('tag-suggestion-popup');
       const optionsContainer = document.getElementById('suggestion-options');
+      
+      if (!popup || !optionsContainer) {
+        console.error('Missing popup elements:', {popup, optionsContainer});
+        return;
+      }
       
       const originalText = element.getAttribute('data-original-text');
       const suggestedTag = element.getAttribute('data-suggested-tag');

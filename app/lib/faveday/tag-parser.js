@@ -127,9 +127,8 @@ class TagParser {
    * @param {number} minWordLength - Minimum word length
    * @returns {Array} Array of suggestion objects
    */
-  findPersonSuggestions(rawText, existingTags, tagCache, minUses = 3, minWordLength = 2) {
+  findPersonSuggestions(rawText, existingTags, tagCache, minUses = 3, minWordLength = 2, suggestedWords = new Set()) {
     const suggestions = [];
-    const suggestedWords = new Set();
     
     const personTags = Object.keys(tagCache).filter(tag => 
       tagCache[tag].isPerson && tagCache[tag].totalUses >= minUses
@@ -152,7 +151,9 @@ class TagParser {
             firstName: firstName,
             type: 'person'
           });
+          // Add both the firstName and the actual matched text to prevent overlaps
           suggestedWords.add(firstName.toLowerCase());
+          suggestedWords.add(nameMatch[0].toLowerCase());
         }
       }
     });
@@ -169,9 +170,8 @@ class TagParser {
    * @param {number} minWordLength - Minimum word length
    * @returns {Array} Array of suggestion objects
    */
-  findTopicSuggestions(rawText, existingTags, tagCache, minUses = 3, minWordLength = 2) {
+  findTopicSuggestions(rawText, existingTags, tagCache, minUses = 3, minWordLength = 2, suggestedWords = new Set()) {
     const suggestions = [];
-    const suggestedWords = new Set();
     
     const topicTags = Object.keys(tagCache).filter(tag => 
       !tagCache[tag].isPerson && tagCache[tag].totalUses >= minUses

@@ -86,7 +86,7 @@
       <div class="bento-item coverage">
         <h4>📊 Coverage</h4>
         <div class="bento-main-value">{{percentage}}%</div>
-        <small>{{entriesMade}}/{{daysPassed}} tracked</small>
+        <small>{{entriesMade}}/{{daysPassed}} tracked {{#deltaDisplay}}<span class="trend-indicator">{{deltaDisplay}}</span>{{/deltaDisplay}}</small>
       </div>
       {{/coverage}}
       
@@ -707,6 +707,14 @@
   <div id="tag-suggestion-popup" class="tag-suggestion-popup">
     <div class="suggestion-options" id="suggestion-options">
       <!-- Options will be populated by JavaScript -->
+    </div>
+  </div>
+
+  <!-- Toaster Notification -->
+  <div id="toaster" class="toaster">
+    <div class="toaster-content">
+      <span class="toaster-icon">✓</span>
+      <span class="toaster-message" id="toaster-message"></span>
     </div>
   </div>
 </body>

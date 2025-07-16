@@ -254,6 +254,81 @@ describe('Tag Parser Tests', () => {
       assert.strictEqual(suggestions[0].start, 0);
       assert.strictEqual(suggestions[0].end, 5);
     });
+
+    it('should share suggested words set between person and topic suggestions', () => {
+      const mockCacheWithSharedWords = {
+        'michael': {
+          isPerson: true,
+          totalUses: 5,
+          originalName: 'Michael'
+        },
+        'programming': {
+          isPerson: false,
+          totalUses: 8,
+          originalName: 'programming'
+        }
+      };
+      
+      const text = 'Michael enjoys programming and Michael coding';
+      const existingTags = [];
+      const sharedSuggestedWords = new Set();
+      
+      // Test person suggestions first
+      const personSuggestions = parser.findPersonSuggestions(text, existingTags, mockCacheWithSharedWords, 3, 2, sharedSuggestedWords);
+      
+      // Should suggest only the first occurrence of "Michael"
+      assert.strictEqual(personSuggestions.length, 1);
+      assert.strictEqual(personSuggestions[0].text, 'Michael');
+      assert.strictEqual(personSuggestions[0].start, 0);
+      
+      // Then test topic suggestions with the same shared set
+      const topicSuggestions = parser.findTopicSuggestions(text, existingTags, mockCacheWithSharedWords, 3, 2, sharedSuggestedWords);
+      
+      // Should suggest programming once, and "Michael" should be blocked for topic suggestions
+      assert.strictEqual(topicSuggestions.length, 1);
+      assert.strictEqual(topicSuggestions[0].text, 'programming');
+      
+      // Verify "Michael" is in the shared set and blocked for future suggestions
+      assert.strictEqual(sharedSuggestedWords.has('michael'), true);
+    });
+
+    it('should handle the Michael Jackson scenario without duplicates', () => {
+      const mockCacheWithMichaelJackson = {
+        'michael': {
+          isPerson: true,
+          totalUses: 5,
+          originalName: 'Michael'
+        },
+        'jackson': {
+          isPerson: false,
+          totalUses: 4,
+          originalName: 'Jackson'
+        }
+      };
+      
+      const text = 'Michael Jackson was a great performer';
+      const existingTags = [];
+      const sharedSuggestedWords = new Set();
+      
+      // Test person suggestions first
+      const personSuggestions = parser.findPersonSuggestions(text, existingTags, mockCacheWithMichaelJackson, 3, 2, sharedSuggestedWords);
+      
+      // Should suggest "Michael" -> @Michael
+      assert.strictEqual(personSuggestions.length, 1);
+      assert.strictEqual(personSuggestions[0].text, 'Michael');
+      assert.strictEqual(personSuggestions[0].suggestedTag, '@Michael');
+      
+      // Then test topic suggestions with the same shared set
+      const topicSuggestions = parser.findTopicSuggestions(text, existingTags, mockCacheWithMichaelJackson, 3, 2, sharedSuggestedWords);
+      
+      // Should suggest "Jackson" -> #Jackson since it's not blocked
+      assert.strictEqual(topicSuggestions.length, 1);
+      assert.strictEqual(topicSuggestions[0].text, 'Jackson');
+      assert.strictEqual(topicSuggestions[0].suggestedTag, '#Jackson');
+      
+      // This is the expected behavior - both can be suggested since they're different words
+      // The key is that the same word (like "Michael") won't be suggested twice
+    });
   });
 
   describe('Topic Suggestions', () => {

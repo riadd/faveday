@@ -2161,4 +2161,46 @@ input:checked + .slider:before {
   text-align: left;
 }
 
+/* Toaster Notification */
+.toaster {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  z-index: 1001;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  min-width: 200px;
+  max-width: 400px;
+}
+
+.toaster.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.toaster-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toaster-icon {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.toaster-message {
+  flex: 1;
+}
+
 
