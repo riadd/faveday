@@ -1,0 +1,12 @@
+{
+  "name": "faveday-tests",
+  "version": "1.0.0",
+  "description": "Unit tests for FaveDay tag handling",
+  "main": "test-runner.js",
+  "scripts": {
+    "test": "node test-runner.js"
+  },
+  "devDependencies": {
+    "assert": "^2.0.0"
+  }
+}

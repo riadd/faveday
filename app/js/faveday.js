@@ -131,102 +131,34 @@
       return result.replace(/\n/g, "<br>");
     }
 
+    // Initialize shared tag parser
+    getTagParser() {
+      if (!this._tagParser) {
+        this._tagParser = new TagParser();
+      }
+      return this._tagParser;
+    }
+
     camelCaseToSpace(str) {
-      // Handle sequences like "CallOfTheCovenant" -> "Call Of The Covenant"
-      return str.replace(/([a-z])([A-Z])/g, '$1 $2')
-        // Handle sequences like "XMLHttpRequest" -> "XML Http Request"  
-        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
+      return this.getTagParser().camelCaseToSpace(str);
     }
 
-    // Helper method to check if suggestion overlaps with existing tags
     checkOverlap(suggestionStart, suggestionEnd, existingTags) {
-      return existingTags.some(tag => 
-        (suggestionStart >= tag.start && suggestionStart < tag.end) ||
-        (suggestionEnd > tag.start && suggestionEnd <= tag.end)
-      );
+      return this.getTagParser().checkOverlap(suggestionStart, suggestionEnd, existingTags);
     }
 
-    // Helper method to create word matching regex
     createWordRegex(word) {
-      return new RegExp(`\\b(${word})\\b(?![\\w@#])`, 'i');
+      return this.getTagParser().createWordRegex(word);
     }
 
     // Extract person suggestions from raw text
     findPersonSuggestions(rawText, existingTags, tagCache, minUses, minWordLength, suggestedWords = new Set()) {
-      const suggestions = [];
-      
-      const personTags = Object.keys(tagCache).filter(tag => 
-        tagCache[tag].isPerson && tagCache[tag].totalUses >= minUses
-      );
-      
-      personTags.forEach(tagKey => {
-        const tagData = tagCache[tagKey];
-        const fullName = tagData.originalName || tagKey;
-        const firstName = fullName.split(/(?=[A-Z])/)[0];
-        
-        if (firstName.length > minWordLength && !suggestedWords.has(firstName.toLowerCase())) {
-          const nameMatch = this.createWordRegex(firstName).exec(rawText);
-          
-          if (nameMatch && !this.checkOverlap(nameMatch.index, nameMatch.index + nameMatch[0].length, existingTags)) {
-            suggestions.push({
-              text: nameMatch[0],
-              start: nameMatch.index,
-              end: nameMatch.index + nameMatch[0].length,
-              suggestedTag: `@${fullName}`,
-              firstName: firstName,
-              type: 'person'
-            });
-            suggestedWords.add(firstName.toLowerCase());
-          }
-        }
-      });
-      
-      return suggestions;
+      return this.getTagParser().findPersonSuggestions(rawText, existingTags, tagCache, minUses, minWordLength);
     }
 
     // Extract topic suggestions from raw text  
     findTopicSuggestions(rawText, existingTags, tagCache, minUses, minWordLength, suggestedWords = new Set()) {
-      const suggestions = [];
-      
-      const topicTags = Object.keys(tagCache).filter(tag => 
-        !tagCache[tag].isPerson && tagCache[tag].totalUses >= minUses
-      );
-      
-      topicTags.forEach(tagKey => {
-        const tagData = tagCache[tagKey];
-        const fullName = tagData.originalName || tagKey;
-        const searchWords = [];
-        
-        // Add the full tag name (lowercase)
-        searchWords.push(fullName.toLowerCase());
-        
-        // Add camelCase parts if applicable
-        if (/[A-Z]/.test(fullName)) {
-          const parts = fullName.split(/(?=[A-Z])/).filter(part => part.length > minWordLength);
-          searchWords.push(...parts.map(part => part.toLowerCase()));
-        }
-        
-        // Try to match each search word
-        for (const searchWord of searchWords) {
-          if (searchWord.length > minWordLength && !suggestedWords.has(searchWord)) {
-            const wordMatch = this.createWordRegex(searchWord).exec(rawText);
-            
-            if (wordMatch && !this.checkOverlap(wordMatch.index, wordMatch.index + wordMatch[0].length, existingTags)) {
-              suggestions.push({
-                text: wordMatch[0],
-                start: wordMatch.index,
-                end: wordMatch.index + wordMatch[0].length,
-                suggestedTag: `#${fullName}`,
-                type: 'topic'
-              });
-              suggestedWords.add(searchWord);
-              break; // Only suggest once per tag
-            }
-          }
-        }
-      });
-      
-      return suggestions;
+      return this.getTagParser().findTopicSuggestions(rawText, existingTags, tagCache, minUses, minWordLength);
     }
 
   
@@ -1735,9 +1667,9 @@
         return;
       }
       
-      // Update the score data
+      // Update the score data - only replace first occurrence
       targetScore.notes = targetScore.notes.replace(
-        new RegExp(`\\b${originalText}\\b`, 'g'), 
+        new RegExp(`\\b${originalText}\\b`), 
         newTag
       );
       

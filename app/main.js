@@ -3,6 +3,7 @@
 const electron = require('electron');
 const path = require('path')
 const os = require('os')
+const TagCacheBuilder = require('./lib/faveday/tag-cache');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -147,78 +148,8 @@ async function saveScores(dirPath, scores) {
 async function calculateTagCache(dirPath, scores) {
   console.log('Calculating tag cache...');
   
-  const tagStats = {};
-  const currentYear = new Date().getFullYear();
-  
-  // Extract and analyze all tags
-  for (const score of scores) {
-    const tags = score.notes.match(/[#@]\p{L}+/gui) || [];
-    const year = score.date.getFullYear();
-    
-    for (const rawTag of tags) {
-      const isPersonTag = rawTag.startsWith('@');
-      const tagName = rawTag.slice(1).toLowerCase();
-      const originalName = rawTag.slice(1); // Preserve original casing
-      
-      if (!tagStats[tagName]) {
-        tagStats[tagName] = {
-          name: tagName,
-          originalName: originalName, // Store original casing
-          totalUses: 0,
-          scores: [],
-          yearStats: {},
-          hasPersonUsage: false,
-          recentActivity: false,
-          firstUsage: null,
-          lastUsage: null
-        };
-      }
-      
-      const tag = tagStats[tagName];
-      tag.totalUses++;
-      tag.scores.push(score.summary);
-      tag.hasPersonUsage = tag.hasPersonUsage || isPersonTag;
-      tag.recentActivity = tag.recentActivity || (year >= currentYear - 1);
-      
-      // Track first and last usage dates
-      const scoreDate = score.date;
-      if (!tag.firstUsage || scoreDate < tag.firstUsage) {
-        tag.firstUsage = scoreDate;
-      }
-      if (!tag.lastUsage || scoreDate > tag.lastUsage) {
-        tag.lastUsage = scoreDate;
-      }
-      
-      // Track usage by year
-      if (!tag.yearStats[year]) {
-        tag.yearStats[year] = 0;
-      }
-      tag.yearStats[year]++;
-    }
-  }
-  
-  // Calculate derived statistics
-  for (const tag of Object.values(tagStats)) {
-    tag.avgScore = tag.scores.length > 0 ? tag.scores.reduce((a, b) => a + b, 0) / tag.scores.length : 0;
-    
-    // Find peak year
-    let maxYear = null;
-    let maxCount = 0;
-    for (const [year, count] of Object.entries(tag.yearStats)) {
-      if (count > maxCount) {
-        maxCount = count;
-        maxYear = year;
-      }
-    }
-    tag.peakYear = maxYear;
-    tag.peakYearCount = maxCount;
-    
-    // Determine if it's likely a person tag
-    tag.isPerson = tag.hasPersonUsage;
-    
-    // Clean up scores array to save space
-    delete tag.scores;
-  }
+  const cacheBuilder = new TagCacheBuilder();
+  const tagStats = cacheBuilder.calculateTagCache(scores);
   
   // Save cache to file
   const cacheFile = `${dirPath}/tag-cache.json`;
