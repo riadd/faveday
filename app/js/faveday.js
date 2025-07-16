@@ -373,6 +373,33 @@
       }
     }
 
+    getOrdinalSuffix(day) {
+      const lastDigit = day % 10;
+      const lastTwoDigits = day % 100;
+      
+      // Handle special cases for 11th, 12th, 13th
+      if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+        return 'th';
+      }
+      
+      // Handle 1st, 2nd, 3rd, and everything else
+      switch (lastDigit) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    }
+
+    formatDateWithOrdinal(date) {
+      const day = date.getDate();
+      const month = date.format("{Month}");
+      const year = date.format("{yyyy}");
+      const ordinalSuffix = this.getOrdinalSuffix(day);
+      
+      return `${month} ${day}${ordinalSuffix}, ${year}`;
+    }
+
     showToaster(message, type = 'success', duration = 3000) {
       const toaster = document.getElementById('toaster');
       const toasterMessage = document.getElementById('toaster-message');
@@ -1355,7 +1382,7 @@
       console.log(`${isNew ? 'added' : 'edited'} score (${this.currentVal}): ${notes}`)
       
       // Format date for toaster notification
-      const formattedDate = score.date.format("{Month} {d}{S}, {yyyy}");
+      const formattedDate = this.formatDateWithOrdinal(score.date);
       const action = isNew ? 'added' : 'updated';
       this.showToaster(`Date ${formattedDate} ${action}.`);
       
@@ -1840,7 +1867,7 @@
         notesCell.innerHTML = targetScore.enhancedText(this.tagCache);
         
         // Show toaster notification
-        const formattedDate = targetScore.date.format("{Month} {d}{S}, {yyyy}");
+        const formattedDate = this.formatDateWithOrdinal(targetScore.date);
         this.showToaster(`"${originalText}" converted to ${preservedCapitalizationTag} on ${formattedDate}.`);
       } catch (error) {
         console.error('Error saving converted tag:', error);
