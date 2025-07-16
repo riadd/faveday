@@ -1459,7 +1459,8 @@
       
       return {
         days: daysDiff,
-        lastDate: latestScore.dateStr()
+        lastDate: latestScore.dateStr(),
+        dateId: latestScore.dateId()
       };
     }
 
@@ -1491,6 +1492,7 @@
       
       // Calculate delta
       const delta = currentPercentage - previousPercentage;
+      const trend = delta > 0 ? 'up' : delta < 0 ? 'down' : 'same';
       const deltaDisplay = delta === 0 ? '' : 
         delta > 0 ? `↗ +${delta}%` : `↘ ${delta}%`;
       
@@ -1500,6 +1502,7 @@
         percentage: currentPercentage,
         previousPercentage: previousPercentage,
         delta: delta,
+        trend: trend,
         deltaDisplay: deltaDisplay
       };
     }
@@ -1585,6 +1588,267 @@
         },
         topTag: topTag ? { tag: topTag[0], count: topTag[1] } : null
       };
+    }
+
+    getPersonMentionsRatio() {
+      const now = new Date();
+      const threeSixtyFiveDaysAgo = new Date(now);
+      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
+      const sevenThirtyDaysAgo = new Date(now);
+      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
+      
+      // Current period (last 365 days)
+      const currentEntries = this.all.filter(score => score.date >= threeSixtyFiveDaysAgo);
+      const currentEntriesWithPeople = currentEntries.filter(score => 
+        score.notes && score.notes.match(/@\p{L}[\p{L}\d]*/gu)
+      );
+      
+      // Previous period (365 days before that)
+      const previousEntries = this.all.filter(score => 
+        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo
+      );
+      const previousEntriesWithPeople = previousEntries.filter(score => 
+        score.notes && score.notes.match(/@\p{L}[\p{L}\d]*/gu)
+      );
+      
+      const currentPercentage = currentEntries.length > 0 ? 
+        Math.round((currentEntriesWithPeople.length / currentEntries.length) * 100) : 0;
+      const previousPercentage = previousEntries.length > 0 ? 
+        Math.round((previousEntriesWithPeople.length / previousEntries.length) * 100) : 0;
+      
+      // Calculate trend
+      const diff = currentPercentage - previousPercentage;
+      const trend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+      const trendDisplay = diff === 0 ? '' : 
+        diff > 0 ? `↗ +${Math.abs(diff)}%` : `↘ -${Math.abs(diff)}%`;
+      
+      return {
+        percentage: currentPercentage,
+        daysWithPeople: currentEntriesWithPeople.length,
+        totalDays: currentEntries.length,
+        trend: trend,
+        trendDisplay: trendDisplay,
+        previousPercentage: previousPercentage
+      };
+    }
+
+    getLazySundays() {
+      const now = new Date();
+      const threeSixtyFiveDaysAgo = new Date(now);
+      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
+      const sevenThirtyDaysAgo = new Date(now);
+      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
+      
+      // Current period
+      const currentSundays = this.all.filter(score => 
+        score.date >= threeSixtyFiveDaysAgo && score.date.getDay() === 0
+      );
+      const currentLazySundays = currentSundays.filter(score => score.summary <= 2);
+      
+      // Previous period
+      const previousSundays = this.all.filter(score => 
+        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo && score.date.getDay() === 0
+      );
+      const previousLazySundays = previousSundays.filter(score => score.summary <= 2);
+      
+      const currentPercentage = currentSundays.length > 0 ? 
+        Math.round((currentLazySundays.length / currentSundays.length) * 100) : 0;
+      const previousPercentage = previousSundays.length > 0 ? 
+        Math.round((previousLazySundays.length / previousSundays.length) * 100) : 0;
+      
+      // Calculate trend (note: for lazy days, more is bad, so invert the trend logic)
+      const diff = currentPercentage - previousPercentage;
+      const trend = diff > 0 ? 'down' : diff < 0 ? 'up' : 'same'; // Inverted: more lazy = down trend
+      const trendDisplay = diff === 0 ? '' : 
+        diff > 0 ? `↘ +${Math.abs(diff)}%` : `↗ -${Math.abs(diff)}%`;
+      
+      return {
+        percentage: currentPercentage,
+        lazyCount: currentLazySundays.length,
+        totalSundays: currentSundays.length,
+        trend: trend,
+        trendDisplay: trendDisplay,
+        previousPercentage: previousPercentage
+      };
+    }
+
+    getLazySaturdays() {
+      const now = new Date();
+      const threeSixtyFiveDaysAgo = new Date(now);
+      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
+      const sevenThirtyDaysAgo = new Date(now);
+      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
+      
+      // Current period
+      const currentSaturdays = this.all.filter(score => 
+        score.date >= threeSixtyFiveDaysAgo && score.date.getDay() === 6
+      );
+      const currentLazySaturdays = currentSaturdays.filter(score => score.summary <= 2);
+      
+      // Previous period
+      const previousSaturdays = this.all.filter(score => 
+        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo && score.date.getDay() === 6
+      );
+      const previousLazySaturdays = previousSaturdays.filter(score => score.summary <= 2);
+      
+      const currentPercentage = currentSaturdays.length > 0 ? 
+        Math.round((currentLazySaturdays.length / currentSaturdays.length) * 100) : 0;
+      const previousPercentage = previousSaturdays.length > 0 ? 
+        Math.round((previousLazySaturdays.length / previousSaturdays.length) * 100) : 0;
+      
+      // Calculate trend (note: for lazy days, down is good, up is bad)
+      const diff = currentPercentage - previousPercentage;
+      const trend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+      const trendDisplay = diff === 0 ? '' : 
+        diff > 0 ? `↗ +${Math.abs(diff)}%` : `↘ -${Math.abs(diff)}%`;
+      
+      return {
+        percentage: currentPercentage,
+        lazyCount: currentLazySaturdays.length,
+        totalSaturdays: currentSaturdays.length,
+        trend: trend,
+        trendDisplay: trendDisplay,
+        previousPercentage: previousPercentage
+      };
+    }
+
+    getTotalOverview() {
+      const totalEntries = this.all.length;
+      const totalScoreSum = this.all.reduce((sum, score) => sum + (score.summary || 0), 0);
+      const avgScore = totalEntries > 0 ? (totalScoreSum / totalEntries).toFixed(1) : '0.0';
+      
+      return {
+        totalEntries: totalEntries,
+        totalScoreAvg: avgScore
+      };
+    }
+
+    getFiveScoreDaysCount() {
+      const now = new Date();
+      const threeSixtyFiveDaysAgo = new Date(now);
+      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
+      const sevenThirtyDaysAgo = new Date(now);
+      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
+      
+      // Current period
+      const currentFiveScoreDays = this.all.filter(score => 
+        score.date >= threeSixtyFiveDaysAgo && score.summary === 5
+      ).length;
+      
+      // Previous period
+      const previousFiveScoreDays = this.all.filter(score => 
+        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo && score.summary === 5
+      ).length;
+      
+      // Calculate trend
+      const diff = currentFiveScoreDays - previousFiveScoreDays;
+      const trend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+      const trendDisplay = diff === 0 ? '' : 
+        diff > 0 ? `↗ +${Math.abs(diff)}` : `↘ -${Math.abs(diff)}`;
+      
+      return {
+        count: currentFiveScoreDays,
+        previousCount: previousFiveScoreDays,
+        trend: trend,
+        trendDisplay: trendDisplay
+      };
+    }
+
+    getAverageDurationBetweenHighScores() {
+      const now = new Date();
+      const oneYearAgo = new Date(now);
+      oneYearAgo.setFullYear(now.getFullYear() - 1);
+      const twoYearsAgo = new Date(now);
+      twoYearsAgo.setFullYear(now.getFullYear() - 2);
+      
+      // Helper function to calculate average duration
+      const calculateAverageDuration = (entries) => {
+        const highScoreEntries = entries.filter(score => score.summary >= 4)
+          .sort((a, b) => a.date - b.date);
+        
+        if (highScoreEntries.length < 2) return null;
+        
+        const durations = [];
+        for (let i = 1; i < highScoreEntries.length; i++) {
+          const daysDiff = Math.floor((highScoreEntries[i].date - highScoreEntries[i-1].date) / (1000 * 60 * 60 * 24));
+          durations.push(daysDiff);
+        }
+        
+        return durations.length > 0 ? Math.round(durations.reduce((sum, d) => sum + d, 0) / durations.length) : null;
+      };
+      
+      // Current year (last 365 days)
+      const currentYearEntries = this.all.filter(score => score.date >= oneYearAgo);
+      const currentAvgDuration = calculateAverageDuration(currentYearEntries);
+      
+      // Previous year (365 days before that)
+      const previousYearEntries = this.all.filter(score => 
+        score.date >= twoYearsAgo && score.date < oneYearAgo
+      );
+      const previousAvgDuration = calculateAverageDuration(previousYearEntries);
+      
+      // Calculate trend (note: for duration, lower is better, so trend logic is inverted)
+      let trend = 'same';
+      let trendDisplay = '';
+      
+      if (currentAvgDuration !== null && previousAvgDuration !== null) {
+        const diff = currentAvgDuration - previousAvgDuration;
+        if (diff < 0) {
+          trend = 'up'; // Getting better (lower duration)
+          trendDisplay = `↗ ${Math.abs(diff)} days less`;
+        } else if (diff > 0) {
+          trend = 'down'; // Getting worse (higher duration)
+          trendDisplay = `↘ +${diff} days more`;
+        }
+      }
+      
+      return {
+        averageDays: currentAvgDuration,
+        previousAverageDays: previousAvgDuration,
+        trend: trend,
+        trendDisplay: trendDisplay
+      };
+    }
+
+    async showJourneyAnalytics() {
+      // Get config for birthdate
+      const config = await window.api.getConfig();
+      
+      // Calculate all widget data
+      const calendarProgress = this.getCalendarYearProgress();
+      const lifeProgress = config.birthdate ? this.getLifeYearProgress(config.birthdate) : null;
+      const coverage = this.getCoverageProgress();
+      const lastHighScore = this.getDaysSinceLastScore(5);
+      const lastLowScore = this.getDaysSinceLastScore(1);
+      const thirtyDayStats = this.getThirtyDayComparisons();
+      
+      // New analytics widgets
+      const personMentions = this.getPersonMentionsRatio();
+      const lazySundays = this.getLazySundays();
+      const lazySaturdays = this.getLazySaturdays();
+      const totalOverview = this.getTotalOverview();
+      const fiveScoreDays = this.getFiveScoreDaysCount();
+      const avgDurationHighScores = this.getAverageDurationBetweenHighScores();
+      
+      this.pushHistory('/analytics', 'Analytics');
+      
+      return this.render('#tmpl-journey-analytics', '#content', {
+        years: this.years.map(y => ({year: y})),
+        calendarProgress: calendarProgress,
+        lifeProgress: lifeProgress,
+        coverage: coverage,
+        thirtyDayStats: thirtyDayStats,
+        lastHighScore: lastHighScore,
+        lastLowScore: lastLowScore,
+        personMentions: personMentions,
+        lazySundays: lazySundays,
+        lazySaturdays: lazySaturdays,
+        totalOverview: totalOverview,
+        fiveScoreDays: fiveScoreDays,
+        avgDurationHighScores: avgDurationHighScores
+      }, {
+        yearsBar: Hogan.compile($('#tmpl-years-bar').html())
+      });
     }
 
     async showSettings() {
@@ -1948,6 +2212,10 @@
     return window.app.showTags(sortBy);
   };
 
+  window.onShowJourneyAnalytics = async function() {
+    return await window.app.showJourneyAnalytics();
+  };
+
   window.onShowDashboard = async function() {
     return await window.app.showDashboard();
   };
@@ -2018,6 +2286,16 @@
 
   window.onConvertToTag = function(originalText, newTag, element) {
     window.app.convertToTag(originalText, newTag, element);
+  };
+
+  window.onJumpToScoreDate = function(dateId) {
+    // Parse the dateId (format: "YYYY-MM-DD") to get year and month
+    const dateParts = dateId.split('-');
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]);
+    
+    // Navigate to the month view for that date
+    window.app.showMonth(year, month);
   };
 
   window.addEventListener("popstate", (event) => {
@@ -2371,6 +2649,9 @@
           break;
         case 'tags':
           window.app.showTags();
+          break;
+        case 'analytics':
+          window.onShowJourneyAnalytics();
           break;
         case 'settings':
           // Use wrapper function to handle async properly

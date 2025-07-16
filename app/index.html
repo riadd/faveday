@@ -110,40 +110,10 @@
         <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
       </div>
       {{/thirtyDayStats}}
-      
-      {{#lastHighScore}}
-      <div class="bento-item">
-        <h4>⭐ Last 5+ Score</h4>
-        <div class="bento-main-value">{{days}}</div>
-        <small>days ago on {{lastDate}}</small>
-      </div>
-      {{/lastHighScore}}
-      
-      {{#lastLowScore}}
-      <div class="bento-item">
-        <h4>😔 Last 1 Score</h4>
-        <div class="bento-main-value">{{days}}</div>
-        <small>days ago on {{lastDate}}</small>
-      </div>
-      {{/lastLowScore}}
-      
-      {{#thirtyDayStats}}
-      {{#topTag}}
-      <div class="bento-item">
-        <h4>🏷️ Top Tag</h4>
-        <div class="bento-main-value">{{tag}}</div>
-        <small>{{count}} times past 30 days</small>
-      </div>
-      {{/topTag}}
-      
-      {{^topTag}}
-      <div class="bento-item">
-        <h4>🏷️ Top Tag</h4>
-        <div class="bento-main-value">-</div>
-        <small>No tags used yet</small>
-      </div>
-      {{/topTag}}
-      {{/thirtyDayStats}}
+    </div>
+    
+    <div class="analytics-link-section">
+      <a onclick="onShowJourneyAnalytics()" class="analytics-link-button">📊 View Detailed Analytics & Trends</a>
     </div>
 
     {{#hasTodayScores}}
@@ -160,7 +130,7 @@
     </table>
     
     <div id="footer">
-      {{footer}} • <a onclick="onShowSettings()">Settings</a>
+      {{footer}} • <a onclick="onShowJourneyAnalytics()">Analytics</a> • <a onclick="onShowSettings()">Settings</a>
     </div>
   </script>
 
@@ -645,10 +615,158 @@
   <script type="text/mustache" id="tmpl-years-bar">
     <div class="yearsBar">
       <a onclick="onShowTags()">Tags</a>
+      <a onclick="onShowJourneyAnalytics()">Analytics</a>
       <a onclick="onShowYears()">Years</a>
       {{#years}}
         <a onclick="onShowYear({{year}})">{{year}}</a>
       {{/years}}
+    </div>
+  </script>
+
+  <!-- tmpl-journey-analytics -->
+  <script type="text/mustache" id="tmpl-journey-analytics">
+    <h1>📊 Analytics</h1>
+    {{> yearsBar}}
+
+    <div class="analytics-intro">
+      <p>Explore comprehensive insights from your journey. These analytics help you understand patterns, trends, and milestones in your personal development.</p>
+    </div>
+
+    <!-- Extended Bento Grid with all widgets -->
+    <div class="analytics-grid">
+      <!-- Existing Dashboard Widgets -->
+      {{#calendarProgress}}
+      <div class="analytics-item calendar-progress">
+        <h4>📅 Year {{year}} Progress</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{daysPassed}}/{{totalDays}} days passed</small>
+      </div>
+      {{/calendarProgress}}
+
+      {{#lifeProgress}}
+      <div class="analytics-item life-progress">
+        <h4>🎂 Age {{age}} Progress</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{daysPassed}}/{{totalDays}} days in life year</small>
+      </div>
+      {{/lifeProgress}}
+      {{^lifeProgress}}
+      <div class="analytics-item life-progress">
+        <h4>🎂 Life Progress</h4>
+        <div class="analytics-main-value">-/-</div>
+        <small><a onclick="onShowSettings()">Set birthdate</a></small>
+      </div>
+      {{/lifeProgress}}
+
+      {{#coverage}}
+      <div class="analytics-item trend-{{trend}}-widget coverage">
+        <h4>📊 Coverage</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{entriesMade}}/{{daysPassed}} tracked {{#deltaDisplay}}<span class="trend-indicator trend-{{trend}}">{{deltaDisplay}}</span>{{/deltaDisplay}}</small>
+      </div>
+      {{/coverage}}
+
+      <!-- 30-day comparison widgets -->
+      {{#thirtyDayStats}}
+      <div class="analytics-item trend-{{score.trend}}-widget">
+        <h4>⭐ Recent Avg Score</h4>
+        <div class="analytics-main-value">{{score.current}}</div>
+        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
+      </div>
+
+      <div class="analytics-item trend-{{entries.trend}}-widget">
+        <h4>📊 Total Entries</h4>
+        <div class="analytics-main-value">{{entries.current}}</div>
+        <small>vs {{entries.previous}} past 30 days <span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span></small>
+      </div>
+
+      <div class="analytics-item trend-{{words.trend}}-widget">
+        <h4>📝 Avg Words/Day</h4>
+        <div class="analytics-main-value">{{words.current}}</div>
+        <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
+      </div>
+
+      {{#lastHighScore}}
+      <div class="analytics-item last-high-score clickable-widget" onclick="onJumpToScoreDate('{{dateId}}')">
+        <div class="clickable-indicator"></div>
+        <h4>🎯 Last 5+ Score</h4>
+        <div class="analytics-main-value">{{days}}</div>
+        <small>days ago on {{lastDate}}</small>
+      </div>
+      {{/lastHighScore}}
+
+      {{#lastLowScore}}
+      <div class="analytics-item last-low-score clickable-widget" onclick="onJumpToScoreDate('{{dateId}}')">
+        <div class="clickable-indicator"></div>
+        <h4>📉 Last 1 Score</h4>
+        <div class="analytics-main-value">{{days}}</div>
+        <small>days ago on {{lastDate}}</small>
+      </div>
+      {{/lastLowScore}}
+
+      {{#topTag}}
+      <div class="analytics-item top-tag clickable-widget" onclick="onShowSearch('{{tag}}')">
+        <div class="clickable-indicator"></div>
+        <h4>🏷️ Top Tag</h4>
+        <div class="analytics-main-value">{{tag}}</div>
+        <small>{{count}} uses in 30 days</small>
+      </div>
+      {{/topTag}}
+      {{/thirtyDayStats}}
+
+      <!-- New Analytics Widgets -->
+      {{#personMentions}}
+      <div class="analytics-item trend-{{trend}}-widget person-mentions">
+        <h4>👥 Social Connection</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{daysWithPeople}}/{{totalDays}} entries mention people {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/personMentions}}
+
+      {{#lazySundays}}
+      <div class="analytics-item trend-{{trend}}-widget lazy-sundays">
+        <h4>😴 Lazy Sundays</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{lazyCount}}/{{totalSundays}} Sundays ≤2 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/lazySundays}}
+
+      {{#lazySaturdays}}
+      <div class="analytics-item trend-{{trend}}-widget lazy-saturdays">
+        <h4>🛋️ Lazy Saturdays</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{lazyCount}}/{{totalSaturdays}} Saturdays ≤2 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/lazySaturdays}}
+
+      {{#fiveScoreDays}}
+      <div class="analytics-item trend-{{trend}}-widget five-score-days clickable-widget" onclick="onShowSearch('=5')">
+        <div class="clickable-indicator"></div>
+        <h4>🎉 Perfect Days</h4>
+        <div class="analytics-main-value">{{count}}</div>
+        <small>5-score days in last 365 days {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/fiveScoreDays}}
+
+      {{#avgDurationHighScores}}
+      <div class="analytics-item trend-{{trend}}-widget duration-high-scores">
+        <h4>⚡ High Score Frequency</h4>
+        <div class="analytics-main-value">{{#averageDays}}{{averageDays}}{{/averageDays}}{{^averageDays}}-{{/averageDays}}</div>
+        <small>{{#averageDays}}days between 4+ scores in recent year{{/averageDays}}{{^averageDays}}insufficient data{{/averageDays}} {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/avgDurationHighScores}}
+
+      {{#totalOverview}}
+      <div class="analytics-item total-overview">
+        <h4>📖 Journey Overview</h4>
+        <div class="analytics-main-value">{{totalEntries}}</div>
+        <small>entries, {{totalScoreAvg}} avg score</small>
+      </div>
+      {{/totalOverview}}
+    </div>
+
+    <div class="analytics-footer">
+      <p><em>Your journey is unique. These insights help you understand your patterns and celebrate your progress. 🎯</em></p>
     </div>
   </script>
 
