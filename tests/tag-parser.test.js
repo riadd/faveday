@@ -329,6 +329,80 @@ describe('Tag Parser Tests', () => {
       // This is the expected behavior - both can be suggested since they're different words
       // The key is that the same word (like "Michael") won't be suggested twice
     });
+
+    it('should preserve original capitalization in suggestions', () => {
+      const mockCacheWithCapitalizedTags = {
+        'party': {
+          isPerson: false,
+          totalUses: 5,
+          originalName: 'party'
+        },
+        'javascript': {
+          isPerson: false,
+          totalUses: 8,
+          originalName: 'JavaScript'
+        },
+        'alice': {
+          isPerson: true,
+          totalUses: 6,
+          originalName: 'Alice'
+        }
+      };
+      
+      const text = 'Alice went to the Party and learned JavaScript';
+      const existingTags = [];
+      
+      // Test person suggestions
+      const personSuggestions = parser.findPersonSuggestions(text, existingTags, mockCacheWithCapitalizedTags, 3, 2);
+      
+      // Should preserve "Alice" capitalization, not convert to "alice"
+      assert.strictEqual(personSuggestions.length, 1);
+      assert.strictEqual(personSuggestions[0].text, 'Alice');
+      assert.strictEqual(personSuggestions[0].suggestedTag, '@Alice');
+      
+      // Test topic suggestions
+      const topicSuggestions = parser.findTopicSuggestions(text, existingTags, mockCacheWithCapitalizedTags, 3, 2);
+      
+      // Should preserve "Party" and "JavaScript" capitalization
+      assert.strictEqual(topicSuggestions.length, 2);
+      
+      const partySuggestion = topicSuggestions.find(s => s.text === 'Party');
+      assert.strictEqual(partySuggestion.suggestedTag, '#party');
+      
+      const jsSuggestion = topicSuggestions.find(s => s.text === 'JavaScript');  
+      assert.strictEqual(jsSuggestion.suggestedTag, '#JavaScript');
+    });
+
+    it('should handle capitalization preservation in realistic scenarios', () => {
+      const mockCacheWithMixedCase = {
+        'party': {
+          isPerson: false,
+          totalUses: 10,
+          originalName: 'party'
+        },
+        'birthday': {
+          isPerson: false,
+          totalUses: 8,
+          originalName: 'Birthday'
+        }
+      };
+      
+      // Test mixed capitalization scenarios
+      const testCases = [
+        { text: 'Had a great Party last night', expected: 'Party' },
+        { text: 'PARTY was amazing', expected: 'PARTY' },
+        { text: 'party time!', expected: 'party' },
+        { text: 'Birthday celebration', expected: 'Birthday' }
+      ];
+      
+      testCases.forEach(({ text, expected }) => {
+        const suggestions = parser.findTopicSuggestions(text, [], mockCacheWithMixedCase, 3, 2);
+        const suggestion = suggestions.find(s => s.text === expected);
+        
+        assert(suggestion, `Should find suggestion for "${expected}" in "${text}"`);
+        assert.strictEqual(suggestion.text, expected, `Should preserve "${expected}" capitalization`);
+      });
+    });
   });
 
   describe('Topic Suggestions', () => {

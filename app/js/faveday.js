@@ -1355,7 +1355,7 @@
       console.log(`${isNew ? 'added' : 'edited'} score (${this.currentVal}): ${notes}`)
       
       // Format date for toaster notification
-      const formattedDate = score.date.format("{Month} {dd}{S}");
+      const formattedDate = score.date.format("{Month} {d}{S}, {yyyy}");
       const action = isNew ? 'added' : 'updated';
       this.showToaster(`Date ${formattedDate} ${action}.`);
       
@@ -1820,9 +1820,13 @@
       }
       
       // Update the score data - only replace first occurrence
+      // Preserve original capitalization by extracting the marker and using original text
+      const tagMarker = newTag.charAt(0); // '#' or '@'
+      const preservedCapitalizationTag = `${tagMarker}${originalText}`;
+      
       targetScore.notes = targetScore.notes.replace(
         new RegExp(`\\b${originalText}\\b`), 
-        newTag
+        preservedCapitalizationTag
       );
       
       // Immediately update the visual display
@@ -1834,8 +1838,13 @@
         this.tagCache = await window.api.getTagCache();
         // Final update with fresh cache data
         notesCell.innerHTML = targetScore.enhancedText(this.tagCache);
+        
+        // Show toaster notification
+        const formattedDate = targetScore.date.format("{Month} {d}{S}, {yyyy}");
+        this.showToaster(`"${originalText}" converted to ${preservedCapitalizationTag} on ${formattedDate}.`);
       } catch (error) {
         console.error('Error saving converted tag:', error);
+        this.showToaster(`Error converting tag: ${error.message}`, 'error');
       }
     }
 
