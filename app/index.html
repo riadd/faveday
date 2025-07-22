@@ -83,10 +83,10 @@
       {{/lifeProgress}}
       
       {{#coverage}}
-      <div class="bento-item coverage">
+      <div class="bento-item trend-{{trend}}-widget coverage">
         <h4>📊 Coverage</h4>
         <div class="bento-main-value">{{percentage}}%</div>
-        <small>{{entriesMade}}/{{daysPassed}} tracked {{#deltaDisplay}}<span class="trend-indicator">{{deltaDisplay}}</span>{{/deltaDisplay}}</small>
+        <small>{{entriesMade}}/{{daysPassed}} tracked {{#deltaDisplay}}<span class="trend-indicator trend-{{trend}}">{{deltaDisplay}}</span>{{/deltaDisplay}}</small>
       </div>
       {{/coverage}}
       
@@ -632,9 +632,9 @@
       <p>Explore comprehensive insights from your journey. These analytics help you understand patterns, trends, and milestones in your personal development.</p>
     </div>
 
-    <!-- Extended Bento Grid with all widgets -->
+    <!-- Organized Analytics Grid with Row Structure -->
     <div class="analytics-grid">
-      <!-- Existing Dashboard Widgets -->
+      <!-- Row 1: Progress Widgets -->
       {{#calendarProgress}}
       <div class="analytics-item calendar-progress">
         <h4>📅 Year {{year}} Progress</h4>
@@ -658,6 +658,14 @@
       </div>
       {{/lifeProgress}}
 
+      {{#seasonProgress}}
+      <div class="analytics-item season-progress">
+        <h4>{{emoji}} {{season}} Progress</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{daysPassed}}/{{totalDays}} days in season</small>
+      </div>
+      {{/seasonProgress}}
+
       {{#coverage}}
       <div class="analytics-item trend-{{trend}}-widget coverage">
         <h4>📊 Coverage</h4>
@@ -666,7 +674,7 @@
       </div>
       {{/coverage}}
 
-      <!-- 30-day comparison widgets -->
+      <!-- Row 2: 30-Day Comparison Widgets -->
       {{#thirtyDayStats}}
       <div class="analytics-item trend-{{score.trend}}-widget">
         <h4>⭐ Recent Avg Score</h4>
@@ -685,7 +693,117 @@
         <div class="analytics-main-value">{{words.current}}</div>
         <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
       </div>
+      {{/thirtyDayStats}}
 
+      <!-- Row 3: Lazy Widgets (Grouped Together) -->
+      {{#lazyWorkweeks}}
+      <div class="analytics-item trend-{{trend}}-widget lazy-workweeks">
+        <h4>💼 Lazy Workweeks</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{lazyCount}}/{{totalWorkweeks}} weeks ≤10 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/lazyWorkweeks}}
+
+      {{#lazySaturdays}}
+      <div class="analytics-item trend-{{trend}}-widget lazy-saturdays">
+        <h4>🛋️ Lazy Saturdays</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{lazyCount}}/{{totalSaturdays}} Saturdays ≤2 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/lazySaturdays}}
+
+      {{#lazySundays}}
+      <div class="analytics-item trend-{{trend}}-widget lazy-sundays">
+        <h4>😴 Lazy Sundays</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{lazyCount}}/{{totalSundays}} Sundays ≤2 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/lazySundays}}
+
+      <!-- Row 4: Tag & Quality Widgets -->
+      {{#trendingTopics}}
+      <div class="analytics-item trending-topics clickable-widget" onclick="onShowSearch('{{tag}}')">
+        <div class="clickable-indicator"></div>
+        <h4>📈 Trending #Topic</h4>
+        <div class="analytics-main-value">{{tag}}</div>
+        <small>{{recentCount}} uses, {{surgeRatio}}x surge</small>
+      </div>
+      {{/trendingTopics}}
+      {{^trendingTopics}}
+      <div class="analytics-item trending-topics">
+        <h4>📈 Trending #Topic</h4>
+        <div class="analytics-main-value">-</div>
+        <small>no recent surges</small>
+      </div>
+      {{/trendingTopics}}
+
+      {{#trendingPeople}}
+      <div class="analytics-item trending-people clickable-widget" onclick="onShowSearch('{{person}}')">
+        <div class="clickable-indicator"></div>
+        <h4>🔥 Trending @Person</h4>
+        <div class="analytics-main-value">{{person}}</div>
+        <small>{{recentCount}} mentions, {{surgeRatio}}x surge</small>
+      </div>
+      {{/trendingPeople}}
+      {{^trendingPeople}}
+      <div class="analytics-item trending-people">
+        <h4>🔥 Trending @Person</h4>
+        <div class="analytics-main-value">-</div>
+        <small>no recent surges</small>
+      </div>
+      {{/trendingPeople}}
+
+      {{#superTag}}
+      <div class="analytics-item super-tag clickable-widget" onclick="onShowSearch('{{tag}}')">
+        <div class="clickable-indicator"></div>
+        <h4>⭐ Super Tag</h4>
+        <div class="analytics-main-value">{{tag}}</div>
+        <small>{{superScore}} super score ({{avgScore}} avg, {{recentCount}} uses)</small>
+      </div>
+      {{/superTag}}
+      {{^superTag}}
+      <div class="analytics-item super-tag">
+        <h4>⭐ Super Tag</h4>
+        <div class="analytics-main-value">-</div>
+        <small>insufficient recent tag usage</small>
+      </div>
+      {{/superTag}}
+
+      {{#consistency}}
+      <div class="analytics-item trend-{{trend}}-widget consistency">
+        <h4>🎯 Consistency</h4>
+        <div class="analytics-main-value">{{consistency}}</div>
+        <small>stability score ({{stdDev}} std dev) {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/consistency}}
+
+      <!-- Additional Analytics Widgets -->
+      {{#personMentions}}
+      <div class="analytics-item trend-{{trend}}-widget person-mentions">
+        <h4>👥 Social Connection</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{daysWithPeople}}/{{totalDays}} entries mention people {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/personMentions}}
+
+      {{#fiveScoreDays}}
+      <div class="analytics-item trend-{{trend}}-widget five-score-days clickable-widget" onclick="onShowSearch('=5')">
+        <div class="clickable-indicator"></div>
+        <h4>🎉 Perfect Days</h4>
+        <div class="analytics-main-value">{{count}}</div>
+        <small>5-score days in last 365 days {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/fiveScoreDays}}
+
+      {{#avgDurationHighScores}}
+      <div class="analytics-item trend-{{trend}}-widget duration-high-scores">
+        <h4>⚡ High Score Frequency</h4>
+        <div class="analytics-main-value">{{#averageDays}}{{averageDays}}{{/averageDays}}{{^averageDays}}-{{/averageDays}}</div>
+        <small>{{#averageDays}}days between 4+ scores in recent year{{/averageDays}}{{^averageDays}}insufficient data{{/averageDays}} {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/avgDurationHighScores}}
+
+      {{#thirtyDayStats}}
       {{#lastHighScore}}
       <div class="analytics-item last-high-score clickable-widget" onclick="onJumpToScoreDate('{{dateId}}')">
         <div class="clickable-indicator"></div>
@@ -713,48 +831,6 @@
       </div>
       {{/topTag}}
       {{/thirtyDayStats}}
-
-      <!-- New Analytics Widgets -->
-      {{#personMentions}}
-      <div class="analytics-item trend-{{trend}}-widget person-mentions">
-        <h4>👥 Social Connection</h4>
-        <div class="analytics-main-value">{{percentage}}%</div>
-        <small>{{daysWithPeople}}/{{totalDays}} entries mention people {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
-      </div>
-      {{/personMentions}}
-
-      {{#lazySundays}}
-      <div class="analytics-item trend-{{trend}}-widget lazy-sundays">
-        <h4>😴 Lazy Sundays</h4>
-        <div class="analytics-main-value">{{percentage}}%</div>
-        <small>{{lazyCount}}/{{totalSundays}} Sundays ≤2 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
-      </div>
-      {{/lazySundays}}
-
-      {{#lazySaturdays}}
-      <div class="analytics-item trend-{{trend}}-widget lazy-saturdays">
-        <h4>🛋️ Lazy Saturdays</h4>
-        <div class="analytics-main-value">{{percentage}}%</div>
-        <small>{{lazyCount}}/{{totalSaturdays}} Saturdays ≤2 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
-      </div>
-      {{/lazySaturdays}}
-
-      {{#fiveScoreDays}}
-      <div class="analytics-item trend-{{trend}}-widget five-score-days clickable-widget" onclick="onShowSearch('=5')">
-        <div class="clickable-indicator"></div>
-        <h4>🎉 Perfect Days</h4>
-        <div class="analytics-main-value">{{count}}</div>
-        <small>5-score days in last 365 days {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
-      </div>
-      {{/fiveScoreDays}}
-
-      {{#avgDurationHighScores}}
-      <div class="analytics-item trend-{{trend}}-widget duration-high-scores">
-        <h4>⚡ High Score Frequency</h4>
-        <div class="analytics-main-value">{{#averageDays}}{{averageDays}}{{/averageDays}}{{^averageDays}}-{{/averageDays}}</div>
-        <small>{{#averageDays}}days between 4+ scores in recent year{{/averageDays}}{{^averageDays}}insufficient data{{/averageDays}} {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
-      </div>
-      {{/avgDurationHighScores}}
 
       {{#totalOverview}}
       <div class="analytics-item total-overview">

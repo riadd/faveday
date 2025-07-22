@@ -1494,7 +1494,7 @@
       const delta = currentPercentage - previousPercentage;
       const trend = delta > 0 ? 'up' : delta < 0 ? 'down' : 'same';
       const deltaDisplay = delta === 0 ? '' : 
-        delta > 0 ? `↗ +${delta}%` : `↘ ${delta}%`;
+        delta > 0 ? `↗ +${delta}%` : `↘ -${Math.abs(delta)}%`;
       
       return {
         entriesMade: currentEntriesInRange,
@@ -1696,11 +1696,11 @@
       const previousPercentage = previousSaturdays.length > 0 ? 
         Math.round((previousLazySaturdays.length / previousSaturdays.length) * 100) : 0;
       
-      // Calculate trend (note: for lazy days, down is good, up is bad)
+      // Calculate trend (note: for lazy days, more is bad, so invert the trend logic)
       const diff = currentPercentage - previousPercentage;
-      const trend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+      const trend = diff > 0 ? 'down' : diff < 0 ? 'up' : 'same'; // Inverted: more lazy = down trend
       const trendDisplay = diff === 0 ? '' : 
-        diff > 0 ? `↗ +${Math.abs(diff)}%` : `↘ -${Math.abs(diff)}%`;
+        diff > 0 ? `↘ +${Math.abs(diff)}%` : `↗ -${Math.abs(diff)}%`;
       
       return {
         percentage: currentPercentage,
@@ -1810,6 +1810,413 @@
       };
     }
 
+    getLazyWorkweeks() {
+      const now = new Date();
+      const threeSixtyFiveDaysAgo = new Date(now);
+      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
+      const sevenThirtyDaysAgo = new Date(now);
+      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
+      
+      // Helper function to get Monday of the week for a given date
+      const getMondayOfWeek = (date) => {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+        return new Date(d.setDate(diff));
+      };
+      
+      // Current period workweeks
+      const currentEntries = this.all.filter(score => score.date >= threeSixtyFiveDaysAgo);
+      const currentWorkweeks = new Map();
+      
+      currentEntries.forEach(entry => {
+        const dayOfWeek = entry.date.getDay();
+        // Only count Monday (1) through Friday (5)
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+          const monday = getMondayOfWeek(entry.date);
+          const weekKey = monday.toISOString().split('T')[0];
+          
+          if (!currentWorkweeks.has(weekKey)) {
+            currentWorkweeks.set(weekKey, 0);
+          }
+          currentWorkweeks.set(weekKey, currentWorkweeks.get(weekKey) + entry.summary);
+        }
+      });
+      
+      const currentLazyWorkweeks = Array.from(currentWorkweeks.values()).filter(total => total <= 10);
+      const currentTotalWorkweeks = currentWorkweeks.size;
+      
+      // Previous period workweeks
+      const previousEntries = this.all.filter(score => 
+        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo
+      );
+      const previousWorkweeks = new Map();
+      
+      previousEntries.forEach(entry => {
+        const dayOfWeek = entry.date.getDay();
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+          const monday = getMondayOfWeek(entry.date);
+          const weekKey = monday.toISOString().split('T')[0];
+          
+          if (!previousWorkweeks.has(weekKey)) {
+            previousWorkweeks.set(weekKey, 0);
+          }
+          previousWorkweeks.set(weekKey, previousWorkweeks.get(weekKey) + entry.summary);
+        }
+      });
+      
+      const previousLazyWorkweeks = Array.from(previousWorkweeks.values()).filter(total => total <= 10);
+      const previousTotalWorkweeks = previousWorkweeks.size;
+      
+      const currentPercentage = currentTotalWorkweeks > 0 ? 
+        Math.round((currentLazyWorkweeks.length / currentTotalWorkweeks) * 100) : 0;
+      const previousPercentage = previousTotalWorkweeks > 0 ? 
+        Math.round((previousLazyWorkweeks.length / previousTotalWorkweeks) * 100) : 0;
+      
+      // Calculate trend (note: for lazy workweeks, more is bad, so invert the trend logic)
+      const diff = currentPercentage - previousPercentage;
+      const trend = diff > 0 ? 'down' : diff < 0 ? 'up' : 'same'; // Inverted: more lazy = down trend
+      const trendDisplay = diff === 0 ? '' : 
+        diff > 0 ? `↘ +${Math.abs(diff)}%` : `↗ -${Math.abs(diff)}%`;
+      
+      return {
+        percentage: currentPercentage,
+        lazyCount: currentLazyWorkweeks.length,
+        totalWorkweeks: currentTotalWorkweeks,
+        trend: trend,
+        trendDisplay: trendDisplay,
+        previousPercentage: previousPercentage
+      };
+    }
+
+    getTrendingTopics() {
+      // Get recent 30-day usage for topic tags (#tags)
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      
+      const recentEntries = this.all.filter(s => s.date >= thirtyDaysAgo);
+      const recentTopicCounts = {};
+      
+      recentEntries.forEach(score => {
+        const topicTags = score.notes.match(/#\p{L}[\p{L}\d]*/gu) || [];
+        topicTags.forEach(tag => {
+          const cleanTag = tag.slice(1).toLowerCase();
+          recentTopicCounts[cleanTag] = (recentTopicCounts[cleanTag] || 0) + 1;
+        });
+      });
+      
+      // Load tag cache to get historical usage
+      let tagCache = {};
+      try {
+        tagCache = JSON.parse(localStorage.getItem('tagCache') || '{}');
+      } catch (e) {
+        console.warn('Could not load tag cache for trending topics');
+      }
+      
+      // Find tags with recent surge that aren't staples
+      const trendingTopics = [];
+      Object.entries(recentTopicCounts).forEach(([tag, recentCount]) => {
+        const cacheData = tagCache[tag];
+        if (!cacheData || cacheData.isPerson) return; // Skip people tags or missing cache
+        
+        const totalUses = cacheData.totalUses || 0;
+        const historicalAvg = totalUses > 0 ? totalUses / Math.max(1, Object.keys(cacheData.yearStats || {}).length) : 0;
+        
+        // Only include tags that:
+        // 1. Have recent activity (>= 2 uses in 30 days)  
+        // 2. Show surge (recent usage > 2x historical average)
+        // 3. Aren't super common staples (< 50 total historical uses)
+        if (recentCount >= 2 && recentCount > (historicalAvg * 2) && totalUses < 50) {
+          const surgeRatio = historicalAvg > 0 ? (recentCount / historicalAvg) : recentCount;
+          trendingTopics.push({
+            tag: tag,
+            recentCount: recentCount,
+            surgeRatio: Math.round(surgeRatio * 10) / 10,
+            avgScore: cacheData.avgScore || 0
+          });
+        }
+      });
+      
+      // Sort by surge ratio (highest surge first)
+      trendingTopics.sort((a, b) => b.surgeRatio - a.surgeRatio);
+      
+      return trendingTopics.length > 0 ? trendingTopics[0] : null;
+    }
+
+    getTrendingPeople() {
+      // Get recent 30-day usage for person tags (@tags)
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      
+      const recentEntries = this.all.filter(s => s.date >= thirtyDaysAgo);
+      const recentPersonCounts = {};
+      
+      recentEntries.forEach(score => {
+        const personTags = score.notes.match(/@\p{L}[\p{L}\d]*/gu) || [];
+        personTags.forEach(tag => {
+          const cleanTag = tag.slice(1).toLowerCase();
+          recentPersonCounts[cleanTag] = (recentPersonCounts[cleanTag] || 0) + 1;
+        });
+      });
+      
+      // Load tag cache to get historical usage
+      let tagCache = {};
+      try {
+        tagCache = JSON.parse(localStorage.getItem('tagCache') || '{}');
+      } catch (e) {
+        console.warn('Could not load tag cache for trending people');
+      }
+      
+      // Find people with recent activity surge
+      const trendingPeople = [];
+      Object.entries(recentPersonCounts).forEach(([person, recentCount]) => {
+        const cacheData = tagCache[person];
+        if (!cacheData || !cacheData.isPerson) return; // Skip topic tags or missing cache
+        
+        const totalUses = cacheData.totalUses || 0;
+        const historicalAvg = totalUses > 0 ? totalUses / Math.max(1, Object.keys(cacheData.yearStats || {}).length) : 0;
+        
+        // Only include people that:
+        // 1. Have recent activity (>= 2 mentions in 30 days)
+        // 2. Show surge (recent mentions > 1.5x historical average) 
+        // 3. Aren't constant mentions (< 30 total historical uses)
+        if (recentCount >= 2 && recentCount > (historicalAvg * 1.5) && totalUses < 30) {
+          const surgeRatio = historicalAvg > 0 ? (recentCount / historicalAvg) : recentCount;
+          trendingPeople.push({
+            person: person,
+            recentCount: recentCount,
+            surgeRatio: Math.round(surgeRatio * 10) / 10,
+            avgScore: cacheData.avgScore || 0
+          });
+        }
+      });
+      
+      // Sort by surge ratio (highest surge first)
+      trendingPeople.sort((a, b) => b.surgeRatio - a.surgeRatio);
+      
+      return trendingPeople.length > 0 ? trendingPeople[0] : null;
+    }
+
+    getScoreConsistency() {
+      const now = new Date();
+      const threeSixtyFiveDaysAgo = new Date(now);
+      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
+      const sevenThirtyDaysAgo = new Date(now);
+      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
+      
+      // Helper function to calculate standard deviation
+      const calculateStandardDeviation = (scores) => {
+        if (scores.length === 0) return 0;
+        const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+        const squaredDiffs = scores.map(score => Math.pow(score - mean, 2));
+        const avgSquaredDiff = squaredDiffs.reduce((sum, diff) => sum + diff, 0) / scores.length;
+        return Math.sqrt(avgSquaredDiff);
+      };
+      
+      // Current period (last 365 days)
+      const currentEntries = this.all.filter(score => score.date >= threeSixtyFiveDaysAgo);
+      const currentScores = currentEntries.map(entry => entry.summary);
+      const currentStdDev = calculateStandardDeviation(currentScores);
+      
+      // Previous period (365 days before that)
+      const previousEntries = this.all.filter(score => 
+        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo
+      );
+      const previousScores = previousEntries.map(entry => entry.summary);
+      const previousStdDev = calculateStandardDeviation(previousScores);
+      
+      // Calculate consistency score (inverted - lower std dev = higher consistency)
+      const currentConsistency = currentStdDev > 0 ? Math.round((2.0 / currentStdDev) * 100) / 100 : 5.0;
+      const previousConsistency = previousStdDev > 0 ? Math.round((2.0 / previousStdDev) * 100) / 100 : 5.0;
+      
+      // Calculate trend (higher consistency = better trend)
+      const diff = currentConsistency - previousConsistency;
+      const trend = diff > 0.1 ? 'up' : diff < -0.1 ? 'down' : 'same';
+      
+      const trendDisplay = Math.abs(diff) < 0.1 ? '' : 
+        diff > 0 ? `↗ +${Math.round(Math.abs(diff) * 100) / 100}` : `↘ -${Math.round(Math.abs(diff) * 100) / 100}`;
+      
+      return {
+        consistency: currentConsistency,
+        stdDev: Math.round(currentStdDev * 100) / 100,
+        previousConsistency: previousConsistency,
+        previousStdDev: Math.round(previousStdDev * 100) / 100,
+        entryCount: currentEntries.length,
+        trend: trend,
+        trendDisplay: trendDisplay
+      };
+    }
+
+    getSuperTag() {
+      // Get recent 30-day usage for all tags
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      
+      const recentEntries = this.all.filter(s => s.date >= thirtyDaysAgo);
+      const recentTagData = {};
+      
+      // Collect recent tag usage with scores
+      recentEntries.forEach(score => {
+        const allTags = score.notes.match(/[#@]\p{L}[\p{L}\d]*/gu) || [];
+        allTags.forEach(tag => {
+          const cleanTag = tag.slice(1).toLowerCase();
+          if (!recentTagData[cleanTag]) {
+            recentTagData[cleanTag] = {
+              scores: [],
+              count: 0,
+              isPersonTag: tag.startsWith('@')
+            };
+          }
+          recentTagData[cleanTag].scores.push(score.summary);
+          recentTagData[cleanTag].count++;
+        });
+      });
+      
+      // Load tag cache for historical context
+      let tagCache = {};
+      try {
+        tagCache = JSON.parse(localStorage.getItem('tagCache') || '{}');
+      } catch (e) {
+        console.warn('Could not load tag cache for super tag calculation');
+      }
+      
+      // Calculate Super Tag score using weighted formula
+      const superTagCandidates = [];
+      Object.entries(recentTagData).forEach(([tag, data]) => {
+        // Must have at least 2 recent uses to be considered
+        if (data.count < 2) return;
+        
+        const avgScore = data.scores.reduce((sum, score) => sum + score, 0) / data.scores.length;
+        const recentCount = data.count;
+        
+        // Get historical context from cache
+        const cacheData = tagCache[tag] || {};
+        const totalHistoricalUses = cacheData.totalUses || recentCount;
+        
+        /**
+         * SUPER TAG WEIGHTED FORMULA:
+         * 
+         * superScore = (avgScore * sqrt(recentCount)) / frequencyBias
+         * 
+         * Where:
+         * - avgScore: Average score of entries with this tag (quality component)
+         * - sqrt(recentCount): Diminishing returns on usage (prevents spam, rewards meaningful use)
+         * - frequencyBias: Normalizes against over/under-used tags
+         * 
+         * frequencyBias = 1 + (totalUses / expectedUses)^0.5
+         * - expectedUses = estimated reasonable usage over time
+         * - This prevents both single-use bias AND overused tag bias
+         */
+        
+        const expectedUses = Math.max(5, Math.min(30, totalHistoricalUses * 0.3)); // Reasonable range
+        const frequencyBias = 1 + Math.pow(totalHistoricalUses / expectedUses, 0.5);
+        const usageWeight = Math.sqrt(recentCount);
+        const superScore = (avgScore * usageWeight) / frequencyBias;
+        
+        superTagCandidates.push({
+          tag: tag,
+          superScore: Math.round(superScore * 100) / 100,
+          avgScore: Math.round(avgScore * 10) / 10,
+          recentCount: recentCount,
+          totalUses: totalHistoricalUses,
+          frequencyBias: Math.round(frequencyBias * 100) / 100,
+          isPersonTag: data.isPersonTag
+        });
+      });
+      
+      // Sort by super score (highest first)
+      superTagCandidates.sort((a, b) => b.superScore - a.superScore);
+      
+      return superTagCandidates.length > 0 ? superTagCandidates[0] : null;
+    }
+
+    getSeasonProgress() {
+      const now = new Date();
+      const year = now.getFullYear();
+      
+      // Define season boundaries (Northern Hemisphere)
+      const seasons = {
+        'Spring': { start: new Date(year, 2, 20), end: new Date(year, 5, 20) }, // Mar 20 - Jun 20
+        'Summer': { start: new Date(year, 5, 21), end: new Date(year, 8, 22) }, // Jun 21 - Sep 22
+        'Fall': { start: new Date(year, 8, 23), end: new Date(year, 11, 20) },   // Sep 23 - Dec 20
+        'Winter': { start: new Date(year, 11, 21), end: new Date(year + 1, 2, 19) } // Dec 21 - Mar 19
+      };
+      
+      // Determine current season
+      let currentSeason = null;
+      let seasonStart = null;
+      let seasonEnd = null;
+      
+      for (const [season, dates] of Object.entries(seasons)) {
+        if (season === 'Winter') {
+          // Winter spans across years
+          const winterStart = new Date(year - 1, 11, 21);
+          const winterEnd = new Date(year, 2, 19);
+          if (now >= winterStart || now <= winterEnd) {
+            currentSeason = season;
+            seasonStart = now.getMonth() < 3 ? winterStart : new Date(year, 11, 21);
+            seasonEnd = now.getMonth() < 3 ? winterEnd : new Date(year + 1, 2, 19);
+            break;
+          }
+        } else {
+          if (now >= dates.start && now <= dates.end) {
+            currentSeason = season;
+            seasonStart = dates.start;
+            seasonEnd = dates.end;
+            break;
+          }
+        }
+      }
+      
+      if (!currentSeason) {
+        // Fallback logic
+        const month = now.getMonth();
+        if (month >= 2 && month <= 4) {
+          currentSeason = 'Spring';
+          seasonStart = new Date(year, 2, 20);
+          seasonEnd = new Date(year, 5, 20);
+        } else if (month >= 5 && month <= 7) {
+          currentSeason = 'Summer';
+          seasonStart = new Date(year, 5, 21);
+          seasonEnd = new Date(year, 8, 22);
+        } else if (month >= 8 && month <= 10) {
+          currentSeason = 'Fall';
+          seasonStart = new Date(year, 8, 23);
+          seasonEnd = new Date(year, 11, 20);
+        } else {
+          currentSeason = 'Winter';
+          seasonStart = new Date(year, 11, 21);
+          seasonEnd = new Date(year + 1, 2, 19);
+        }
+      }
+      
+      // Calculate progress
+      const totalDays = Math.ceil((seasonEnd - seasonStart) / (1000 * 60 * 60 * 24));
+      const daysPassed = Math.ceil((now - seasonStart) / (1000 * 60 * 60 * 24));
+      const percentage = Math.round((daysPassed / totalDays) * 100);
+      
+      // Season emojis
+      const seasonEmojis = {
+        'Spring': '🌸',
+        'Summer': '☀️', 
+        'Fall': '🍂',
+        'Winter': '❄️'
+      };
+      
+      return {
+        season: currentSeason,
+        emoji: seasonEmojis[currentSeason] || '📅',
+        percentage: Math.min(100, Math.max(0, percentage)),
+        daysPassed: Math.max(0, daysPassed),
+        totalDays: totalDays,
+        seasonStart: seasonStart.toDateString(),
+        seasonEnd: seasonEnd.toDateString()
+      };
+    }
+
     async showJourneyAnalytics() {
       // Get config for birthdate
       const config = await window.api.getConfig();
@@ -1822,13 +2229,21 @@
       const lastLowScore = this.getDaysSinceLastScore(1);
       const thirtyDayStats = this.getThirtyDayComparisons();
       
-      // New analytics widgets
+      // New analytics widgets  
       const personMentions = this.getPersonMentionsRatio();
       const lazySundays = this.getLazySundays();
       const lazySaturdays = this.getLazySaturdays();
       const totalOverview = this.getTotalOverview();
       const fiveScoreDays = this.getFiveScoreDaysCount();
       const avgDurationHighScores = this.getAverageDurationBetweenHighScores();
+      
+      // Latest widget additions
+      const lazyWorkweeks = this.getLazyWorkweeks();
+      const trendingTopics = this.getTrendingTopics(); 
+      const trendingPeople = this.getTrendingPeople();
+      const consistency = this.getScoreConsistency();
+      const superTag = this.getSuperTag();
+      const seasonProgress = this.getSeasonProgress();
       
       this.pushHistory('/analytics', 'Analytics');
       
@@ -1845,7 +2260,14 @@
         lazySaturdays: lazySaturdays,
         totalOverview: totalOverview,
         fiveScoreDays: fiveScoreDays,
-        avgDurationHighScores: avgDurationHighScores
+        avgDurationHighScores: avgDurationHighScores,
+        // New widgets
+        lazyWorkweeks: lazyWorkweeks,
+        trendingTopics: trendingTopics,
+        trendingPeople: trendingPeople,
+        consistency: consistency,
+        superTag: superTag,
+        seasonProgress: seasonProgress
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
