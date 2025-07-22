@@ -1,133 +1,184 @@
-# FaveDay Tag System Unit Tests
+# FaveDay Test Suite
 
-This directory contains unit tests for the FaveDay tag handling system, extracted into isolated, testable modules.
+A comprehensive, organized test suite for the FaveDay journaling application.
 
-## Structure
+## 📁 Test Structure
 
 ```
 tests/
-├── package.json          # Test dependencies and scripts
-├── test-runner.js         # Simple test framework
-├── tag-parser.test.js     # Tests for tag parsing functionality
-├── tag-cache.test.js      # Tests for tag cache operations
-├── demo.js               # Interactive demo script
-└── README.md             # This file
-
-app/lib/faveday/          # App libraries (tests import from here)
-├── tag-parser.js         # Tag parsing logic
-└── tag-cache.js          # Tag cache operations
+├── test-framework.js          # Unified testing framework and utilities
+├── run-all-tests.js           # Main test runner
+├── widgets/                   # Widget-specific tests
+│   ├── core-widgets.test.js   # Tests for essential dashboard widgets
+│   └── new-widgets.test.js    # Tests for newly added widgets
+├── tag-parser.test.js         # Tag parsing functionality tests
+├── tag-cache.test.js          # Tag cache operations tests
+├── navigation.test.js         # UI navigation tests
+├── journey-analytics.test.js  # Analytics page tests
+├── test-runner.js             # Legacy test runner
+├── package.json               # Test dependencies
+└── README.md                  # This file
 ```
 
-## Running Tests
+## 🚀 Running Tests
 
-### Prerequisites
-- Node.js installed
-- No external dependencies (uses built-in Node.js modules)
-
-### Run All Tests
+### Run All Modern Tests (Recommended)
 ```bash
-cd tests
-node test-runner.js
+node tests/run-all-tests.js
 ```
 
-### Run Tests via npm
+### Run Specific Test Suite
 ```bash
-cd tests
-npm test
+node tests/run-all-tests.js --suite "Core Widgets"
+node tests/run-all-tests.js --suite "New Widgets"
 ```
 
-## Test Coverage
+### List Available Test Suites
+```bash
+node tests/run-all-tests.js --list
+```
 
-### Tag Parser Tests (`tag-parser.test.js`)
-- ✅ Basic tag extraction (#hashtags and @mentions)
-- ✅ Unicode character support in tags
-- ✅ Position tracking for tags
-- ✅ Tag classification (person vs topic)
-- ✅ CamelCase to space conversion
-- ✅ First name extraction from person tags
-- ✅ Overlap detection with existing tags
-- ✅ Word boundary regex creation
-- ✅ Person suggestion finding
-- ✅ Topic suggestion finding
-- ✅ Minimum usage thresholds
-- ✅ Duplicate prevention
+### Run Individual Test Files
+```bash
+node tests/widgets/core-widgets.test.js
+node tests/widgets/new-widgets.test.js
+```
 
-### Tag Cache Tests (`tag-cache.test.js`)
-- ✅ Basic tag statistics calculation
-- ✅ Average score computation
-- ✅ Original tag casing preservation
-- ✅ Person vs topic tag identification
-- ✅ Year-based usage statistics
-- ✅ Peak year calculation
-- ✅ First/last usage date tracking
-- ✅ Recent activity marking
-- ✅ Tag queries and filtering
-- ✅ Sorting by different criteria
-- ✅ Edge cases (empty data, malformed tags)
-- ✅ Case-insensitive deduplication
+### Run Legacy Tests
+```bash
+node tests/test-runner.js              # Tag system tests
+```
 
-## Key Features Tested
+## 🧪 Test Framework Features
 
-### Tag Detection Regex
-The system uses `/([#@])\\p{L}[\\p{L}\\d]*/gui` to detect:
-- Topic tags: `#javascript`, `#webDev`, `#café`
-- Person tags: `@john`, `@marySue`, `@naïve`
-- Unicode support for international characters
-- Numbers in tags: `#web2`, `@user123`
+### Unified Test Framework
+- **Consistent API**: `describe()`, `test()`, assertions
+- **Built-in Mocks**: MockFaveDayApp, localStorage simulation
+- **Test Data Generators**: Helper functions for creating realistic test data
+- **Comprehensive Assertions**: `assertEqual()`, `assertTrend()`, `assertBetween()`, etc.
 
-### Tag Cache System
-- Comprehensive statistics per tag
-- Usage counts and average scores
-- Year-based breakdowns
-- Peak activity periods
-- Recent activity tracking
-- Person vs topic classification
-- Original casing preservation
-
-### Suggestion Engine
-- Person suggestions based on first names
-- Topic suggestions from full names and camelCase parts
-- Overlap prevention with existing tags
-- Configurable thresholds
-- Duplicate prevention
-
-## Benefits of This Test Suite
-
-1. **Isolated Testing**: Tests run without requiring the full Electron app
-2. **Fast Feedback**: Quick iteration on tag-related features
-3. **Regression Prevention**: Catch tag parsing/cache issues early
-4. **Documentation**: Tests serve as living documentation of tag behavior
-5. **Refactoring Safety**: Safe to modify tag code with test coverage
-6. **No Code Duplication**: Tests use the actual app libraries, not duplicated code
-
-## Development Workflow
-
-1. **Make Changes**: Modify tag logic in `app/lib/faveday/tag-parser.js` or `app/lib/faveday/tag-cache.js`
-2. **Run Tests**: Execute `node test-runner.js` to verify changes
-3. **Update Tests**: Add new tests for new features
-4. **No Integration Step**: Changes are automatically reflected in both app and tests!
-
-## Adding New Tests
-
-To add a new test:
-
+### Mock Data Utilities
 ```javascript
-describe('New Feature Tests', () => {
-  it('should do something specific', () => {
-    // Test code here
-    assert.strictEqual(actual, expected);
-  });
+// Generate score entries
+framework.generateScoreEntry(daysAgo, score, notes)
+
+// Generate workweek data
+framework.generateWorkweekData(mondayDaysAgo, [scores], notes)
+
+// Generate tagged entries
+framework.generateTaggedEntries(count, daysAgo, tag, avgScore)
+```
+
+### Widget Testing
+- **MockFaveDayApp**: Simulates real app with test data
+- **Tag Cache Simulation**: Automatic tag cache generation for realistic testing
+- **Date-aware Testing**: Handles relative dates and time periods correctly
+
+## 📊 Test Categories
+
+### Core Widgets Tests
+Tests essential dashboard functionality:
+- **30-Day Comparisons**: Entry counts, score averages, trends
+- **Edge Cases**: Empty data, single entries, boundary conditions
+- **Trend Logic**: Proper up/down/same trend calculations
+
+### New Widgets Tests  
+Tests recently added analytics widgets:
+- **Lazy Workweeks**: Workday point calculations, weekend filtering
+- **Season Progress**: Current season detection, progress calculation
+- **Trending Tags**: Surge detection, staple filtering (future)
+- **Consistency Metrics**: Standard deviation calculations (future)
+
+### Legacy Tests (Individual Files)
+- **Tag Parser Tests**: Tag extraction, Unicode support, position tracking
+- **Tag Cache Tests**: Statistics, average scores, year-based data
+- **Navigation Tests**: UI flow and interaction testing
+- **Analytics Tests**: Journey analytics page validation
+
+## 🎯 Best Practices
+
+### Test Naming Convention
+- **Descriptive Names**: "30-Day Entry Comparison - More Recent Entries"
+- **Scenario-Based**: What situation is being tested
+- **Expected Outcome**: What should happen
+
+### Test Structure
+```javascript
+framework.test('Widget Feature - Specific Scenario', () => {
+  // 1. Setup test data
+  const testData = [...];
+  
+  // 2. Execute widget function
+  const app = new MockFaveDayApp(testData);
+  const result = app.getWidgetFunction();
+  
+  // 3. Assert expected outcomes
+  framework.assertEqual(result.value, expected, 'Description');
+  framework.assertTrend(result.trend, 'up', 'Trend explanation');
+  
+  return true; // Test passed
 });
 ```
 
-The test runner will automatically discover and run any `.test.js` files in the tests directory.
+### Data Generation
+- **Realistic Scenarios**: Use representative data patterns
+- **Edge Cases**: Test boundary conditions
+- **Date Handling**: Use relative dates (daysAgo) for consistency
 
-## Future Enhancements
+## 🔧 Extending Tests
 
-Potential areas for additional testing:
-- Performance benchmarks for large tag datasets
-- Memory usage analysis
-- Tag rendering HTML output validation
-- Integration tests with mock score data
-- Fuzzing tests for edge cases
-- Tag migration/upgrade scenarios
+### Adding New Test Suites
+1. Create test file in appropriate directory (e.g., `tests/features/new-feature.test.js`)
+2. Import test framework: `const { TestFramework, MockFaveDayApp } = require('../test-framework');`
+3. Export test function: `module.exports = { runNewFeatureTests };`
+4. Register in `run-all-tests.js`: `this.registerTestSuite('New Feature', runNewFeatureTests);`
+
+### Adding New Widget Methods to Mock
+Update `MockFaveDayApp` in `test-framework.js` with new widget calculation methods.
+
+### Custom Assertions
+Add specialized assertion methods to `TestFramework` class for domain-specific testing needs.
+
+## 📈 Test Results
+
+The test runner provides comprehensive results:
+- **Individual Test Status**: ✅ Pass or ❌ Fail with error details
+- **Suite Summary**: Pass/fail counts and success rates
+- **Overall Results**: Multi-suite summary with timing
+- **Failure Analysis**: Detailed error messages and debugging tips
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+- **Date Dependencies**: Tests may behave differently based on current date
+- **Mock Data**: Ensure test data represents realistic usage patterns
+- **Async Operations**: Widget functions are synchronous, but framework supports async
+
+### Debug Mode
+Add `console.log` statements in test data or mock functions to debug issues:
+```javascript
+const result = app.getWidget();
+console.log('Debug result:', JSON.stringify(result, null, 2));
+```
+
+## 🎉 Success Metrics
+
+A successful test run should show:
+- All test suites passing (100% success rate)
+- Fast execution times (< 100ms per suite)
+- Clear, descriptive test names
+- Comprehensive coverage of widget functionality
+
+## 🔄 Migration Notes
+
+### New vs Legacy Tests
+- **New Tests**: Use unified framework, located in `widgets/` subdirectory
+- **Legacy Tests**: Individual files, existing functionality testing
+- **Both Are Valid**: Legacy tests continue to work for tag system validation
+
+### Gradual Migration
+- New widget tests use modern framework
+- Legacy tests remain for existing features
+- Future tests should use unified framework
+
+This test suite ensures FaveDay widgets are reliable, consistent, and working as expected across all scenarios.
