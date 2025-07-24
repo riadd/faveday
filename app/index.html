@@ -820,20 +820,20 @@
       <!-- Row 7: Lookbacks & Overview -->
       {{#thirtyDayStats}}
       {{#lastHighScore}}
-      <div class="analytics-item last-high-score clickable-widget" onclick="onJumpToScoreDate('{{dateId}}')">
+      <div class="analytics-item trend-{{trend}}-widget last-high-score clickable-widget" onclick="onJumpToScoreDate('{{dateId}}')">
         <div class="clickable-indicator"></div>
         <h4>🎯 Last 5+ Score</h4>
         <div class="analytics-main-value">{{days}}</div>
-        <small>days ago on {{lastDate}}</small>
+        <small>days ago on {{lastDate}} {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
       {{/lastHighScore}}
 
       {{#lastLowScore}}
-      <div class="analytics-item last-low-score clickable-widget" onclick="onJumpToScoreDate('{{dateId}}')">
+      <div class="analytics-item trend-{{trend}}-widget last-low-score clickable-widget" onclick="onJumpToScoreDate('{{dateId}}')">
         <div class="clickable-indicator"></div>
         <h4>📉 Last 1 Score</h4>
         <div class="analytics-main-value">{{days}}</div>
-        <small>days ago on {{lastDate}}</small>
+        <small>days ago on {{lastDate}} {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
       {{/lastLowScore}}
       {{/thirtyDayStats}}

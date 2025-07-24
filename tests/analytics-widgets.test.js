@@ -140,6 +140,85 @@ function runAnalyticsWidgetsTests() {
     });
   });
 
+  // Performance & Trend Widgets
+  framework.describe('Performance & Trend Widgets', function() {
+    
+    framework.testWidget('High Score Frequency', () => {
+      console.log('       ⚡ Testing high score frequency trends...');
+      
+      const testData = [
+        // Recent year: High scores every 5 days (good frequency)
+        ...Array(6).fill().map((_, i) => framework.generateScoreEntry(30 + (i * 5), 4, `#recent #high`)),
+        // Previous year: High scores every 10 days (poor frequency) 
+        ...Array(6).fill().map((_, i) => framework.generateScoreEntry(400 + (i * 10), 4, `#previous #high`))
+      ];
+      
+      const app = new MockFaveDayApp(testData);
+      const result = app.getAverageDurationBetweenHighScores();
+      
+      framework.assertExists(result.averageDays, 'Should calculate average days');
+      // Allow wider range since exact values may vary based on calculation
+      framework.assertBetween(result.averageDays, 3, 8, 'Recent average should be around 5 days');
+      framework.assertBetween(result.previousAverageDays, 8, 15, 'Previous average should be around 10 days');
+      framework.assertTrend(result.trend, 'up', 'Better frequency (lower days) should trend up');
+      framework.assertExists(result.trendDisplay, 'Should have trend display');
+      
+      console.log(`       ✓ Frequency trend: ${result.averageDays} current vs ${result.previousAverageDays} previous = ${result.trend}`);
+      
+      return true;
+    });
+
+    framework.testWidget('Last 5+ Score', () => {
+      console.log('       🎯 Testing last high score recency...');
+      
+      const testData = [
+        // Recent high score 3 days ago
+        framework.generateScoreEntry(3, 5, '#recent #high'),
+        // Previous period had high score 7 days before the 30-day mark
+        framework.generateScoreEntry(37, 5, '#previous #high'),
+        // Add some regular entries for context
+        ...Array(10).fill().map((_, i) => framework.generateScoreEntry(i + 10, 3, '#regular'))
+      ];
+      
+      const app = new MockFaveDayApp(testData);
+      const result = app.getDaysSinceLastScore(5);
+      
+      framework.assertEqual(result.days, 3, 'Should show 3 days since last 5-score');
+      framework.assertExists(result.lastDate, 'Should have last date');
+      framework.assertExists(result.trend, 'Should have trend calculation');
+      // More recent high score should be better (up trend with inverted logic)
+      
+      console.log(`       ✓ Last high score: ${result.days} days ago, trend: ${result.trend}`);
+      
+      return true;
+    });
+
+    framework.testWidget('Last 1 Score', () => {
+      console.log('       📉 Testing last low score avoidance...');
+      
+      const testData = [
+        // Recent low score 10 days ago (good - avoiding recent lows)
+        framework.generateScoreEntry(10, 1, '#old #low'),
+        // Previous period had low score 5 days before the 30-day mark (worse)
+        framework.generateScoreEntry(35, 1, '#previous #low'),
+        // Add some regular entries for context
+        ...Array(8).fill().map((_, i) => framework.generateScoreEntry(i + 2, 3, '#regular'))
+      ];
+      
+      const app = new MockFaveDayApp(testData);
+      const result = app.getDaysSinceLastScore(1);
+      
+      framework.assertEqual(result.days, 10, 'Should show 10 days since last 1-score');
+      framework.assertExists(result.lastDate, 'Should have last date');
+      framework.assertExists(result.trend, 'Should have trend calculation');
+      // Longer time since low score should be better (up trend with normal logic)
+      
+      console.log(`       ✓ Last low score: ${result.days} days ago, trend: ${result.trend}`);
+      
+      return true;
+    });
+  });
+
   // Edge Cases & Error Handling
   framework.describe('Edge Cases & Data Validation', function() {
     

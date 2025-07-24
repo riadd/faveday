@@ -200,6 +200,15 @@ class UnifiedTestFramework {
     return entries;
   }
 
+  generateSpacedHighScores(count, startDaysAgo, daySpacing) {
+    const entries = [];
+    for (let i = 0; i < count; i++) {
+      const daysAgo = startDaysAgo + (i * daySpacing);
+      entries.push(this.generateScoreEntry(daysAgo, 4 + Math.floor(Math.random() * 2), `#high #spaced`)); // Random 4 or 5 score
+    }
+    return entries;
+  }
+
   // Final results summary
   printResults() {
     console.log('\n' + '═'.repeat(80));
@@ -437,6 +446,136 @@ class MockFaveDayApp {
       daysPassed: daysPassed,
       percentage: percentage,
       trend: percentage > 50 ? 'up' : percentage < 50 ? 'down' : 'same'
+    };
+  }
+
+  getAverageDurationBetweenHighScores() {
+    const now = new Date();
+    const oneYearAgo = new Date(now);
+    oneYearAgo.setFullYear(now.getFullYear() - 1);
+    const twoYearsAgo = new Date(now);
+    twoYearsAgo.setFullYear(now.getFullYear() - 2);
+    
+    // Helper function to calculate average duration
+    const calculateAverageDuration = (entries) => {
+      const highScoreEntries = entries.filter(score => score.summary >= 4)
+        .sort((a, b) => a.date - b.date);
+      
+      if (highScoreEntries.length < 2) return null;
+      
+      const durations = [];
+      for (let i = 1; i < highScoreEntries.length; i++) {
+        const daysDiff = Math.floor((highScoreEntries[i].date - highScoreEntries[i-1].date) / (1000 * 60 * 60 * 24));
+        durations.push(daysDiff);
+      }
+      
+      return durations.length > 0 ? Math.round(durations.reduce((sum, d) => sum + d, 0) / durations.length) : null;
+    };
+    
+    // Current year (last 365 days)
+    const currentYearEntries = this.all.filter(score => score.date >= oneYearAgo);
+    const currentAvgDuration = calculateAverageDuration(currentYearEntries);
+    
+    // Previous year (365 days before that)
+    const previousYearEntries = this.all.filter(score => 
+      score.date >= twoYearsAgo && score.date < oneYearAgo
+    );
+    const previousAvgDuration = calculateAverageDuration(previousYearEntries);
+    
+    // Calculate trend (note: for duration, lower is better, so trend logic is inverted)
+    let trend = 'same';
+    let trendDisplay = '';
+    
+    if (currentAvgDuration !== null && previousAvgDuration !== null) {
+      const diff = currentAvgDuration - previousAvgDuration;
+      if (diff < 0) {
+        trend = 'up'; // Getting better (lower duration)
+        trendDisplay = `↗ ${Math.abs(diff)} days less`;
+      } else if (diff > 0) {
+        trend = 'down'; // Getting worse (higher duration)
+        trendDisplay = `↘ +${diff} days more`;
+      }
+    }
+    
+    return {
+      averageDays: currentAvgDuration,
+      previousAverageDays: previousAvgDuration,
+      trend: trend,
+      trendDisplay: trendDisplay
+    };
+  }
+
+  getDaysSinceLastScore(targetScore) {
+    const now = new Date();
+    const targetScores = this.all.filter(s => s.summary === targetScore);
+    
+    if (targetScores.length === 0) {
+      return null; // No scores of this type found
+    }
+    
+    const latestScore = targetScores.sort((a, b) => b.date - a.date)[0];
+    const daysDiff = Math.floor((now - latestScore.date) / (1000 * 60 * 60 * 24));
+    
+    // Calculate trend by comparing current vs previous 30-day periods
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+    const sixtyDaysAgo = new Date(now);
+    sixtyDaysAgo.setDate(now.getDate() - 60);
+    
+    // Get most recent target score in last 30 days
+    const currentPeriodScores = this.all.filter(s => 
+      s.summary === targetScore && s.date >= thirtyDaysAgo
+    );
+    const currentDays = currentPeriodScores.length > 0 ? 
+      Math.floor((now - currentPeriodScores.sort((a, b) => b.date - a.date)[0].date) / (1000 * 60 * 60 * 24)) : 
+      null;
+    
+    // Get most recent target score in previous 30 days (30-60 days ago)
+    const previousPeriodScores = this.all.filter(s => 
+      s.summary === targetScore && s.date >= sixtyDaysAgo && s.date < thirtyDaysAgo
+    );
+    const previousDays = previousPeriodScores.length > 0 ? 
+      Math.floor((thirtyDaysAgo - previousPeriodScores.sort((a, b) => b.date - a.date)[0].date) / (1000 * 60 * 60 * 24)) : 
+      null;
+    
+    // Calculate trend based on score type
+    let trend = 'same';
+    let trendDisplay = '';
+    
+    if (currentDays !== null && previousDays !== null) {
+      const diff = currentDays - previousDays;
+      
+      if (targetScore >= 4) {
+        // For high scores (4+): lower days since = better (inverted logic)
+        if (diff < 0) {
+          trend = 'up'; // More recent high score = better
+          trendDisplay = `↗ ${Math.abs(diff)} days more recent`;
+        } else if (diff > 0) {
+          trend = 'down'; // Less recent high score = worse
+          trendDisplay = `↘ +${diff} days longer ago`;
+        }
+      } else {
+        // For low scores (1-2): higher days since = better (normal logic)
+        if (diff > 0) {
+          trend = 'up'; // Longer since low score = better
+          trendDisplay = `↗ +${diff} days longer ago`;
+        } else if (diff < 0) {
+          trend = 'down'; // More recent low score = worse
+          trendDisplay = `↘ ${Math.abs(diff)} days more recent`;
+        }
+      }
+    }
+    
+    // Mock dateStr and dateId methods for testing
+    const mockDateStr = () => latestScore.date.toLocaleDateString();
+    const mockDateId = () => latestScore.date.toISOString().split('T')[0];
+    
+    return {
+      days: daysDiff,
+      lastDate: mockDateStr(),
+      dateId: mockDateId(),
+      trend: trend,
+      trendDisplay: trendDisplay
     };
   }
 }

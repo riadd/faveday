@@ -623,8 +623,6 @@
       const calendarProgress = this.getCalendarYearProgress();
       const lifeProgress = config.birthdate ? this.getLifeYearProgress(config.birthdate) : null;
       const coverage = this.getCoverageProgress();
-      const lastHighScore = this.getDaysSinceLastScore(5);
-      const lastLowScore = this.getDaysSinceLastScore(1);
       const thirtyDayStats = this.getThirtyDayComparisons();
 
       this.pushHistory('/', '');
@@ -642,8 +640,6 @@
         calendarProgress: calendarProgress,
         lifeProgress: lifeProgress,
         coverage: coverage,
-        lastHighScore: lastHighScore,
-        lastLowScore: lastLowScore,
         thirtyDayStats: thirtyDayStats
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
@@ -1457,10 +1453,62 @@
       const latestScore = targetScores.sort((a, b) => b.date - a.date)[0];
       const daysDiff = Math.floor((now - latestScore.date) / (1000 * 60 * 60 * 24));
       
+      // Calculate trend by comparing current vs previous 30-day periods
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      const sixtyDaysAgo = new Date(now);
+      sixtyDaysAgo.setDate(now.getDate() - 60);
+      
+      // Get most recent target score in last 30 days
+      const currentPeriodScores = this.all.filter(s => 
+        s.summary === targetScore && s.date >= thirtyDaysAgo
+      );
+      const currentDays = currentPeriodScores.length > 0 ? 
+        Math.floor((now - currentPeriodScores.sort((a, b) => b.date - a.date)[0].date) / (1000 * 60 * 60 * 24)) : 
+        null;
+      
+      // Get most recent target score in previous 30 days (30-60 days ago)
+      const previousPeriodScores = this.all.filter(s => 
+        s.summary === targetScore && s.date >= sixtyDaysAgo && s.date < thirtyDaysAgo
+      );
+      const previousDays = previousPeriodScores.length > 0 ? 
+        Math.floor((thirtyDaysAgo - previousPeriodScores.sort((a, b) => b.date - a.date)[0].date) / (1000 * 60 * 60 * 24)) : 
+        null;
+      
+      // Calculate trend based on score type
+      let trend = 'same';
+      let trendDisplay = '';
+      
+      if (currentDays !== null && previousDays !== null) {
+        const diff = currentDays - previousDays;
+        
+        if (targetScore >= 4) {
+          // For high scores (4+): lower days since = better (inverted logic)
+          if (diff < 0) {
+            trend = 'up'; // More recent high score = better
+            trendDisplay = `↗ ${Math.abs(diff)} days more recent`;
+          } else if (diff > 0) {
+            trend = 'down'; // Less recent high score = worse
+            trendDisplay = `↘ +${diff} days longer ago`;
+          }
+        } else {
+          // For low scores (1-2): higher days since = better (normal logic)
+          if (diff > 0) {
+            trend = 'up'; // Longer since low score = better
+            trendDisplay = `↗ +${diff} days longer ago`;
+          } else if (diff < 0) {
+            trend = 'down'; // More recent low score = worse
+            trendDisplay = `↘ ${Math.abs(diff)} days more recent`;
+          }
+        }
+      }
+      
       return {
         days: daysDiff,
         lastDate: latestScore.dateStr(),
-        dateId: latestScore.dateId()
+        dateId: latestScore.dateId(),
+        trend: trend,
+        trendDisplay: trendDisplay
       };
     }
 
@@ -1586,7 +1634,9 @@
           trendDisplay: formatTrend(Math.round(scoreDiff * 10) / 10, scoreDiff > 0 ? 'up' : scoreDiff < 0 ? 'down' : 'same', Math.round(previousAvgScore * 10) / 10),
           trendEmoji: scoreDiff > 0 ? '📈' : scoreDiff < 0 ? '📉' : '➡️'
         },
-        topTag: topTag ? { tag: topTag[0], count: topTag[1] } : null
+        topTag: topTag ? { tag: topTag[0], count: topTag[1] } : null,
+        lastHighScore: this.getDaysSinceLastScore(5),
+        lastLowScore: this.getDaysSinceLastScore(1)
       };
     }
 
@@ -2225,8 +2275,6 @@
       const calendarProgress = this.getCalendarYearProgress();
       const lifeProgress = config.birthdate ? this.getLifeYearProgress(config.birthdate) : null;
       const coverage = this.getCoverageProgress();
-      const lastHighScore = this.getDaysSinceLastScore(5);
-      const lastLowScore = this.getDaysSinceLastScore(1);
       const thirtyDayStats = this.getThirtyDayComparisons();
       
       // New analytics widgets  
@@ -2253,8 +2301,6 @@
         lifeProgress: lifeProgress,
         coverage: coverage,
         thirtyDayStats: thirtyDayStats,
-        lastHighScore: lastHighScore,
-        lastLowScore: lastLowScore,
         personMentions: personMentions,
         lazySundays: lazySundays,
         lazySaturdays: lazySaturdays,
