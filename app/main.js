@@ -57,12 +57,30 @@ ipcMain.on('select-folder', async (event) => {
   return await loadScores(config.filesPath);
 });
 
-ipcMain.handle('get-config', async () => {
+ipcMain.handle('get-config', () => {
   return config;
 });
 
 ipcMain.handle('set-birthdate', async (event, birthdate) => {
   config.birthdate = birthdate;
+  saveConfig();
+  return config;
+});
+
+ipcMain.handle('set-life-quality-weights', async (event, weights) => {
+  config.lifeQualityWeights = weights;
+  saveConfig();
+  return config;
+});
+
+ipcMain.handle('set-score-type', async (event, scoreType) => {
+  config.scoreType = scoreType;
+  saveConfig();
+  return config;
+});
+
+ipcMain.handle('set-default-empty-score', async (event, defaultEmptyScore) => {
+  config.defaultEmptyScore = defaultEmptyScore === '' ? null : parseFloat(defaultEmptyScore);
   saveConfig();
   return config;
 });
@@ -310,6 +328,8 @@ function loadConfig() {
   config = {
     filesPath: null,
     birthdate: null, // User's birthdate in YYYY-MM-DD format
+    scoreType: 'average', // Options: 'average', 'quality', 'median'
+    defaultEmptyScore: null, // Default score for empty days (null = skip empty days)
     windowState: {
       width: 800,
       height: 600,

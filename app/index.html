@@ -17,6 +17,12 @@
 
   <script type="text/javascript" src="./lib/faveday/tag-parser.js"></script>
   <script type="text/javascript" src="./lib/faveday/tag-cache.js"></script>
+  <script type="text/javascript" src="./lib/faveday/config-store.js"></script>
+  <script type="text/javascript" src="./lib/faveday/score-calculator.js"></script>
+  <script type="text/javascript" src="./lib/faveday/data-manager.js"></script>
+  <script type="text/javascript" src="./lib/faveday/router.js"></script>
+  <script type="text/javascript" src="./lib/faveday/settings-manager.js"></script>
+  <script type="text/javascript" src="./lib/faveday/widget-manager.js"></script>
   <script type="text/javascript" src="./js/faveday.js"></script>
 
   <!-- tmpl-scores -->
@@ -93,7 +99,7 @@
       <!-- 30-day comparison widgets -->
       {{#thirtyDayStats}}
       <div class="bento-item trend-{{score.trend}}-widget">
-        <h4>⭐ Avg Score</h4>
+        <h4>{{scoreTypeIcon}}&nbsp;{{scoreTypeName}}</h4>
         <div class="bento-main-value">{{score.current}}</div>
         <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
       </div>
@@ -139,7 +145,7 @@
     {{> header}}
     {{> scoreBar}}
 
-    <h1>{{title}} <small>Ø {{average}}</small></h1>
+    <h1>{{title}} <small>{{scoreTypeIcon}} {{displayScore}}</small></h1>
     {{> yearsBar}}
     {{> monthBar}}
     {{}}
@@ -183,13 +189,13 @@
   <script type="text/mustache" id="tmpl-months">
     {{> header}}
 
-    <h1>{{title}} <small>Ø {{average}}</small></h1>
+    <h1>{{title}} <small>{{scoreTypeIcon}} {{displayScore}}</small></h1>
     {{> yearsBar}}
 
     <table class="box yearCal">
       <tr>
         <th>Date</th>
-        <th>Average</th>
+        <th>{{scoreTypeIcon}}&nbsp;{{scoreTypeName}}</th>
         <th>Entries</th>
         <th>Words</th>
         <th colSpan=50>Calendar</th>
@@ -242,7 +248,7 @@
   <!-- tmpl-search -->
   <script type="text/mustache" id="tmpl-search">
     <div class="search-header">
-      <h1>{{count}} Results <small>Ø {{average}}</small></h1>
+      <h1>{{count}} Results <small>{{scoreTypeIcon}} {{displayScore}}</small></h1>
       <div class="search-type-toggle">
         <span class="toggle-label">Tags only</span>
         <label class="switch">
@@ -341,13 +347,13 @@
     {{> header}}
     {{> scoreBar}}
 
-    <h1>{{year}} <small>Ø {{average}}</small></h1>
+    <h1>{{year}} <small>{{scoreTypeIcon}}&nbsp;{{displayScore}}</small></h1>
     {{> yearsBar}}
 
     <table class="box yearCal">
       <tr>
         <th colspan=2>Date</th>
-        <th>Average</th>
+        <th>{{scoreTypeIcon}}&nbsp;{{scoreTypeName}}</th>
         <th colSpan=50>Calendar</th>
       </tr>
 
@@ -400,15 +406,15 @@
     {{> header}}
     {{> scoreBar}}
 
-    <h1>Years</h1>
+    <h1>Years <small>{{scoreTypeIcon}} {{overallDisplayScore}}</small></h1>
     {{> yearsBar}}
     
     <table class="box yearsCal">
       <tr>
         <th></th>
         <th>Year</th>
-        <th>Average</th>
-        <th>Entries</th>
+        <th>{{scoreTypeIcon}}&nbsp;{{scoreTypeName}}</th>
+        <th>Coverage</th>
         <th>Words</th>
         <th>Jan</th>
         <th>Feb</th>
@@ -435,7 +441,7 @@
           </td>
 
           <td class="value">
-            <span class="current summary total">{{totalAvg}}</span>
+            <span class="current summary total">{{displayScore}}</span>
           </td>
 
           <td class="value">
@@ -447,10 +453,8 @@
           </td>
 
           {{#months}}
-            <td>
-              <div style="background-color:{{col}}; width:{{sz}}px; height:{{sz}}px">
-                <a onclick="onShowMonth('{{dateId}}')"></a>
-              </div>
+            <td style="text-align: center;">
+              <a onclick="onShowMonth('{{dateId}}')" style="display: inline-block; background-color:{{col}}; width:{{sz}}px; height:{{sz}}px; border-radius: 50%;"></a>
             </td>
           {{/months}}
 
@@ -527,55 +531,154 @@
   <!-- tmpl-settings -->
   <script type="text/mustache" id="tmpl-settings">
     <h1>Settings</h1>
-    {{> yearsBar}}
 
-    <div class="box settings-section">
-      <h3>Data Storage</h3>
+    <div class="settings-container">
       
-      <div class="setting-item">
-        <label>Current data folder:</label>
-        <span class="folder-path">{{currentFolder}}</span>
-        <button onclick="onSelectFolder()">Change Folder</button>
+      <!-- Data Storage Section -->
+      <div class="settings-card">
+        <h3>Data Storage</h3>
+        <div class="settings-row">
+          <div class="settings-label">
+            <label>Current data folder</label>
+            <small>Your journal entries are stored as text files in this folder</small>
+          </div>
+          <div class="settings-control">
+            <div class="folder-display">{{currentFolder}}</div>
+            <button class="btn-primary" onclick="onSelectFolder()">Change Folder</button>
+          </div>
+        </div>
       </div>
-      
-      <div class="setting-explanation">
-        <small>Your journal entries are stored as text files in this folder. You can change this location or sync it with cloud storage services like Dropbox.</small>
+
+      <!-- Personal Information Section -->
+      <div class="settings-card">
+        <h3>Personal Information</h3>
+        <div class="settings-row">
+          <div class="settings-label">
+            <label for="birthdate-input">Birthdate</label>
+            <small>Used to calculate progress within your current "life year"</small>
+          </div>
+          <div class="settings-control">
+            <input type="date" id="birthdate-input" value="{{birthdate}}" />
+            <button class="btn-primary" onclick="onSaveBirthdate()">Save</button>
+          </div>
+        </div>
       </div>
+
+      <!-- Score Display Type Section -->
+      <div class="settings-card">
+        <h3>Score Display Type</h3>
+        <div class="settings-row">
+          <div class="settings-label">
+            <label>Display metric</label>
+            <small>Choose which score type to display throughout the app</small>
+          </div>
+          <div class="settings-control">
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="scoreType" value="average" {{#scoreTypeAverage}}checked{{/scoreTypeAverage}} onchange="onSetScoreType('average')">
+                <div class="radio-option-content">
+                  <span class="radio-label">⭐ Average</span>
+                  <span class="radio-desc">Simple arithmetic average of daily scores</span>
+                </div>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="scoreType" value="quality" {{#scoreTypeQuality}}checked{{/scoreTypeQuality}} onchange="onSetScoreType('quality')">
+                <div class="radio-option-content">
+                  <span class="radio-label">✨ Quality</span>
+                  <span class="radio-desc">Weighted metric using customizable multipliers</span>
+                </div>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="scoreType" value="median" {{#scoreTypeMedian}}checked{{/scoreTypeMedian}} onchange="onSetScoreType('median')">
+                <div class="radio-option-content">
+                  <span class="radio-label">📊 Median</span>
+                  <span class="radio-desc">Middle value, less affected by outliers</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-row">
+          <div class="settings-label">
+            <label for="default-score-input">Default value for empty days</label>
+            <small>Optional score to use for days without entries. Leave blank to skip empty days in calculations.</small>
+          </div>
+          <div class="settings-control">
+            <input type="number" id="default-score-input" min="0" max="5" step="0.1" value="{{defaultEmptyScore}}" placeholder="None (skip empty days)" />
+            <button class="btn-primary" onclick="onSaveDefaultEmptyScore()">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Life Quality Formula Section (conditional) -->
+      {{#scoreTypeQuality}}
+      <div class="settings-card">
+        <h3>Life Quality Formula</h3>
+        <div class="settings-row">
+          <div class="settings-label">
+            <label>Score weights</label>
+            <small>Customize how much each score contributes to your life quality metric</small>
+          </div>
+          <div class="settings-control">
+            <div class="weight-grid">
+              <div class="weight-row">
+                <label for="weight-1">1 (Disaster)</label>
+                <input type="number" id="weight-1" step="0.1" min="0" max="100" value="{{lifeQualityWeights.1}}" />
+              </div>
+              <div class="weight-row">
+                <label for="weight-2">2 (Routine)</label>
+                <input type="number" id="weight-2" step="0.1" min="0" max="100" value="{{lifeQualityWeights.2}}" />
+              </div>
+              <div class="weight-row">
+                <label for="weight-3">3 (Good)</label>
+                <input type="number" id="weight-3" step="0.1" min="0" max="100" value="{{lifeQualityWeights.3}}" />
+              </div>
+              <div class="weight-row">
+                <label for="weight-4">4 (Great)</label>
+                <input type="number" id="weight-4" step="0.1" min="0" max="100" value="{{lifeQualityWeights.4}}" />
+              </div>
+              <div class="weight-row">
+                <label for="weight-5">5 (Unforgettable)</label>
+                <input type="number" id="weight-5" step="0.1" min="0" max="100" value="{{lifeQualityWeights.5}}" />
+              </div>
+            </div>
+            <div class="button-group">
+              <button class="btn-primary" onclick="onSaveLifeQualityWeights()">Save Weights</button>
+              <button class="btn-secondary" onclick="onResetLifeQualityWeights()">Reset to Defaults</button>
+            </div>
+            <div class="quality-preview">
+              <strong>Preview:</strong> <span id="preview-text">Current life quality: calculating...</span>
+            </div>
+            <div class="quality-explanation">
+              <small>Higher weights make that score contribute more to your life quality. For example, if 5 = 25.0 and 2 = 1.0, then one perfect day equals 25 routine days in terms of life quality impact.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/scoreTypeQuality}}
+
+      <!-- Data Diagnostics Section -->
+      <div class="settings-card">
+        <h3>Data Diagnostics</h3>
+        <div class="settings-row">
+          <div class="settings-label">
+            <label>Data integrity</label>
+            <small>Check for duplicate dates, missing scores, invalid dates, and other issues</small>
+          </div>
+          <div class="settings-control">
+            <button class="btn-secondary" onclick="onRunDiagnostics()">Run Diagnostics</button>
+            <div id="diagnostics-results" class="diagnostics-results" style="display: none;">
+              <h4>Diagnostic Results:</h4>
+              <div id="diagnostics-content"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="box settings-section">
-      <h3>Personal Information</h3>
-      
-      <div class="setting-item">
-        <label for="birthdate-input">Birthdate (for life year progress):</label>
-        <input type="date" id="birthdate-input" value="{{birthdate}}" />
-        <button onclick="onSaveBirthdate()">Save</button>
-      </div>
-      
-      <div class="setting-explanation">
-        <small>Your birthdate is used to calculate progress within your current "life year" (from birthday to birthday). This data is stored locally on your device.</small>
-      </div>
-    </div>
-
-    <div class="box settings-section">
-      <h3>Data Diagnostics</h3>
-      
-      <div class="setting-item">
-        <label>Check for data integrity issues:</label>
-        <button onclick="onRunDiagnostics()">Run Diagnostics</button>
-      </div>
-      
-      <div id="diagnostics-results" style="display: none;">
-        <h4>Diagnostic Results:</h4>
-        <div id="diagnostics-content"></div>
-      </div>
-      
-      <div class="setting-explanation">
-        <small>This will scan your entries for duplicate dates, missing scores, invalid dates, and other data integrity issues.</small>
-      </div>
-    </div>
-
-    <div id="footer">
+    <div class="settings-footer">
       <a onclick="onShowDashboard()">← Back to Dashboard</a>
     </div>
   </script>
@@ -676,27 +779,35 @@
       {{/coverage}}
 
       {{#thirtyDayStats}}
-      <div class="analytics-item trend-{{score.trend}}-widget">
-        <h4>⭐ Recent Avg Score</h4>
-        <div class="analytics-main-value">{{score.current}}</div>
-        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
-      </div>
-
       <div class="analytics-item trend-{{entries.trend}}-widget">
-        <h4>📊 Total Entries</h4>
+        <h4>📊 Recent Entries</h4>
         <div class="analytics-main-value">{{entries.current}}</div>
         <small>vs {{entries.previous}} past 30 days <span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span></small>
       </div>
-      {{/thirtyDayStats}}
-
-      <!-- Row 3: Writing & Quality -->
-      {{#thirtyDayStats}}
+      
       <div class="analytics-item trend-{{words.trend}}-widget">
         <h4>📝 Avg Words/Day</h4>
         <div class="analytics-main-value">{{words.current}}</div>
         <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
       </div>
       {{/thirtyDayStats}}
+
+      <!-- Row 3: Writing & Quality -->
+      {{#thirtyDayStats}}
+      <div class="analytics-item trend-{{score.trend}}-widget">
+        <h4>{{scoreTypeIcon}} Recent {{scoreTypeName}}</h4>
+        <div class="analytics-main-value">{{score.current}}</div>
+        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
+      </div>
+      {{/thirtyDayStats}}
+
+      {{#lifeQuality}}
+      <div class="analytics-item trend-{{trend}}-widget life-quality">
+        <h4>✨ Life Quality</h4>
+        <div class="analytics-main-value">{{current}}</div>
+        <small>vs {{previous}} past 30 days <span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span></small>
+      </div>
+      {{/lifeQuality}}
 
       {{#consistency}}
       <div class="analytics-item trend-{{trend}}-widget consistency">
@@ -705,14 +816,6 @@
         <small>stability score ({{stdDev}} std dev) {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
       {{/consistency}}
-
-      {{#personMentions}}
-      <div class="analytics-item trend-{{trend}}-widget person-mentions">
-        <h4>👥 Social Connection</h4>
-        <div class="analytics-main-value">{{percentage}}%</div>
-        <small>{{daysWithPeople}}/{{totalDays}} entries mention people {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
-      </div>
-      {{/personMentions}}
 
       <!-- Row 4: Lazy Behaviors -->
       {{#lazyWorkweeks}}
@@ -789,6 +892,17 @@
       {{/superTag}}
 
       <!-- Row 6: Achievement & Performance -->
+      {{#thirtyDayStats}}
+      {{#topTag}}
+      <div class="analytics-item top-tag clickable-widget" onclick="onShowSearch('{{tag}}')">
+        <div class="clickable-indicator"></div>
+        <h4>🏷️ Top Tag</h4>
+        <div class="analytics-main-value">{{tag}}</div>
+        <small>{{count}} uses in 30 days</small>
+      </div>
+      {{/topTag}}
+      {{/thirtyDayStats}}
+      
       {{#fiveScoreDays}}
       <div class="analytics-item trend-{{trend}}-widget five-score-days clickable-widget" onclick="onShowSearch('=5')">
         <div class="clickable-indicator"></div>
@@ -805,17 +919,6 @@
         <small>{{#averageDays}}days between 4+ scores in recent year{{/averageDays}}{{^averageDays}}insufficient data{{/averageDays}} {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
       {{/avgDurationHighScores}}
-
-      {{#thirtyDayStats}}
-      {{#topTag}}
-      <div class="analytics-item top-tag clickable-widget" onclick="onShowSearch('{{tag}}')">
-        <div class="clickable-indicator"></div>
-        <h4>🏷️ Top Tag</h4>
-        <div class="analytics-main-value">{{tag}}</div>
-        <small>{{count}} uses in 30 days</small>
-      </div>
-      {{/topTag}}
-      {{/thirtyDayStats}}
 
       <!-- Row 7: Lookbacks & Overview -->
       {{#thirtyDayStats}}
@@ -837,14 +940,15 @@
       </div>
       {{/lastLowScore}}
       {{/thirtyDayStats}}
-
-      {{#totalOverview}}
-      <div class="analytics-item total-overview">
-        <h4>📖 Journey Overview</h4>
-        <div class="analytics-main-value">{{totalEntries}}</div>
-        <small>entries, {{totalScoreAvg}} avg score</small>
+      
+      {{#personMentions}}
+      <div class="analytics-item trend-{{trend}}-widget person-mentions">
+        <h4>👥 Social Connection</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{daysWithPeople}}/{{totalDays}} entries mention people {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
-      {{/totalOverview}}
+      {{/personMentions}}
+
     </div>
 
     <div class="analytics-footer">

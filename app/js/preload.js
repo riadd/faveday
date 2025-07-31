@@ -9,5 +9,8 @@ contextBridge.exposeInMainWorld('api', {
   close: () => ipcRenderer.send('close-window'),
   selectFolder: () => ipcRenderer.send('select-folder'),
   getConfig: () => ipcRenderer.invoke('get-config'),
-  setBirthdate: (birthdate) => ipcRenderer.invoke('set-birthdate', birthdate)
+  setBirthdate: (birthdate) => ipcRenderer.invoke('set-birthdate', birthdate),
+  setLifeQualityWeights: (weights) => ipcRenderer.invoke('set-life-quality-weights', weights),
+  setScoreType: (scoreType) => ipcRenderer.invoke('set-score-type', scoreType),
+  setDefaultEmptyScore: (defaultEmptyScore) => ipcRenderer.invoke('set-default-empty-score', defaultEmptyScore)
 });

@@ -1,4 +1,8 @@
 
+
+  // Global score calculator instance
+  const scoreCalculator = new ScoreCalculator();
+
   Score = class Score {
     constructor(date, summary, notes) {
       this.date = date;
@@ -175,6 +179,13 @@
     constructor() {
       Sugar.extend();
       
+      // Initialize centralized modules
+      this.scoreCalculator = new ScoreCalculator();
+      this.dataManager = new DataManager();
+      this.router = new Router();
+      this.settingsManager = new SettingsManager(this.scoreCalculator, this.router, this.dataManager);
+      this.widgetManager = new WidgetManager(this.dataManager, this.scoreCalculator, this.router);
+      
       this.showSearch = this.showSearch.bind(this);
       this.tmplScores = Hogan.compile($('#tmpl-scores').html());
       
@@ -208,7 +219,16 @@
       this.tagsOnly = false;
       this.tagCache = {};
 
-      this.loadScores();
+      // loadScores will be called after initialization in onAppStart
+    }
+
+    /**
+     * Initialize configuration store
+     * Call this after the app is created
+     */
+    async initializeConfig() {
+      const config = await window.api.getConfig();
+      window.configStore.load(config);
     }
     
     fmtDiff(val, currentVal) {
@@ -221,6 +241,15 @@
       const absPercentage = Math.abs(percentageChange);
       
       return `${arrow} ${sign}${absPercentage}%`;
+    }
+
+
+    calculateDisplayScore(scores) {
+      return this.scoreCalculator.calculate(scores);
+    }
+
+    getScoreTypeInfo() {
+      return this.widgetManager.getScoreTypeInfo();
     }
     
     showSummary(scores) {
@@ -276,46 +305,32 @@
     }
     
     async loadScores() {
-      // load scores only returns raw lines since we have to pass primitive data over the bridge
-      let data = await window.api.loadScores();
-
-      this.all = []
-      for (let rawScore of data)
-        this.all.push(new Score(rawScore.date, rawScore.summary, rawScore.notes))
+      await this.dataManager.loadScores();
       
-      // Load tag cache
-      this.tagCache = await window.api.getTagCache();
+      // Update legacy properties for backward compatibility
+      this.all = this.dataManager.getAllScores();
+      this.tagCache = this.dataManager.getTagCache();
+      this.years = this.dataManager.getYears();
         
       this.onScoreAdded();
     }
 
     async saveScores() {
-      let rawScores = [];
+      await this.dataManager.saveScores();
       
-      for (const score of this.all) {
-        rawScores.push({
-          date: score.date,
-          summary: score.summary,
-          notes: score.notes
-        });
-      }
-
-      await window.api.saveScores(rawScores);
-      // Reload tag cache after saving
-      this.tagCache = await window.api.getTagCache();
+      // Update legacy properties for backward compatibility  
+      this.tagCache = this.dataManager.getTagCache();
     }
 
     setupDemoUser() {
-      var i, score;
       $('#userName').html('Demo User');
-      this.all = (function() {
-        var j, results;
-        results = [];
-        for (i = j = 0; j <= 800; i = ++j) {
-          results.push(score = new Score(Date.create().addDays(-i), Math.floor((Math.random() * 5) + 1), demoNotes.sample()));
-        }
-        return results;
-      })();
+      
+      const demoScores = this.dataManager.setupDemoUser();
+      
+      // Update legacy properties for backward compatibility
+      this.all = this.dataManager.getAllScores(); 
+      this.years = this.dataManager.getYears();
+      
       return this.onScoreAdded();
     }
 
@@ -556,11 +571,7 @@
     }
     
     getScores(year, month, date) {
-      return this.all.filter(s =>
-        (year == null || s.date.getFullYear() === year) &&
-        (month == null || s.date.getMonth() === month-1) &&
-        (date == null || s.date.getDate() === date)
-      );
+      return this.dataManager.getScores(year, month, date);
     }
 
     async showDashboard() {
@@ -601,7 +612,7 @@
       if (anniversaryScores.length > 0) {
         anniversaryStats = {
           count: anniversaryScores.length,
-          avgScore: anniversaryScores.average(s => s.summary).format(2)
+          avgScore: this.scoreCalculator.calculate(anniversaryScores).format(2)
         };
       }
       
@@ -611,8 +622,8 @@
       {
         let curMonthScores = this.getScores(today.getFullYear(), today.getMonth()+1) // month
         
-        let prevAvg = prevMonthScores.average(s => s.summary)
-        let curAvg = curMonthScores.average(s => s.summary)
+        let prevAvg = this.scoreCalculator.calculate(prevMonthScores, new Date(today.getFullYear(), today.getMonth(), 0).getDate())
+        let curAvg = this.scoreCalculator.calculate(curMonthScores, new Date(today.getFullYear(), today.getMonth()+1, 0).getDate())
         diff = this.fmtDiff(curAvg - prevAvg, prevAvg)
       }
 
@@ -620,10 +631,11 @@
       const config = await window.api.getConfig();
       
       // Calculate progress data
-      const calendarProgress = this.getCalendarYearProgress();
-      const lifeProgress = config.birthdate ? this.getLifeYearProgress(config.birthdate) : null;
-      const coverage = this.getCoverageProgress();
-      const thirtyDayStats = this.getThirtyDayComparisons();
+      const calendarProgress = this.widgetManager.getCalendarYearProgress();
+      const lifeProgress = config.birthdate ? this.widgetManager.getLifeYearProgress(config.birthdate) : null;
+      const coverage = this.widgetManager.getCoverageProgress();
+      const thirtyDayStats = await this.widgetManager.getThirtyDayComparisons();
+      const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
 
       this.pushHistory('/', '');
       
@@ -640,7 +652,28 @@
         calendarProgress: calendarProgress,
         lifeProgress: lifeProgress,
         coverage: coverage,
-        thirtyDayStats: thirtyDayStats
+        thirtyDayStats: thirtyDayStats ? {
+          words: {
+            current: thirtyDayStats.currentAvgWords,
+            previous: thirtyDayStats.previousAvgWords,
+            trend: thirtyDayStats.wordsTrend,
+            trendDisplay: thirtyDayStats.wordsTrendDisplay
+          },
+          entries: {
+            current: thirtyDayStats.currentEntries,
+            previous: thirtyDayStats.previousEntries,
+            trend: thirtyDayStats.entriesTrend,
+            trendDisplay: thirtyDayStats.entriesTrendDisplay
+          },
+          score: {
+            current: thirtyDayStats.currentAvgScore,
+            previous: thirtyDayStats.previousAvgScore,
+            trend: thirtyDayStats.scoreTrend,
+            trendDisplay: thirtyDayStats.scoreTrendDisplay
+          }
+        } : null,
+        scoreTypeIcon: scoreTypeInfo.icon,
+        scoreTypeName: scoreTypeInfo.name
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -650,7 +683,7 @@
       return date.isBetween(date1, date2) ? date.format("{yyyy}-{MM}") : null;
     }
 
-    showMonth(yearNum, monthNum) {
+    async showMonth(yearNum, monthNum) {
       this.showEmpty = false;
       
       let monthDate = Date.create(`${yearNum}-${monthNum}`);
@@ -693,6 +726,7 @@
       let tags = this.getTags(monthScores); 
       let firstDate = this.all[0].date;
       let lastDate = this.all.last().date;
+      const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
       
       this.render('#tmpl-month', '#content', {
         title: title,
@@ -707,7 +741,14 @@
         nextMonth: this.isValidMonth(nextMonthDate, firstDate, lastDate),
         nextYear: this.isValidMonth(nextYearDate, firstDate, lastDate),
         
-        average: monthScores.average(s => s.summary).format(2),
+        displayScore: this.calculateDisplayScore(monthScores).format(2),
+        scoreTypeIcon: scoreTypeInfo.icon,
+        average: this.scoreCalculator.calculate(monthScores, new Date(yearNum, monthNum, 0).getDate()).format(2),
+        lifeQuality: (() => {
+          const preparedScores = this.scoreCalculator.prepareScores(monthScores);
+          const qualityScore = this.scoreCalculator.calculateQuality(preparedScores);
+          return qualityScore.toFixed(2);
+        })(),
         overview: this.getOverview(monthScores)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
@@ -719,7 +760,7 @@
       }.bind(this));
     }
 
-    showMonths(monthId) {
+    async showMonths(monthId) {
       let monthNum = parseInt(monthId)-1;
       let date = new Date(2024, monthNum, 1);
 
@@ -743,7 +784,7 @@
         allMonths.push({
           date: year,
           monthId:  monthDate.format('{yyyy}-{MM}'),
-          totalAvg: oneMonth.average(s => s.summary).format(2),
+          totalAvg: this.scoreCalculator.calculate(oneMonth, new Date(year, monthNum + 1, 0).getDate()).format(2),
           totalCount: oneMonth.length,
           totalWords: (oneMonth.map(s => s.notes.split(' ').length).sum() / 1000.0).format(1),
           days: dayNums.map(d => {
@@ -761,9 +802,19 @@
       let randomScores = monthScores.filter(s => s.summary >=3).sample(5);
       let bestScores = monthScores.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
 
+      // Calculate life quality for this months view using scoreCalculator
+      const monthsLifeQuality = monthScores.length > 0 
+        ? this.scoreCalculator.calculateQuality(this.scoreCalculator.prepareScores(monthScores))
+        : 0;
+
+      const displayScore = this.calculateDisplayScore(monthScores);
+      const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
+
       return this.render('#tmpl-months', '#content', {
         title: title,
-        average: monthScores.average(s => s.summary).format(2),
+        displayScore: displayScore.format(2),
+        scoreTypeIcon: scoreTypeInfo.icon,
+        scoreTypeName: scoreTypeInfo.name,
         months: allMonths.reverse(),
         years: this.years.map(y => ({year: y})),
         scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: this.enhanceScoresForDisplay(randomScores)}),
@@ -781,7 +832,9 @@
       return $('#bestScores').html(this.tmplScores.render({ scores: this.enhanceScoresForDisplay(bestScores) }));
     }
 
-    showYears() {
+    async showYears() {
+      // Get configurable life quality weights
+      const weights = this.scoreCalculator.getLifeQualityWeights();
       const lerp = (t, a, b, i) =>
         Math.floor(t * parseInt(a[i], 16) + (1 - t) * parseInt(b[i], 16));
       
@@ -800,19 +853,33 @@
         return '#444' 
       };
 
-      const  getYearMonths = function(oneYear) {
+      const getYearMonths = (oneYear, year) => {
         let byMonth = oneYear.groupBy(s => s.date.getMonth());
         const monthNums = Array.from({ length: 12 }, (_, index) => index); // 0..11
         
-        return monthNums.map(function(m) {
+        const monthData = [];
+        for (let m of monthNums) {
           let scores = byMonth[m] ?? [];
           
-          return {
-            avg: scores.filter(s => s.summary > 0).average(s => s.summary),
-            dateId: scores.first()?.date.format("{yyyy}-{MM}"),
-            sz: scores.length * 0.8
-          };
-        });
+          // Calculate expected days in this month
+          const yearForDateId = oneYear[0]?.date.getFullYear() || parseInt(year);
+          const daysInMonth = new Date(yearForDateId, m + 1, 0).getDate();
+          
+          const monthScore = this.scoreCalculator.calculate(scores, daysInMonth);
+          
+          // Calculate size: minimum 8px, scale with entry count, max 25px
+          const entryCount = scores.length;
+          const size = entryCount === 0 ? 8 : Math.max(8, Math.min(25, 8 + entryCount * 2));
+          
+          const monthStr = (m + 1).toString().padStart(2, '0');
+          
+          monthData.push({
+            avg: monthScore,
+            dateId: `${yearForDateId}-${monthStr}`,
+            sz: size
+          });
+        }
+        return monthData;
       };
       
       const getYearInspiration = (yearScores) => {
@@ -827,16 +894,27 @@
       let byYear = this.all.groupBy(s => s.date.getFullYear());
       let allYears = [];
       
-      let year = null;
-      for (year in byYear) {
+      for (const year in byYear) {
         let oneYear = byYear[year];
+        
+        // Calculate totalAvg with expected days count
+        const yearNum = parseInt(year);
+        const daysInYear = ((yearNum % 4 === 0 && yearNum % 100 !== 0) || (yearNum % 400 === 0)) ? 366 : 365;
+        const totalAvg = this.scoreCalculator.calculate(oneYear, daysInYear);
+        
+        // Get months data directly 
+        const months = getYearMonths(oneYear, year);
 
+        // Calculate coverage percentage for this year
+        const entriesCount = oneYear.length;
+        const coveragePercentage = Math.round((entriesCount / daysInYear) * 100);
+        
         allYears.push({
           year: year,
-          totalAvg: oneYear.average(s => s.summary).format(2),
-          totalCount: oneYear.length,
+          totalCount: `${coveragePercentage}%`,
           words: (oneYear.map(s => s.notes.split(' ').length).sum() / 1000.0).format(1),
-          months: getYearMonths(oneYear),
+          totalAvg: totalAvg,
+          months: months,
           inspiration: getYearInspiration(oneYear),
         });
       }
@@ -854,12 +932,12 @@
           oneMonth.avg = oneMonth.avg.toFixed(2);
         }
         
+        // Keep the existing rank calculation  
         oneYear.rank = allYears.filter(y => y.totalAvg > oneYear.totalAvg).length + 1;
-        oneYear.rankStr = oneYear.rank < 4 ? `<span class="rank">${oneYear.rank}</span>` : '';
       }
        
       let inspiration = [];
-      for (year in byYear) {
+      for (const year in byYear) {
         let oneYear = byYear[year];
         
         inspiration.push({
@@ -868,18 +946,22 @@
         });
       }
 
-      let bestDays = [];
-      for (let i= 0; i < 7; i++) {
-        bestDays.push(this.all.filter(d => d.date.getDay() === i).average(s => s.summary));
-      }
+      // Calculate best days in parallel
+      const bestDaysPromises = Array.from({ length: 7 }, (_, i) => {
+        const dayScores = this.all.filter(d => d.date.getDay() === i);
+        return this.scoreCalculator.calculate(dayScores);
+      });
+      const bestDays = await Promise.all(bestDaysPromises);
 
-      let bestMonths = [];
-      for (let i= 0; i < 12; i++) {
-        bestMonths.push(this.all.filter(d => d.date.getMonth() === i).average(s => s.summary));
-      }
+      // Calculate best months in parallel
+      const bestMonthsPromises = Array.from({ length: 12 }, (_, i) => {
+        const monthScores = this.all.filter(d => d.date.getMonth() === i);
+        return this.scoreCalculator.calculate(monthScores);
+      });
+      const bestMonths = await Promise.all(bestMonthsPromises);
 
-      let bestSeasons = [];
-      for (let i = 0; i < 4; i++) {
+      // Calculate best seasons in parallel
+      const bestSeasonsPromises = Array.from({ length: 4 }, (_, i) => {
         // Season mapping: 0=Winter, 1=Spring, 2=Summer, 3=Autumn
         let seasonMonths;
         switch(i) {
@@ -888,20 +970,59 @@
           case 2: seasonMonths = [5, 6, 7]; break;  // Summer: Jun, Jul, Aug
           case 3: seasonMonths = [8, 9, 10]; break; // Autumn: Sep, Oct, Nov
         }
-        
-        let seasonScores = this.all.filter(d => seasonMonths.includes(d.date.getMonth()));
-        bestSeasons.push(seasonScores.average(s => s.summary));
-      }
+        const seasonScores = this.all.filter(d => seasonMonths.includes(d.date.getMonth()));
+        return this.scoreCalculator.calculate(seasonScores);
+      });
+      const bestSeasons = await Promise.all(bestSeasonsPromises);
 
       // Find maximum values for highlighting
       const maxDay = Math.max(...bestDays);
       const maxMonth = Math.max(...bestMonths);
       const maxSeason = Math.max(...bestSeasons);
 
+      // Calculate overall statistics across all entries
+      const overallAvg = this.all.length > 0 ? this.scoreCalculator.calculate(this.all) : 0;
+      
+      const overallLifeQuality = this.all.length > 0 
+        ? this.scoreCalculator.calculateQuality(this.scoreCalculator.prepareScores(this.all))
+        : 0;
+
+      // Calculate display scores for each year
+      const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
+      const overallDisplayScore = this.calculateDisplayScore(this.all);
+      
+      // Use already calculated totalAvg for medal ranking
+      for (let yearData of allYears) {
+        yearData.rawDisplayScore = yearData.totalAvg;
+      }
+      
+      // Add medal system for top 3 years based on selected score type
+      const sortedByScore = [...allYears].sort((a, b) => b.rawDisplayScore - a.rawDisplayScore);
+      
+      allYears.forEach(year => {
+        const scoreRank = sortedByScore.findIndex(y => y.year === year.year) + 1;
+        
+        if (scoreRank === 1) {
+          year.rankStr = '🥇';
+        } else if (scoreRank === 2) {
+          year.rankStr = '🥈';
+        } else if (scoreRank === 3) {
+          year.rankStr = '🥉';
+        } else {
+          year.rankStr = '';
+        }
+      });
+      
+      // Format display scores and clean up temporary data
+      for (let yearData of allYears) {
+        yearData.displayScore = yearData.totalAvg.format(2);
+        delete yearData.rawDisplayScore; // Clean up temporary data
+      }
+
       this.pushHistory('/years', 'Years');
       
-      return this.render('#tmpl-years', '#content', {
-        scores: allYears.reverse(),
+      const renderData = {
+        scores: [...allYears].reverse(),
         inspiration: inspiration.filter(i => i.insp != null).reverse(),
         years: this.years.map(y => ({year: y})),
         bestDays: bestDays.map((s, i) => ({
@@ -917,16 +1038,23 @@
           isMax: s === maxSeason
         })),
         streak: this.getMaxStreak(this.all),
-        overview: this.getOverview(this.all)
-      }, {
+        overview: this.getOverview(this.all),
+        overallDisplayScore: overallDisplayScore.format(1),
+        scoreTypeIcon: scoreTypeInfo.icon,
+        scoreTypeName: scoreTypeInfo.name
+      };
+      
+      return this.render('#tmpl-years', '#content', renderData, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
         scoreBar: Hogan.compile($('#tmpl-score-bar').html())
       });
     }
 
     pushHistory(url, title) {
-      document.title = (title.length > 0) ? `Faveday - ${title}` : 'Faveday';
-      // Only push to history if we're not currently handling a popstate event
+      const fullTitle = (title.length > 0) ? `Faveday - ${title}` : 'Faveday';
+      this.router.pushHistory(url, fullTitle);
+      
+      // Only push to browser history if we're not currently handling a popstate event
       // and if the current URL is different from the one we're trying to push
       if (!window.poppingState && window.location.pathname !== url) {
         history.pushState({}, '', url);
@@ -1078,7 +1206,7 @@
       });
     }
 
-    showYear(yearNum) {
+    async showYear(yearNum) {
       let year = parseInt(yearNum);
       let oneYear = this.getScores(year)
       let byMonth = oneYear.groupBy(s => s.date.getMonth());
@@ -1086,7 +1214,8 @@
       const monthNums = Array.from({ length: 12 }, (_, index) => index); // 0..11
       const dayNums = Array.from({ length: 31 }, (_, index) => index + 1); // 1..31
       
-      let months = monthNums.map(month => {
+      let months = [];
+      for (let month of monthNums) {
         let scores = byMonth[month] ?? [];
         let date = Date.create(`${year}-${parseInt(month) + 1}`);
 
@@ -1103,15 +1232,17 @@
         for (let i=0; i<offset; i++)
           days.splice(i, 0, {val:"X", weekday:i});
         
-        return {
+        const monthDisplayScore = await this.calculateDisplayScore(scores);
+        
+        months.push({
           date: date.format('{Mon} {yyyy}'),
-          avg: scores.average(s => s.summary).format(2),
+          avg: monthDisplayScore.format(2),
           link: `/month/${yearNum}/${parseInt(month) + 1}`,
           monthId: date.format('{yyyy}-{MM}'),
           monthsId: date.format('{MM}'),
           days: days
-        }
-      });
+        });
+      }
       
       months.reverse();
       let randomScores = oneYear.filter(s => s.summary >=3).sample(5);
@@ -1119,9 +1250,19 @@
 
       this.pushHistory(`/year/${year}`, year);
       
+      // Calculate life quality for this year using scoreCalculator
+      const yearLifeQuality = oneYear.length > 0 
+        ? this.scoreCalculator.calculateQuality(this.scoreCalculator.prepareScores(oneYear))
+        : 0;
+
+      const displayScore = this.calculateDisplayScore(oneYear);
+      const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
+
       return this.render('#tmpl-year', '#content', {
         year: year,
-        average: oneYear.average(s => s.summary).format(2),
+        displayScore: displayScore.format(2),
+        scoreTypeIcon: scoreTypeInfo.icon,
+        scoreTypeName: scoreTypeInfo.name,
         scores: randomScores.isEmpty() ? [] : this.tmplScores.render({scores: this.enhanceScoresForDisplay(randomScores)}),
         inspiration: bestScores.isEmpty() ? [] : this.tmplScores.render({scores: this.enhanceScoresForDisplay(bestScores)}),
         months: months,
@@ -1134,7 +1275,7 @@
       });
     }
 
-    showSearch(id) {
+    async showSearch(id) {
       const searchInput = $('#search input')[0];
       if (!searchInput) {
         console.error('Search input not found');
@@ -1206,7 +1347,7 @@
       const yearChart = this.years.map(year => {
         const yearScores = foundScores.filter(s => s.date.getFullYear() === year);
         const count = yearScores.length;
-        const avgScore = count > 0 ? yearScores.average(s => s.summary) : 0;
+        const avgScore = count > 0 ? this.scoreCalculator.calculate(yearScores) : 0;
         const percentage = foundScores.length > 0 ? Math.round((count / foundScores.length) * 100) : 0;
         
         return {
@@ -1235,10 +1376,15 @@
         }
       }
       
+      // Calculate life quality for search results using configurable weights
+      const displayScore = foundScores.length > 0 ? this.calculateDisplayScore(foundScores) : 0;
+      const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
+
       this.render('#tmpl-search', '#content', {
         count: foundScores.length,
         hasResults: foundScores.length > 0,
-        average: foundScores.length > 0 ? foundScores.average(s => s.summary).format(2) : "0.00",
+        displayScore: displayScore.format(2),
+        scoreTypeIcon: scoreTypeInfo.icon,
         scores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(foundScores)}),
         yearGroups: yearGroups,
         years: this.years.map(y => ({year: y})),
@@ -1398,164 +1544,10 @@
       document.getElementById('editScoreProgress').value = progressValue;
     }
 
-    getCalendarYearProgress() {
-      const now = new Date();
-      const yearStart = new Date(now.getFullYear(), 0, 1);
-      const yearEnd = new Date(now.getFullYear(), 11, 31);
-      const daysPassed = Math.floor((now - yearStart) / (1000 * 60 * 60 * 24)) + 1;
-      const totalDays = Math.floor((yearEnd - yearStart) / (1000 * 60 * 60 * 24)) + 1;
-      
-      return {
-        year: now.getFullYear(),
-        daysPassed: daysPassed,
-        totalDays: totalDays,
-        percentage: Math.round((daysPassed / totalDays) * 100)
-      };
-    }
 
-    getLifeYearProgress(birthdate) {
-      if (!birthdate) return null;
-      
-      const now = new Date();
-      const birth = new Date(birthdate);
-      
-      // Calculate current life year (age)
-      let lifeYear = now.getFullYear() - birth.getFullYear();
-      const monthDiff = now.getMonth() - birth.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
-        lifeYear--;
-      }
-      
-      // Calculate life year boundaries
-      const lifeYearStart = new Date(birth.getFullYear() + lifeYear, birth.getMonth(), birth.getDate());
-      const lifeYearEnd = new Date(birth.getFullYear() + lifeYear + 1, birth.getMonth(), birth.getDate() - 1);
-      
-      const daysPassed = Math.floor((now - lifeYearStart) / (1000 * 60 * 60 * 24)) + 1;
-      const totalDays = Math.floor((lifeYearEnd - lifeYearStart) / (1000 * 60 * 60 * 24)) + 1;
-      
-      return {
-        age: lifeYear, // Actual current age
-        nextAge: lifeYear + 1, // Next age they will turn
-        daysPassed: daysPassed,
-        totalDays: totalDays,
-        percentage: Math.round((daysPassed / totalDays) * 100)
-      };
-    }
 
-    getDaysSinceLastScore(targetScore) {
-      const now = new Date();
-      const targetScores = this.all.filter(s => s.summary === targetScore);
-      
-      if (targetScores.length === 0) {
-        return null; // No scores of this type found
-      }
-      
-      const latestScore = targetScores.sort((a, b) => b.date - a.date)[0];
-      const daysDiff = Math.floor((now - latestScore.date) / (1000 * 60 * 60 * 24));
-      
-      // Calculate trend by comparing current vs previous 30-day periods
-      const thirtyDaysAgo = new Date(now);
-      thirtyDaysAgo.setDate(now.getDate() - 30);
-      const sixtyDaysAgo = new Date(now);
-      sixtyDaysAgo.setDate(now.getDate() - 60);
-      
-      // Get most recent target score in last 30 days
-      const currentPeriodScores = this.all.filter(s => 
-        s.summary === targetScore && s.date >= thirtyDaysAgo
-      );
-      const currentDays = currentPeriodScores.length > 0 ? 
-        Math.floor((now - currentPeriodScores.sort((a, b) => b.date - a.date)[0].date) / (1000 * 60 * 60 * 24)) : 
-        null;
-      
-      // Get most recent target score in previous 30 days (30-60 days ago)
-      const previousPeriodScores = this.all.filter(s => 
-        s.summary === targetScore && s.date >= sixtyDaysAgo && s.date < thirtyDaysAgo
-      );
-      const previousDays = previousPeriodScores.length > 0 ? 
-        Math.floor((thirtyDaysAgo - previousPeriodScores.sort((a, b) => b.date - a.date)[0].date) / (1000 * 60 * 60 * 24)) : 
-        null;
-      
-      // Calculate trend based on score type
-      let trend = 'same';
-      let trendDisplay = '';
-      
-      if (currentDays !== null && previousDays !== null) {
-        const diff = currentDays - previousDays;
-        
-        if (targetScore >= 4) {
-          // For high scores (4+): lower days since = better (inverted logic)
-          if (diff < 0) {
-            trend = 'up'; // More recent high score = better
-            trendDisplay = `↗ ${Math.abs(diff)} days more recent`;
-          } else if (diff > 0) {
-            trend = 'down'; // Less recent high score = worse
-            trendDisplay = `↘ +${diff} days longer ago`;
-          }
-        } else {
-          // For low scores (1-2): higher days since = better (normal logic)
-          if (diff > 0) {
-            trend = 'up'; // Longer since low score = better
-            trendDisplay = `↗ +${diff} days longer ago`;
-          } else if (diff < 0) {
-            trend = 'down'; // More recent low score = worse
-            trendDisplay = `↘ ${Math.abs(diff)} days more recent`;
-          }
-        }
-      }
-      
-      return {
-        days: daysDiff,
-        lastDate: latestScore.dateStr(),
-        dateId: latestScore.dateId(),
-        trend: trend,
-        trendDisplay: trendDisplay
-      };
-    }
 
-    getCoverageProgress() {
-      const now = new Date();
-      const threeSixtyFiveDaysAgo = new Date(now);
-      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
-      
-      // Calculate for previous year (730 days ago to 365 days ago)
-      const sevenThirtyDaysAgo = new Date(now);
-      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-      
-      // Get the earliest score date to determine actual range
-      const firstScoreDate = this.all.length > 0 ? this.all[this.all.length - 1].date : now;
-      
-      // Current year range
-      const currentRangeStart = threeSixtyFiveDaysAgo > firstScoreDate ? threeSixtyFiveDaysAgo : firstScoreDate;
-      const currentDaysPassed = Math.floor((now - currentRangeStart) / (1000 * 60 * 60 * 24)) + 1;
-      const currentEntriesInRange = this.all.filter(score => score.date >= currentRangeStart).length;
-      const currentPercentage = currentDaysPassed > 0 ? Math.round((currentEntriesInRange / currentDaysPassed) * 100) : 0;
-      
-      // Previous year range
-      const previousRangeStart = sevenThirtyDaysAgo > firstScoreDate ? sevenThirtyDaysAgo : firstScoreDate;
-      const previousYearEntries = this.all.filter(score => 
-        score.date >= previousRangeStart && score.date < threeSixtyFiveDaysAgo
-      ).length;
-      const previousYearDays = Math.floor((threeSixtyFiveDaysAgo - previousRangeStart) / (1000 * 60 * 60 * 24));
-      const previousPercentage = previousYearDays > 0 ? Math.round((previousYearEntries / previousYearDays) * 100) : 0;
-      
-      // Calculate delta
-      const delta = currentPercentage - previousPercentage;
-      const trend = delta > 0 ? 'up' : delta < 0 ? 'down' : 'same';
-      const deltaDisplay = delta === 0 ? '' : 
-        delta > 0 ? `↗ +${delta}%` : `↘ -${Math.abs(delta)}%`;
-      
-      return {
-        entriesMade: currentEntriesInRange,
-        daysPassed: currentDaysPassed,
-        percentage: currentPercentage,
-        previousPercentage: previousPercentage,
-        delta: delta,
-        trend: trend,
-        deltaDisplay: deltaDisplay
-      };
-    }
-
-    getThirtyDayComparisons() {
+    async getThirtyDayComparisons() {
       const now = new Date();
       const thirtyDaysAgo = new Date(now);
       thirtyDaysAgo.setDate(now.getDate() - 30);
@@ -1581,8 +1573,8 @@
       const entriesDiff = currentEntries - previousEntries;
 
       // Average score comparison
-      const currentAvgScore = currentPeriod.length > 0 ? currentPeriod.reduce((sum, s) => sum + s.summary, 0) / currentPeriod.length : 0;
-      const previousAvgScore = previousPeriod.length > 0 ? previousPeriod.reduce((sum, s) => sum + s.summary, 0) / previousPeriod.length : 0;
+      const currentAvgScore = currentPeriod.length > 0 ? this.scoreCalculator.calculate(currentPeriod) : 0;
+      const previousAvgScore = previousPeriod.length > 0 ? this.scoreCalculator.calculate(previousPeriod) : 0;
       const scoreDiff = currentAvgScore - previousAvgScore;
 
       // Most used tag in recent 30 days
@@ -1635,663 +1627,51 @@
           trendEmoji: scoreDiff > 0 ? '📈' : scoreDiff < 0 ? '📉' : '➡️'
         },
         topTag: topTag ? { tag: topTag[0], count: topTag[1] } : null,
-        lastHighScore: this.getDaysSinceLastScore(5),
-        lastLowScore: this.getDaysSinceLastScore(1)
+        lastHighScore: this.widgetManager.getDaysSinceLastScore(5),
+        lastLowScore: this.widgetManager.getDaysSinceLastScore(1)
       };
     }
 
-    getPersonMentionsRatio() {
-      const now = new Date();
-      const threeSixtyFiveDaysAgo = new Date(now);
-      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
-      const sevenThirtyDaysAgo = new Date(now);
-      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-      
-      // Current period (last 365 days)
-      const currentEntries = this.all.filter(score => score.date >= threeSixtyFiveDaysAgo);
-      const currentEntriesWithPeople = currentEntries.filter(score => 
-        score.notes && score.notes.match(/@\p{L}[\p{L}\d]*/gu)
-      );
-      
-      // Previous period (365 days before that)
-      const previousEntries = this.all.filter(score => 
-        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo
-      );
-      const previousEntriesWithPeople = previousEntries.filter(score => 
-        score.notes && score.notes.match(/@\p{L}[\p{L}\d]*/gu)
-      );
-      
-      const currentPercentage = currentEntries.length > 0 ? 
-        Math.round((currentEntriesWithPeople.length / currentEntries.length) * 100) : 0;
-      const previousPercentage = previousEntries.length > 0 ? 
-        Math.round((previousEntriesWithPeople.length / previousEntries.length) * 100) : 0;
-      
-      // Calculate trend
-      const diff = currentPercentage - previousPercentage;
-      const trend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
-      const trendDisplay = diff === 0 ? '' : 
-        diff > 0 ? `↗ +${Math.abs(diff)}%` : `↘ -${Math.abs(diff)}%`;
-      
-      return {
-        percentage: currentPercentage,
-        daysWithPeople: currentEntriesWithPeople.length,
-        totalDays: currentEntries.length,
-        trend: trend,
-        trendDisplay: trendDisplay,
-        previousPercentage: previousPercentage
-      };
-    }
 
-    getLazySundays() {
-      const now = new Date();
-      const threeSixtyFiveDaysAgo = new Date(now);
-      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
-      const sevenThirtyDaysAgo = new Date(now);
-      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-      
-      // Current period
-      const currentSundays = this.all.filter(score => 
-        score.date >= threeSixtyFiveDaysAgo && score.date.getDay() === 0
-      );
-      const currentLazySundays = currentSundays.filter(score => score.summary <= 2);
-      
-      // Previous period
-      const previousSundays = this.all.filter(score => 
-        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo && score.date.getDay() === 0
-      );
-      const previousLazySundays = previousSundays.filter(score => score.summary <= 2);
-      
-      const currentPercentage = currentSundays.length > 0 ? 
-        Math.round((currentLazySundays.length / currentSundays.length) * 100) : 0;
-      const previousPercentage = previousSundays.length > 0 ? 
-        Math.round((previousLazySundays.length / previousSundays.length) * 100) : 0;
-      
-      // Calculate trend (note: for lazy days, more is bad, so invert the trend logic)
-      const diff = currentPercentage - previousPercentage;
-      const trend = diff > 0 ? 'down' : diff < 0 ? 'up' : 'same'; // Inverted: more lazy = down trend
-      const trendDisplay = diff === 0 ? '' : 
-        diff > 0 ? `↘ +${Math.abs(diff)}%` : `↗ -${Math.abs(diff)}%`;
-      
-      return {
-        percentage: currentPercentage,
-        lazyCount: currentLazySundays.length,
-        totalSundays: currentSundays.length,
-        trend: trend,
-        trendDisplay: trendDisplay,
-        previousPercentage: previousPercentage
-      };
-    }
 
-    getLazySaturdays() {
-      const now = new Date();
-      const threeSixtyFiveDaysAgo = new Date(now);
-      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
-      const sevenThirtyDaysAgo = new Date(now);
-      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-      
-      // Current period
-      const currentSaturdays = this.all.filter(score => 
-        score.date >= threeSixtyFiveDaysAgo && score.date.getDay() === 6
-      );
-      const currentLazySaturdays = currentSaturdays.filter(score => score.summary <= 2);
-      
-      // Previous period
-      const previousSaturdays = this.all.filter(score => 
-        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo && score.date.getDay() === 6
-      );
-      const previousLazySaturdays = previousSaturdays.filter(score => score.summary <= 2);
-      
-      const currentPercentage = currentSaturdays.length > 0 ? 
-        Math.round((currentLazySaturdays.length / currentSaturdays.length) * 100) : 0;
-      const previousPercentage = previousSaturdays.length > 0 ? 
-        Math.round((previousLazySaturdays.length / previousSaturdays.length) * 100) : 0;
-      
-      // Calculate trend (note: for lazy days, more is bad, so invert the trend logic)
-      const diff = currentPercentage - previousPercentage;
-      const trend = diff > 0 ? 'down' : diff < 0 ? 'up' : 'same'; // Inverted: more lazy = down trend
-      const trendDisplay = diff === 0 ? '' : 
-        diff > 0 ? `↘ +${Math.abs(diff)}%` : `↗ -${Math.abs(diff)}%`;
-      
-      return {
-        percentage: currentPercentage,
-        lazyCount: currentLazySaturdays.length,
-        totalSaturdays: currentSaturdays.length,
-        trend: trend,
-        trendDisplay: trendDisplay,
-        previousPercentage: previousPercentage
-      };
-    }
 
-    getTotalOverview() {
-      const totalEntries = this.all.length;
-      const totalScoreSum = this.all.reduce((sum, score) => sum + (score.summary || 0), 0);
-      const avgScore = totalEntries > 0 ? (totalScoreSum / totalEntries).toFixed(1) : '0.0';
-      
-      return {
-        totalEntries: totalEntries,
-        totalScoreAvg: avgScore
-      };
-    }
 
-    getFiveScoreDaysCount() {
-      const now = new Date();
-      const threeSixtyFiveDaysAgo = new Date(now);
-      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
-      const sevenThirtyDaysAgo = new Date(now);
-      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-      
-      // Current period
-      const currentFiveScoreDays = this.all.filter(score => 
-        score.date >= threeSixtyFiveDaysAgo && score.summary === 5
-      ).length;
-      
-      // Previous period
-      const previousFiveScoreDays = this.all.filter(score => 
-        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo && score.summary === 5
-      ).length;
-      
-      // Calculate trend
-      const diff = currentFiveScoreDays - previousFiveScoreDays;
-      const trend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
-      const trendDisplay = diff === 0 ? '' : 
-        diff > 0 ? `↗ +${Math.abs(diff)}` : `↘ -${Math.abs(diff)}`;
-      
-      return {
-        count: currentFiveScoreDays,
-        previousCount: previousFiveScoreDays,
-        trend: trend,
-        trendDisplay: trendDisplay
-      };
-    }
 
-    getAverageDurationBetweenHighScores() {
-      const now = new Date();
-      const oneYearAgo = new Date(now);
-      oneYearAgo.setFullYear(now.getFullYear() - 1);
-      const twoYearsAgo = new Date(now);
-      twoYearsAgo.setFullYear(now.getFullYear() - 2);
-      
-      // Helper function to calculate average duration
-      const calculateAverageDuration = (entries) => {
-        const highScoreEntries = entries.filter(score => score.summary >= 4)
-          .sort((a, b) => a.date - b.date);
-        
-        if (highScoreEntries.length < 2) return null;
-        
-        const durations = [];
-        for (let i = 1; i < highScoreEntries.length; i++) {
-          const daysDiff = Math.floor((highScoreEntries[i].date - highScoreEntries[i-1].date) / (1000 * 60 * 60 * 24));
-          durations.push(daysDiff);
-        }
-        
-        return durations.length > 0 ? Math.round(durations.reduce((sum, d) => sum + d, 0) / durations.length) : null;
-      };
-      
-      // Current year (last 365 days)
-      const currentYearEntries = this.all.filter(score => score.date >= oneYearAgo);
-      const currentAvgDuration = calculateAverageDuration(currentYearEntries);
-      
-      // Previous year (365 days before that)
-      const previousYearEntries = this.all.filter(score => 
-        score.date >= twoYearsAgo && score.date < oneYearAgo
-      );
-      const previousAvgDuration = calculateAverageDuration(previousYearEntries);
-      
-      // Calculate trend (note: for duration, lower is better, so trend logic is inverted)
-      let trend = 'same';
-      let trendDisplay = '';
-      
-      if (currentAvgDuration !== null && previousAvgDuration !== null) {
-        const diff = currentAvgDuration - previousAvgDuration;
-        if (diff < 0) {
-          trend = 'up'; // Getting better (lower duration)
-          trendDisplay = `↗ ${Math.abs(diff)} days less`;
-        } else if (diff > 0) {
-          trend = 'down'; // Getting worse (higher duration)
-          trendDisplay = `↘ +${diff} days more`;
-        }
-      }
-      
-      return {
-        averageDays: currentAvgDuration,
-        previousAverageDays: previousAvgDuration,
-        trend: trend,
-        trendDisplay: trendDisplay
-      };
-    }
 
-    getLazyWorkweeks() {
-      const now = new Date();
-      const threeSixtyFiveDaysAgo = new Date(now);
-      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
-      const sevenThirtyDaysAgo = new Date(now);
-      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-      
-      // Helper function to get Monday of the week for a given date
-      const getMondayOfWeek = (date) => {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-        return new Date(d.setDate(diff));
-      };
-      
-      // Current period workweeks
-      const currentEntries = this.all.filter(score => score.date >= threeSixtyFiveDaysAgo);
-      const currentWorkweeks = new Map();
-      
-      currentEntries.forEach(entry => {
-        const dayOfWeek = entry.date.getDay();
-        // Only count Monday (1) through Friday (5)
-        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-          const monday = getMondayOfWeek(entry.date);
-          const weekKey = monday.toISOString().split('T')[0];
-          
-          if (!currentWorkweeks.has(weekKey)) {
-            currentWorkweeks.set(weekKey, 0);
-          }
-          currentWorkweeks.set(weekKey, currentWorkweeks.get(weekKey) + entry.summary);
-        }
-      });
-      
-      const currentLazyWorkweeks = Array.from(currentWorkweeks.values()).filter(total => total <= 10);
-      const currentTotalWorkweeks = currentWorkweeks.size;
-      
-      // Previous period workweeks
-      const previousEntries = this.all.filter(score => 
-        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo
-      );
-      const previousWorkweeks = new Map();
-      
-      previousEntries.forEach(entry => {
-        const dayOfWeek = entry.date.getDay();
-        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-          const monday = getMondayOfWeek(entry.date);
-          const weekKey = monday.toISOString().split('T')[0];
-          
-          if (!previousWorkweeks.has(weekKey)) {
-            previousWorkweeks.set(weekKey, 0);
-          }
-          previousWorkweeks.set(weekKey, previousWorkweeks.get(weekKey) + entry.summary);
-        }
-      });
-      
-      const previousLazyWorkweeks = Array.from(previousWorkweeks.values()).filter(total => total <= 10);
-      const previousTotalWorkweeks = previousWorkweeks.size;
-      
-      const currentPercentage = currentTotalWorkweeks > 0 ? 
-        Math.round((currentLazyWorkweeks.length / currentTotalWorkweeks) * 100) : 0;
-      const previousPercentage = previousTotalWorkweeks > 0 ? 
-        Math.round((previousLazyWorkweeks.length / previousTotalWorkweeks) * 100) : 0;
-      
-      // Calculate trend (note: for lazy workweeks, more is bad, so invert the trend logic)
-      const diff = currentPercentage - previousPercentage;
-      const trend = diff > 0 ? 'down' : diff < 0 ? 'up' : 'same'; // Inverted: more lazy = down trend
-      const trendDisplay = diff === 0 ? '' : 
-        diff > 0 ? `↘ +${Math.abs(diff)}%` : `↗ -${Math.abs(diff)}%`;
-      
-      return {
-        percentage: currentPercentage,
-        lazyCount: currentLazyWorkweeks.length,
-        totalWorkweeks: currentTotalWorkweeks,
-        trend: trend,
-        trendDisplay: trendDisplay,
-        previousPercentage: previousPercentage
-      };
-    }
 
-    getTrendingTopics() {
-      // Get recent 30-day usage for topic tags (#tags)
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now);
-      thirtyDaysAgo.setDate(now.getDate() - 30);
-      
-      const recentEntries = this.all.filter(s => s.date >= thirtyDaysAgo);
-      const recentTopicCounts = {};
-      
-      recentEntries.forEach(score => {
-        const topicTags = score.notes.match(/#\p{L}[\p{L}\d]*/gu) || [];
-        topicTags.forEach(tag => {
-          const cleanTag = tag.slice(1).toLowerCase();
-          recentTopicCounts[cleanTag] = (recentTopicCounts[cleanTag] || 0) + 1;
-        });
-      });
-      
-      // Load tag cache to get historical usage
-      let tagCache = {};
-      try {
-        tagCache = JSON.parse(localStorage.getItem('tagCache') || '{}');
-      } catch (e) {
-        console.warn('Could not load tag cache for trending topics');
-      }
-      
-      // Find tags with recent surge that aren't staples
-      const trendingTopics = [];
-      Object.entries(recentTopicCounts).forEach(([tag, recentCount]) => {
-        const cacheData = tagCache[tag];
-        if (!cacheData || cacheData.isPerson) return; // Skip people tags or missing cache
-        
-        const totalUses = cacheData.totalUses || 0;
-        const historicalAvg = totalUses > 0 ? totalUses / Math.max(1, Object.keys(cacheData.yearStats || {}).length) : 0;
-        
-        // Only include tags that:
-        // 1. Have recent activity (>= 2 uses in 30 days)  
-        // 2. Show surge (recent usage > 2x historical average)
-        // 3. Aren't super common staples (< 50 total historical uses)
-        if (recentCount >= 2 && recentCount > (historicalAvg * 2) && totalUses < 50) {
-          const surgeRatio = historicalAvg > 0 ? (recentCount / historicalAvg) : recentCount;
-          trendingTopics.push({
-            tag: tag,
-            recentCount: recentCount,
-            surgeRatio: Math.round(surgeRatio * 10) / 10,
-            avgScore: cacheData.avgScore || 0
-          });
-        }
-      });
-      
-      // Sort by surge ratio (highest surge first)
-      trendingTopics.sort((a, b) => b.surgeRatio - a.surgeRatio);
-      
-      return trendingTopics.length > 0 ? trendingTopics[0] : null;
-    }
 
-    getTrendingPeople() {
-      // Get recent 30-day usage for person tags (@tags)
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now);
-      thirtyDaysAgo.setDate(now.getDate() - 30);
-      
-      const recentEntries = this.all.filter(s => s.date >= thirtyDaysAgo);
-      const recentPersonCounts = {};
-      
-      recentEntries.forEach(score => {
-        const personTags = score.notes.match(/@\p{L}[\p{L}\d]*/gu) || [];
-        personTags.forEach(tag => {
-          const cleanTag = tag.slice(1).toLowerCase();
-          recentPersonCounts[cleanTag] = (recentPersonCounts[cleanTag] || 0) + 1;
-        });
-      });
-      
-      // Load tag cache to get historical usage
-      let tagCache = {};
-      try {
-        tagCache = JSON.parse(localStorage.getItem('tagCache') || '{}');
-      } catch (e) {
-        console.warn('Could not load tag cache for trending people');
-      }
-      
-      // Find people with recent activity surge
-      const trendingPeople = [];
-      Object.entries(recentPersonCounts).forEach(([person, recentCount]) => {
-        const cacheData = tagCache[person];
-        if (!cacheData || !cacheData.isPerson) return; // Skip topic tags or missing cache
-        
-        const totalUses = cacheData.totalUses || 0;
-        const historicalAvg = totalUses > 0 ? totalUses / Math.max(1, Object.keys(cacheData.yearStats || {}).length) : 0;
-        
-        // Only include people that:
-        // 1. Have recent activity (>= 2 mentions in 30 days)
-        // 2. Show surge (recent mentions > 1.5x historical average) 
-        // 3. Aren't constant mentions (< 30 total historical uses)
-        if (recentCount >= 2 && recentCount > (historicalAvg * 1.5) && totalUses < 30) {
-          const surgeRatio = historicalAvg > 0 ? (recentCount / historicalAvg) : recentCount;
-          trendingPeople.push({
-            person: person,
-            recentCount: recentCount,
-            surgeRatio: Math.round(surgeRatio * 10) / 10,
-            avgScore: cacheData.avgScore || 0
-          });
-        }
-      });
-      
-      // Sort by surge ratio (highest surge first)
-      trendingPeople.sort((a, b) => b.surgeRatio - a.surgeRatio);
-      
-      return trendingPeople.length > 0 ? trendingPeople[0] : null;
-    }
 
-    getScoreConsistency() {
-      const now = new Date();
-      const threeSixtyFiveDaysAgo = new Date(now);
-      threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
-      const sevenThirtyDaysAgo = new Date(now);
-      sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-      
-      // Helper function to calculate standard deviation
-      const calculateStandardDeviation = (scores) => {
-        if (scores.length === 0) return 0;
-        const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-        const squaredDiffs = scores.map(score => Math.pow(score - mean, 2));
-        const avgSquaredDiff = squaredDiffs.reduce((sum, diff) => sum + diff, 0) / scores.length;
-        return Math.sqrt(avgSquaredDiff);
-      };
-      
-      // Current period (last 365 days)
-      const currentEntries = this.all.filter(score => score.date >= threeSixtyFiveDaysAgo);
-      const currentScores = currentEntries.map(entry => entry.summary);
-      const currentStdDev = calculateStandardDeviation(currentScores);
-      
-      // Previous period (365 days before that)
-      const previousEntries = this.all.filter(score => 
-        score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo
-      );
-      const previousScores = previousEntries.map(entry => entry.summary);
-      const previousStdDev = calculateStandardDeviation(previousScores);
-      
-      // Calculate consistency score (inverted - lower std dev = higher consistency)
-      const currentConsistency = currentStdDev > 0 ? Math.round((2.0 / currentStdDev) * 100) / 100 : 5.0;
-      const previousConsistency = previousStdDev > 0 ? Math.round((2.0 / previousStdDev) * 100) / 100 : 5.0;
-      
-      // Calculate trend (higher consistency = better trend)
-      const diff = currentConsistency - previousConsistency;
-      const trend = diff > 0.1 ? 'up' : diff < -0.1 ? 'down' : 'same';
-      
-      const trendDisplay = Math.abs(diff) < 0.1 ? '' : 
-        diff > 0 ? `↗ +${Math.round(Math.abs(diff) * 100) / 100}` : `↘ -${Math.round(Math.abs(diff) * 100) / 100}`;
-      
-      return {
-        consistency: currentConsistency,
-        stdDev: Math.round(currentStdDev * 100) / 100,
-        previousConsistency: previousConsistency,
-        previousStdDev: Math.round(previousStdDev * 100) / 100,
-        entryCount: currentEntries.length,
-        trend: trend,
-        trendDisplay: trendDisplay
-      };
-    }
 
-    getSuperTag() {
-      // Get recent 30-day usage for all tags
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now);
-      thirtyDaysAgo.setDate(now.getDate() - 30);
-      
-      const recentEntries = this.all.filter(s => s.date >= thirtyDaysAgo);
-      const recentTagData = {};
-      
-      // Collect recent tag usage with scores
-      recentEntries.forEach(score => {
-        const allTags = score.notes.match(/[#@]\p{L}[\p{L}\d]*/gu) || [];
-        allTags.forEach(tag => {
-          const cleanTag = tag.slice(1).toLowerCase();
-          if (!recentTagData[cleanTag]) {
-            recentTagData[cleanTag] = {
-              scores: [],
-              count: 0,
-              isPersonTag: tag.startsWith('@')
-            };
-          }
-          recentTagData[cleanTag].scores.push(score.summary);
-          recentTagData[cleanTag].count++;
-        });
-      });
-      
-      // Load tag cache for historical context
-      let tagCache = {};
-      try {
-        tagCache = JSON.parse(localStorage.getItem('tagCache') || '{}');
-      } catch (e) {
-        console.warn('Could not load tag cache for super tag calculation');
-      }
-      
-      // Calculate Super Tag score using weighted formula
-      const superTagCandidates = [];
-      Object.entries(recentTagData).forEach(([tag, data]) => {
-        // Must have at least 2 recent uses to be considered
-        if (data.count < 2) return;
-        
-        const avgScore = data.scores.reduce((sum, score) => sum + score, 0) / data.scores.length;
-        const recentCount = data.count;
-        
-        // Get historical context from cache
-        const cacheData = tagCache[tag] || {};
-        const totalHistoricalUses = cacheData.totalUses || recentCount;
-        
-        /**
-         * SUPER TAG WEIGHTED FORMULA:
-         * 
-         * superScore = (avgScore * sqrt(recentCount)) / frequencyBias
-         * 
-         * Where:
-         * - avgScore: Average score of entries with this tag (quality component)
-         * - sqrt(recentCount): Diminishing returns on usage (prevents spam, rewards meaningful use)
-         * - frequencyBias: Normalizes against over/under-used tags
-         * 
-         * frequencyBias = 1 + (totalUses / expectedUses)^0.5
-         * - expectedUses = estimated reasonable usage over time
-         * - This prevents both single-use bias AND overused tag bias
-         */
-        
-        const expectedUses = Math.max(5, Math.min(30, totalHistoricalUses * 0.3)); // Reasonable range
-        const frequencyBias = 1 + Math.pow(totalHistoricalUses / expectedUses, 0.5);
-        const usageWeight = Math.sqrt(recentCount);
-        const superScore = (avgScore * usageWeight) / frequencyBias;
-        
-        superTagCandidates.push({
-          tag: tag,
-          superScore: Math.round(superScore * 100) / 100,
-          avgScore: Math.round(avgScore * 10) / 10,
-          recentCount: recentCount,
-          totalUses: totalHistoricalUses,
-          frequencyBias: Math.round(frequencyBias * 100) / 100,
-          isPersonTag: data.isPersonTag
-        });
-      });
-      
-      // Sort by super score (highest first)
-      superTagCandidates.sort((a, b) => b.superScore - a.superScore);
-      
-      return superTagCandidates.length > 0 ? superTagCandidates[0] : null;
-    }
 
-    getSeasonProgress() {
-      const now = new Date();
-      const year = now.getFullYear();
-      
-      // Define season boundaries (Northern Hemisphere)
-      const seasons = {
-        'Spring': { start: new Date(year, 2, 20), end: new Date(year, 5, 20) }, // Mar 20 - Jun 20
-        'Summer': { start: new Date(year, 5, 21), end: new Date(year, 8, 22) }, // Jun 21 - Sep 22
-        'Fall': { start: new Date(year, 8, 23), end: new Date(year, 11, 20) },   // Sep 23 - Dec 20
-        'Winter': { start: new Date(year, 11, 21), end: new Date(year + 1, 2, 19) } // Dec 21 - Mar 19
-      };
-      
-      // Determine current season
-      let currentSeason = null;
-      let seasonStart = null;
-      let seasonEnd = null;
-      
-      for (const [season, dates] of Object.entries(seasons)) {
-        if (season === 'Winter') {
-          // Winter spans across years
-          const winterStart = new Date(year - 1, 11, 21);
-          const winterEnd = new Date(year, 2, 19);
-          if (now >= winterStart || now <= winterEnd) {
-            currentSeason = season;
-            seasonStart = now.getMonth() < 3 ? winterStart : new Date(year, 11, 21);
-            seasonEnd = now.getMonth() < 3 ? winterEnd : new Date(year + 1, 2, 19);
-            break;
-          }
-        } else {
-          if (now >= dates.start && now <= dates.end) {
-            currentSeason = season;
-            seasonStart = dates.start;
-            seasonEnd = dates.end;
-            break;
-          }
-        }
-      }
-      
-      if (!currentSeason) {
-        // Fallback logic
-        const month = now.getMonth();
-        if (month >= 2 && month <= 4) {
-          currentSeason = 'Spring';
-          seasonStart = new Date(year, 2, 20);
-          seasonEnd = new Date(year, 5, 20);
-        } else if (month >= 5 && month <= 7) {
-          currentSeason = 'Summer';
-          seasonStart = new Date(year, 5, 21);
-          seasonEnd = new Date(year, 8, 22);
-        } else if (month >= 8 && month <= 10) {
-          currentSeason = 'Fall';
-          seasonStart = new Date(year, 8, 23);
-          seasonEnd = new Date(year, 11, 20);
-        } else {
-          currentSeason = 'Winter';
-          seasonStart = new Date(year, 11, 21);
-          seasonEnd = new Date(year + 1, 2, 19);
-        }
-      }
-      
-      // Calculate progress
-      const totalDays = Math.ceil((seasonEnd - seasonStart) / (1000 * 60 * 60 * 24));
-      const daysPassed = Math.ceil((now - seasonStart) / (1000 * 60 * 60 * 24));
-      const percentage = Math.round((daysPassed / totalDays) * 100);
-      
-      // Season emojis
-      const seasonEmojis = {
-        'Spring': '🌸',
-        'Summer': '☀️', 
-        'Fall': '🍂',
-        'Winter': '❄️'
-      };
-      
-      return {
-        season: currentSeason,
-        emoji: seasonEmojis[currentSeason] || '📅',
-        percentage: Math.min(100, Math.max(0, percentage)),
-        daysPassed: Math.max(0, daysPassed),
-        totalDays: totalDays,
-        seasonStart: seasonStart.toDateString(),
-        seasonEnd: seasonEnd.toDateString()
-      };
-    }
+
 
     async showJourneyAnalytics() {
       // Get config for birthdate
       const config = await window.api.getConfig();
       
       // Calculate all widget data
-      const calendarProgress = this.getCalendarYearProgress();
-      const lifeProgress = config.birthdate ? this.getLifeYearProgress(config.birthdate) : null;
-      const coverage = this.getCoverageProgress();
-      const thirtyDayStats = this.getThirtyDayComparisons();
+      const calendarProgress = this.widgetManager.getCalendarYearProgress();
+      const lifeProgress = config.birthdate ? this.widgetManager.getLifeYearProgress(config.birthdate) : null;
+      const coverage = this.widgetManager.getCoverageProgress();
+      const thirtyDayStats = await this.widgetManager.getThirtyDayComparisons();
       
       // New analytics widgets  
-      const personMentions = this.getPersonMentionsRatio();
-      const lazySundays = this.getLazySundays();
-      const lazySaturdays = this.getLazySaturdays();
-      const totalOverview = this.getTotalOverview();
-      const fiveScoreDays = this.getFiveScoreDaysCount();
-      const avgDurationHighScores = this.getAverageDurationBetweenHighScores();
+      const personMentions = this.widgetManager.getPersonMentionsRatio();
+      const lazySundays = this.widgetManager.getLazySundays();
+      const lazySaturdays = this.widgetManager.getLazySaturdays();
+      const totalOverview = this.widgetManager.getTotalOverview();
+      const fiveScoreDays = this.widgetManager.getFiveScoreDaysCount();
+      const avgDurationHighScores = this.widgetManager.getAverageDurationBetweenHighScores();
       
       // Latest widget additions
-      const lazyWorkweeks = this.getLazyWorkweeks();
-      const trendingTopics = this.getTrendingTopics(); 
-      const trendingPeople = this.getTrendingPeople();
-      const consistency = this.getScoreConsistency();
-      const superTag = this.getSuperTag();
-      const seasonProgress = this.getSeasonProgress();
+      const lazyWorkweeks = this.widgetManager.getLazyWorkweeks();
+      const trendingTopics = this.widgetManager.getTrendingTopics(); 
+      const trendingPeople = this.widgetManager.getTrendingPeople();
+      const consistency = this.widgetManager.getScoreConsistency();
+      const superTag = this.widgetManager.getSuperTag();
+      const seasonProgress = this.widgetManager.getSeasonProgress();
+      const lifeQuality = await this.widgetManager.getLifeQualityStats();
+      const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
       
       this.pushHistory('/analytics', 'Analytics');
       
@@ -2300,48 +1680,83 @@
         calendarProgress: calendarProgress,
         lifeProgress: lifeProgress,
         coverage: coverage,
-        thirtyDayStats: thirtyDayStats,
+        thirtyDayStats: thirtyDayStats ? {
+          words: {
+            current: thirtyDayStats.currentAvgWords,
+            previous: thirtyDayStats.previousAvgWords,
+            trend: thirtyDayStats.wordsTrend,
+            trendDisplay: thirtyDayStats.wordsTrendDisplay
+          },
+          entries: {
+            current: thirtyDayStats.currentEntries,
+            previous: thirtyDayStats.previousEntries,
+            trend: thirtyDayStats.entriesTrend,
+            trendDisplay: thirtyDayStats.entriesTrendDisplay
+          },
+          score: {
+            current: thirtyDayStats.currentAvgScore,
+            previous: thirtyDayStats.previousAvgScore,
+            trend: thirtyDayStats.scoreTrend,
+            trendDisplay: thirtyDayStats.scoreTrendDisplay
+          }
+        } : null,
         personMentions: personMentions,
         lazySundays: lazySundays,
         lazySaturdays: lazySaturdays,
         totalOverview: totalOverview,
-        fiveScoreDays: fiveScoreDays,
-        avgDurationHighScores: avgDurationHighScores,
+        fiveScoreDays: fiveScoreDays ? {
+          ...fiveScoreDays,
+          count: fiveScoreDays.currentCount
+        } : null,
+        avgDurationHighScores: avgDurationHighScores ? {
+          ...avgDurationHighScores,
+          averageDays: avgDurationHighScores.currentAvgDuration
+        } : null,
         // New widgets
         lazyWorkweeks: lazyWorkweeks,
         trendingTopics: trendingTopics,
         trendingPeople: trendingPeople,
         consistency: consistency,
         superTag: superTag,
-        seasonProgress: seasonProgress
+        seasonProgress: seasonProgress,
+        lifeQuality: lifeQuality ? {
+          ...lifeQuality,
+          current: lifeQuality.currentQuality,
+          previous: lifeQuality.previousQuality
+        } : null,
+        scoreTypeIcon: scoreTypeInfo.icon,
+        scoreTypeName: scoreTypeInfo.name
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
     }
 
     async showSettings() {
-      const config = await window.api.getConfig();
-      
-      this.pushHistory('/settings', 'Settings');
-      
-      return this.render('#tmpl-settings', '#content', {
-        birthdate: config.birthdate || '',
-        currentFolder: config.filesPath || 'Not set',
-        years: this.years.map(y => ({year: y}))
-      }, {
-        yearsBar: Hogan.compile($('#tmpl-years-bar').html())
-      });
+      return await this.settingsManager.showSettings();
     }
 
     async saveBirthdate() {
-      const birthdateInput = document.getElementById('birthdate-input');
-      const birthdate = birthdateInput.value;
-      
-      if (birthdate) {
-        await window.api.setBirthdate(birthdate);
-        // Refresh dashboard to show new progress
-        this.showDashboard();
-      }
+      return await this.settingsManager.saveBirthdate();
+    }
+
+    async saveLifeQualityWeights() {
+      return await this.settingsManager.saveLifeQualityWeights();
+    }
+
+    async resetLifeQualityWeights() {
+      return await this.settingsManager.resetLifeQualityWeights();
+    }
+
+    async updateLifeQualityPreview(weights) {
+      return await this.settingsManager.updateLifeQualityPreview(weights);
+    }
+
+    async setScoreType(scoreType) {
+      return await this.settingsManager.setScoreType(scoreType);
+    }
+
+    async saveDefaultEmptyScore() {
+      return await this.settingsManager.saveDefaultEmptyScore();
     }
 
     runDiagnostics() {
@@ -2655,21 +2070,21 @@
     return window.app.setupDropbox();
   };
 
-  window.onShowMonth = function(monthId) {
+  window.onShowMonth = async function(monthId) {
     let [year, month] = monthId.split('-');
-    return window.app.showMonth(parseInt(year), parseInt(month));
+    return await window.app.showMonth(parseInt(year), parseInt(month));
   };
 
-  window.onShowMonths = function(id) {
-    return window.app.showMonths(id);
+  window.onShowMonths = async function(id) {
+    return await window.app.showMonths(id);
   };
 
-  window.onShowYear = function(id) {
-    return window.app.showYear(id);
+  window.onShowYear = async function(id) {
+    return await window.app.showYear(id);
   };
   
-  window.onShowYears = function() {
-    return window.app.showYears();
+  window.onShowYears = async function() {
+    return await window.app.showYears();
   };
 
   window.onShowTags = function() {
@@ -2720,11 +2135,11 @@
     return window.app.selectDay(val)
   }
 
-  window.onShowSearch = function(id) {
+  window.onShowSearch = async function(id) {
     if (id != null) {
       $('#search input')[0].value = id;
     }
-    return window.app.showSearch(id);
+    return await window.app.showSearch(id);
   };
 
   window.onToggleSearchType = function(checked) {
@@ -2738,6 +2153,22 @@
 
   window.onSaveBirthdate = async function() {
     return await window.app.saveBirthdate();
+  };
+
+  window.onSaveLifeQualityWeights = async function() {
+    return await window.app.saveLifeQualityWeights();
+  };
+
+  window.onResetLifeQualityWeights = async function() {
+    return await window.app.resetLifeQualityWeights();
+  };
+
+  window.onSetScoreType = async function(scoreType) {
+    return await window.app.setScoreType(scoreType);
+  };
+
+  window.onSaveDefaultEmptyScore = async function() {
+    return await window.app.saveDefaultEmptyScore();
   };
 
   window.onRunDiagnostics = function() {
@@ -2773,8 +2204,10 @@
   });
 
   // Call onAppStart when the window 
-  function onAppStart() {
+  async function onAppStart() {
     window.app = new FaveDayApp();
+    await window.app.initializeConfig();
+    await window.app.loadScores();
 
     document.getElementById('minimize-btn').addEventListener('click', () => {
       window.api.minimize();

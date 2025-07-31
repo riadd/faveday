@@ -1104,32 +1104,122 @@ tr .yearRow {
 /* years cal */
 
 .yearsCal {
-  border: 1px solid #aaa;
-  padding-bottom: 20px;
+  border: 1px solid #333;
+  padding-bottom: 10px;
+  font-size: 14px;
 }
 
 .yearsCal th {
-  padding: 15px;
+  padding: 8px 4px;
   background: #444;
+  font-size: 13px;
+}
+
+.yearsCal td:nth-child(1){
+  width: 30px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.yearsCal td:nth-child(2){
+  width: 50px;
 }
 
 .yearsCal td:nth-child(3){
-  width: 100px;
+  width: 50px;
+}
+
+.yearsCal td:nth-child(4){
+  width: 50px;
+}
+
+.yearsCal td:nth-child(5){
+  width: 45px;
+}
+
+.yearsCal td:nth-child(6){
+  width: 40px;
+}
+
+.yearsCal td:nth-child(n+7) {
+  width: 16px;
+  padding: 2px 0px;
 }
 
 .yearsCal td {
-  height: 25px;
+  height: 32px;
+  vertical-align: middle;
+  padding: 2px 3px;
+  font-size: 13px;
 }
 
+
 .yearsCal td div {
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
   border-radius: 50px;
   margin: 0 auto;
 }
 
 .yearsCal td a {
   color: white;
+}
+
+/* Life Quality Settings */
+.life-quality-weights {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.weight-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weight-input label {
+  min-width: 120px;
+  font-weight: normal;
+  color: #ccc;
+}
+
+.weight-input input {
+  width: 80px;
+  padding: 4px 6px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background-color: #444;
+  color: #eee;
+}
+
+.settings-buttons {
+  margin: 15px 0 10px 0;
+}
+
+.settings-buttons button {
+  margin-right: 10px;
+  padding: 8px 16px;
+  background: #007cba;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.settings-buttons button:hover {
+  background: #005a87;
+}
+
+.setting-preview {
+  background: #444;
+  color: #eee;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+  font-family: monospace;
+  border: 1px solid #555;
 }
 
 /* scoreBar */
@@ -1578,68 +1668,254 @@ input:checked + .slider:before {
   color: #fff;
 }
 
-/* Settings section */
-.settings-section {
-  margin: 20px 0;
+/* Modern Settings Layout */
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+  max-height: none;
+  overflow: visible;
 }
 
-.settings-section h3 {
-  margin: 0 0 15px 0;
+.settings-card {
+  background: #2a2a2a;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 0;
+  border: 1px solid #444;
+}
+
+.settings-card h3 {
+  margin: 0;
+  padding: 20px 20px 0 20px;
   color: #eee;
   font-size: 1.1em;
+  font-weight: 600;
 }
 
-.setting-item {
-  margin: 15px 0;
+.settings-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 40px;
 }
 
-.setting-item label {
-  min-width: 250px;
-  font-size: 0.9em;
-  color: #ccc;
+.settings-label {
+  flex: 0 0 250px;
 }
 
-.setting-item input[type="date"] {
-  padding: 5px;
-  border: 1px solid #555;
-  border-radius: 4px;
-  background-color: #444;
+.settings-label label {
+  display: block;
   color: #eee;
+  font-weight: 500;
+  margin-bottom: 4px;
 }
 
-.setting-item button {
-  padding: 5px 15px;
+.settings-label small {
+  color: #999;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+.settings-control {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Buttons */
+.btn-primary, .btn-secondary {
+  padding: 8px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9em;
+}
+
+.btn-primary {
   background-color: #0e90d2;
   color: white;
-  cursor: pointer;
 }
 
-.setting-item button:hover {
+.btn-primary:hover {
   background-color: #0c7ab8;
 }
 
-.setting-explanation {
-  margin: 10px 0;
-  color: #888;
+.btn-secondary {
+  background-color: #444;
+  color: #ccc;
+  border: 1px solid #555;
 }
 
-.folder-path {
+.btn-secondary:hover {
+  background-color: #555;
+  color: #eee;
+}
+
+/* Form Controls */
+input[type="date"], input[type="number"] {
+  padding: 8px 12px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background-color: #333;
+  color: #eee;
+  font-size: 0.9em;
+}
+
+input[type="date"]:focus, input[type="number"]:focus {
+  outline: none;
+  border-color: #0e90d2;
+  box-shadow: 0 0 0 2px rgba(14, 144, 210, 0.2);
+}
+
+/* Folder Display */
+.folder-display {
   font-family: monospace;
   background-color: #333;
-  padding: 5px 8px;
-  border-radius: 4px;
+  padding: 8px 12px;
+  border-radius: 6px;
   color: #ccc;
-  font-size: 0.9em;
-  max-width: 300px;
+  font-size: 0.85em;
+  max-width: 400px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: inline-block;
+  margin-bottom: 12px;
+  border: 1px solid #555;
+}
+
+/* Radio Group */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  background-color: #333;
+  border: 2px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 12px;
+}
+
+.radio-option:hover {
+  border-color: #555;
+  background-color: #363636;
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+  border-color: #0e90d2;
+  background-color: rgba(14, 144, 210, 0.1);
+}
+
+.radio-option input[type="radio"] {
+  margin: 2px 0 0 0;
+  flex-shrink: 0;
+}
+
+.radio-option-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.radio-option .radio-label {
+  font-weight: 500;
+  color: #eee;
+  margin-bottom: 4px;
+}
+
+.radio-option .radio-desc {
+  color: #999;
+  font-size: 0.85em;
+  line-height: 1.3;
+}
+
+/* Weight Grid */
+.weight-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.weight-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #444;
+  border-radius: 6px;
+}
+
+.weight-row label {
+  color: #ccc;
+  font-size: 0.9em;
+  margin: 0;
+}
+
+.weight-row input[type="number"] {
+  width: 80px;
+  text-align: right;
+  margin: 0;
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Quality Preview */
+.quality-preview {
+  padding: 12px;
+  background-color: #444;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  color: #eee;
+  font-size: 0.9em;
+}
+
+.quality-explanation {
+  color: #999;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+/* Diagnostics Results */
+.diagnostics-results {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #333;
+  border-radius: 6px;
+  border: 1px solid #555;
+}
+
+.diagnostics-results h4 {
+  margin: 0 0 12px 0;
+  color: #eee;
+}
+
+/* Settings Footer */
+.settings-footer {
+  text-align: center;
+  margin: 40px 0 20px 0;
+}
+
+.settings-footer a {
+  color: #0e90d2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.settings-footer a:hover {
+  text-decoration: underline;
 }
 
 /* Enhanced Tag Styles */
