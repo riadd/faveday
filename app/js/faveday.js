@@ -636,6 +636,7 @@
       const coverage = this.widgetManager.getCoverageProgress();
       const thirtyDayStats = await this.widgetManager.getThirtyDayComparisons();
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
+      const nextFutureLetter = this.widgetManager.getNextFutureLetter();
 
       this.pushHistory('/', '');
       
@@ -673,7 +674,8 @@
           }
         } : null,
         scoreTypeIcon: scoreTypeInfo.icon,
-        scoreTypeName: scoreTypeInfo.name
+        scoreTypeName: scoreTypeInfo.name,
+        nextFutureLetter: nextFutureLetter
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -1453,6 +1455,14 @@
       $('#editScore').show();
       $('#content').hide();
       
+      // Determine if this is a future entry based on date
+      let date = new Date(dateId);
+      let today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time for date comparison
+      date.setHours(0, 0, 0, 0);
+      
+      this.isFutureEntry = date > today;
+      
       // Find the last entry for this date (most recent if multiple exist)
       let matches = this.all.filter(s => s.dateId() === dateId)
       let score = matches.length > 0 ? matches[matches.length - 1] : null
@@ -1464,7 +1474,6 @@
       this.updateScoreProgress(score.notes)
       this.selectScoreVal(score.summary);
       
-      let date = new Date(dateId);
       let dateLabel = Sugar.Date.format(date, '{d} {Month} {yyyy} ({Weekday})')
       $('#editScore .date .thisDay').text(dateLabel);
       
@@ -1473,6 +1482,10 @@
       
       let textarea = $('#editScore textarea')
       textarea.val(score.notes);
+      
+      // Update UI based on entry type
+      this.updateEntryModeUI();
+      
       textarea.focus(); // Focus on the textarea
       textarea.get(0).setSelectionRange(score.notes.length, score.notes.length);
     }
@@ -1480,6 +1493,40 @@
     hideEditScore() {
       $('#editScore').hide();
       $('#content').show();
+    }
+
+    switchToFutureEntry() {
+      // Set date to one year from today
+      let futureDate = new Date();
+      futureDate.addYears(1);
+      let futureDateId = futureDate.format("{yyyy}-{MM}-{dd}");
+      
+      // Show edit score with future date
+      this.showEditScore(futureDateId);
+    }
+
+    updateEntryModeUI() {
+      const editScore = $('#editScore');
+      const modeLabel = $('#entryModeLabel');
+      const submitButtonText = $('#submitButtonText');
+      const scoreButtons = $('#scoreButtons');
+      const futureBtn = $('#futureEntryBtn');
+      
+      if (this.isFutureEntry) {
+        // Future entry mode
+        editScore.addClass('future-entry-mode');
+        modeLabel.text('Future Entry');
+        submitButtonText.text('Save Future Entry');
+        scoreButtons.hide();
+        futureBtn.hide();
+      } else {
+        // Diary entry mode
+        editScore.removeClass('future-entry-mode');
+        modeLabel.text('Diary Entry');
+        submitButtonText.text('Add Score');
+        scoreButtons.show();
+        futureBtn.show();
+      }
     }
     
     selectScoreVal(val) {
@@ -1501,36 +1548,67 @@
       this.showEditScore(nextDate.format("{yyyy}-{MM}-{dd}"));
     }
 
-    submitScore() {
+    async submitScore() {
       let dateLabel = $('#editScore .date .thisDay').text()
       let dateId = new Date(dateLabel).format("{yyyy}-{MM}-{dd}")
-
-      let score = this.all.find(s => s.dateId() === dateId)
-      let isNew = false;
-      
-      if (score == null)
-      {
-        score = new Score(new Date(), 3, '')
-        this.all.push(score)
-        isNew = true;
-      }
-      
       let notes = $('#editScore textarea').val();
-      
-      score.date = new Date(dateId)
-      score.summary = this.currentVal
-      score.notes = notes
-      
-      console.log(`${isNew ? 'added' : 'edited'} score (${this.currentVal}): ${notes}`)
-      
-      // Format date for toaster notification
-      const formattedDate = this.formatDateWithOrdinal(score.date);
-      const action = isNew ? 'added' : 'updated';
-      this.showToaster(`Date ${formattedDate} ${action}.`);
+
+      if (this.isFutureEntry) {
+        // Handle future entry
+        await this.dataManager.loadFutureEntries(); // Ensure we have latest data
+        let futureEntries = this.dataManager.getFutureEntries();
+        
+        // Find existing future entry or create new one
+        let existingIndex = futureEntries.findIndex(entry => 
+          new Date(entry.date).format("{yyyy}-{MM}-{dd}") === dateId
+        );
+        
+        if (existingIndex >= 0) {
+          // Update existing future entry
+          futureEntries[existingIndex].notes = notes;
+          console.log(`Updated future entry for ${dateId}: ${notes}`);
+        } else {
+          // Create new future entry
+          let futureEntry = {
+            date: new Date(dateId),
+            notes: notes
+          };
+          futureEntries.push(futureEntry);
+          console.log(`Added future entry for ${dateId}: ${notes}`);
+        }
+        
+        // Save future entries
+        await this.dataManager.saveFutureEntries(futureEntries);
+        
+        this.showToaster(`Future entry saved for ${this.formatDateWithOrdinal(new Date(dateId))}.`);
+      } else {
+        // Handle regular diary entry
+        let score = this.all.find(s => s.dateId() === dateId)
+        let isNew = false;
+        
+        if (score == null)
+        {
+          score = new Score(new Date(), 3, '')
+          this.all.push(score)
+          isNew = true;
+        }
+        
+        score.date = new Date(dateId)
+        score.summary = this.currentVal
+        score.notes = notes
+        
+        console.log(`${isNew ? 'added' : 'edited'} score (${this.currentVal}): ${notes}`)
+        
+        // Format date for toaster notification
+        const formattedDate = this.formatDateWithOrdinal(score.date);
+        const action = isNew ? 'added' : 'updated';
+        this.showToaster(`Date ${formattedDate} ${action}.`);
+        
+        this.saveScores()
+      }
       
       this.hideEditScore();
       this.onScoreAddedAndNavigateBack();
-      this.saveScores()
     }
     
     updateScoreProgress(text) {
@@ -2133,6 +2211,10 @@
 
   window.onSelectDay = function (val) {
     return window.app.selectDay(val)
+  }
+
+  window.onSwitchToFutureEntry = function() {
+    return window.app.switchToFutureEntry();
   }
 
   window.onShowSearch = async function(id) {

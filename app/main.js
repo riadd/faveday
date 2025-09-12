@@ -52,6 +52,19 @@ ipcMain.handle('get-tag-cache', async () => {
   return await loadTagCache(config.filesPath);
 });
 
+ipcMain.handle('load-future-entries', async () => {
+  if (config.filesPath != null) {
+    return await loadFutureEntries(config.filesPath);
+  }
+  return [];
+});
+
+ipcMain.handle('save-future-entries', async (event, futureEntries) => {
+  if (config.filesPath != null) {
+    await saveFutureEntries(config.filesPath, futureEntries);
+  }
+});
+
 ipcMain.on('select-folder', async (event) => {
   config.filesPath = await selectFolder();
   return await loadScores(config.filesPath);
@@ -190,6 +203,55 @@ async function loadTagCache(dirPath) {
   }
   
   return {};
+}
+
+async function loadFutureEntries(dirPath) {
+  console.log(`Loading future entries from ${dirPath}`);
+  
+  const futureFile = `${dirPath}/future.txt`;
+  const re = /([\d-]+),(.*)/g;
+  
+  let futureEntries = [];
+  
+  try {
+    if (fs.existsSync(futureFile)) {
+      const txt = fs.readFileSync(futureFile, 'utf-8');
+      
+      let matches;
+      while ((matches = re.exec(txt)) !== null) {
+        let entry = {
+          date: new Date(matches[1]),
+          notes: matches[2].replace(/\\n/g, "\n")
+        };
+        
+        futureEntries.push(entry);
+      }
+    }
+  } catch (error) {
+    console.error('Error loading future entries:', error);
+  }
+  
+  console.log(`Loaded ${futureEntries.length} future entries`);
+  return futureEntries;
+}
+
+async function saveFutureEntries(dirPath, futureEntries) {
+  console.log(`Saving ${futureEntries.length} future entries to ${dirPath}`);
+  
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+  
+  const futureFile = `${dirPath}/future.txt`;
+  let futureData = '';
+  
+  for (const entry of futureEntries) {
+    const date = `${entry.date.getFullYear()}-${entry.date.getMonth() + 1}-${entry.date.getDate()}`;
+    futureData += `${date},${entry.notes.replace(/\n/g, "\\n")}\n`;
+  }
+  
+  fs.writeFileSync(futureFile, futureData, 'utf-8');
+  console.log(`Future entries saved to ${futureFile}`);
 }
 
 const configFilePath = path.join(app.getPath('userData'), 'faveday-config.json');

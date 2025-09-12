@@ -7,6 +7,7 @@
 class DataManager {
   constructor() {
     this.scores = [];
+    this.futureEntries = [];
     this.tagCache = null;
     this.years = [];
   }
@@ -26,8 +27,9 @@ class DataManager {
       // Extract years for navigation
       this.years = [...new Set(this.scores.map(s => s.date.getFullYear()))].sort();
       
-      // Load tag cache
+      // Load tag cache and future entries
       this.tagCache = await window.api.getTagCache();
+      this.futureEntries = await window.api.loadFutureEntries();
       
       return this.scores;
     } catch (error) {
@@ -162,6 +164,47 @@ class DataManager {
    */
   getTagCache() {
     return this.tagCache;
+  }
+
+  /**
+   * Load future entries from storage via IPC
+   * @returns {Promise<Array>} Array of future entry objects
+   */
+  async loadFutureEntries() {
+    try {
+      this.futureEntries = await window.api.loadFutureEntries();
+      return this.futureEntries;
+    } catch (error) {
+      console.error('Failed to load future entries:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save future entries to storage via IPC
+   * @param {Array} entries - Array of future entry objects to save
+   */
+  async saveFutureEntries(entries = null) {
+    try {
+      const entriesToSave = entries || this.futureEntries;
+      await window.api.saveFutureEntries(entriesToSave);
+      
+      // Update local state if we saved the current entries
+      if (!entries) {
+        this.futureEntries = entriesToSave;
+      }
+    } catch (error) {
+      console.error('Failed to save future entries:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all future entries
+   * @returns {Array} Array of future entry objects
+   */
+  getFutureEntries() {
+    return this.futureEntries;
   }
 
   /**

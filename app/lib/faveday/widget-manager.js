@@ -1069,6 +1069,59 @@ class WidgetManager {
     return this.scoreCalculator.getScoreTypeInfo();
   }
 
+  /**
+   * Get next future entry countdown
+   * @returns {Object} Countdown information for next future letter
+   */
+  getNextFutureLetter() {
+    const futureEntries = this.dataManager.getFutureEntries();
+    
+    if (!futureEntries || futureEntries.length === 0) {
+      return {
+        hasEntry: false,
+        message: 'No future letters'
+      };
+    }
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // Reset time for date comparison
+    
+    // Find the next future entry (earliest date after today)
+    const upcomingEntries = futureEntries
+      .filter(entry => new Date(entry.date) > now)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    if (upcomingEntries.length === 0) {
+      return {
+        hasEntry: false,
+        message: 'No upcoming letters'
+      };
+    }
+
+    const nextEntry = upcomingEntries[0];
+    const targetDate = new Date(nextEntry.date);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    // Calculate days until
+    const timeDiff = targetDate.getTime() - now.getTime();
+    const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    // Get preview text (first 50 characters)
+    const previewText = nextEntry.notes.length > 50 
+      ? nextEntry.notes.substring(0, 50) + '...'
+      : nextEntry.notes;
+    
+    return {
+      hasEntry: true,
+      daysUntil: daysUntil,
+      targetDate: targetDate,
+      previewText: previewText,
+      message: daysUntil === 1 ? 'Tomorrow' : 
+               daysUntil === 0 ? 'Today' : 
+               `${daysUntil} days`
+    };
+  }
+
 }
 
 // Export for Node.js (for testing)

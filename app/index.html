@@ -96,6 +96,23 @@
       </div>
       {{/coverage}}
       
+      {{#nextFutureLetter}}
+      {{#hasEntry}}
+      <div class="bento-item future-letter-countdown">
+        <h4>💌 Future Letter</h4>
+        <div class="bento-main-value">{{message}}</div>
+        <small class="future-preview">{{previewText}}</small>
+      </div>
+      {{/hasEntry}}
+      {{^hasEntry}}
+      <div class="bento-item future-letter-empty">
+        <h4>💌 Future Letter</h4>
+        <div class="bento-main-value">-/-</div>
+        <small><a onclick="onSwitchToFutureEntry()">Write to future self</a></small>
+      </div>
+      {{/hasEntry}}
+      {{/nextFutureLetter}}
+      
       <!-- 30-day comparison widgets -->
       {{#thirtyDayStats}}
       <div class="bento-item trend-{{score.trend}}-widget">
@@ -986,6 +1003,12 @@
   <!-- new score form -->
   <div id="editScore">
     <progress id="editScoreProgress" value="0" max="100"></progress>
+    <div class="entry-mode-toggle">
+      <button id="futureEntryBtn" class="future-entry-btn" onclick="onSwitchToFutureEntry()">
+        Write to Future Self
+      </button>
+      <div id="entryModeLabel" class="entry-mode-label">Diary Entry</div>
+    </div>
     <form>
       <textarea id="editScoreText" placeholder="Notes"></textarea>
     </form>
@@ -995,12 +1018,16 @@
         <div class="thisDay">28-09-2024</div>
         <div class="nextDay" onclick="onSelectDay(+1)">+</div>
       </button>
-      <button class="valButton" onclick="onSelectScoreVal(1)">1</button>
-      <button class="valButton" onclick="onSelectScoreVal(2)">2</button>
-      <button class="valButton val3" onclick="onSelectScoreVal(3)">3</button>
-      <button class="valButton" onclick="onSelectScoreVal(4)">4</button>
-      <button class="valButton" onclick="onSelectScoreVal(5)">5</button>
-      <button class="submit" onclick="onSubmitScore()">Add Score</button>
+      <div id="scoreButtons" class="score-buttons">
+        <button class="valButton" onclick="onSelectScoreVal(1)">1</button>
+        <button class="valButton" onclick="onSelectScoreVal(2)">2</button>
+        <button class="valButton val3" onclick="onSelectScoreVal(3)">3</button>
+        <button class="valButton" onclick="onSelectScoreVal(4)">4</button>
+        <button class="valButton" onclick="onSelectScoreVal(5)">5</button>
+      </div>
+      <button class="submit" onclick="onSubmitScore()">
+        <span id="submitButtonText">Add Score</span>
+      </button>
     </div>
   </div>
   <!-- /new score form -->
