@@ -2620,19 +2620,6 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* Journey Analytics Page */
-.analytics-intro {
-  text-align: center;
-  margin: 20px 0 30px 0;
-  padding: 0 20px;
-  color: #ccc;
-}
-
-.analytics-intro p {
-  font-size: 16px;
-  line-height: 1.5;
-  max-width: 600px;
-  margin: 0 auto;
-}
 
 .analytics-grid {
   display: grid;
