@@ -660,12 +660,6 @@
             trend: thirtyDayStats.wordsTrend,
             trendDisplay: thirtyDayStats.wordsTrendDisplay
           },
-          entries: {
-            current: thirtyDayStats.currentEntries,
-            previous: thirtyDayStats.previousEntries,
-            trend: thirtyDayStats.entriesTrend,
-            trendDisplay: thirtyDayStats.entriesTrendDisplay
-          },
           score: {
             current: thirtyDayStats.currentAvgScore,
             previous: thirtyDayStats.previousAvgScore,

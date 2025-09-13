@@ -101,7 +101,6 @@
       <div class="bento-item future-letter-countdown">
         <h4>💌 Future Letter</h4>
         <div class="bento-main-value">{{message}}</div>
-        <small class="future-preview">{{previewText}}</small>
       </div>
       {{/hasEntry}}
       {{^hasEntry}}
@@ -119,12 +118,6 @@
         <h4>{{scoreTypeIcon}}&nbsp;{{scoreTypeName}}</h4>
         <div class="bento-main-value">{{score.current}}</div>
         <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
-      </div>
-      
-      <div class="bento-item trend-{{entries.trend}}-widget">
-        <h4>📊 Total Entries</h4>
-        <div class="bento-main-value">{{entries.current}}</div>
-        <small>vs {{entries.previous}} past 30 days <span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span></small>
       </div>
       
       <div class="bento-item trend-{{words.trend}}-widget">

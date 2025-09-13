@@ -262,7 +262,7 @@ class WidgetManager {
   }
 
   /**
-   * Get diary coverage progress
+   * Get diary coverage progress for the last year (most recent 365 days at most)
    * @returns {Object} Coverage statistics and trends
    */
   getCoverageProgress() {
@@ -272,24 +272,36 @@ class WidgetManager {
     }
     
     const now = new Date();
-    const firstEntry = new Date(Math.min(...allScores.map(s => s.date)));
-    const totalDaysSinceFirst = Math.floor((now - firstEntry) / (1000 * 60 * 60 * 24)) + 1;
-    const entriesCount = allScores.length;
-    const currentPercentage = Math.round((entriesCount / totalDaysSinceFirst) * 100);
+    const oneYearAgo = new Date(now);
+    oneYearAgo.setDate(now.getDate() - 365);
     
-    // Compare with 30 days ago
+    // Count entries in the last year (or since first entry if less than a year)
+    const firstEntry = new Date(Math.min(...allScores.map(s => s.date)));
+    const periodStart = firstEntry > oneYearAgo ? firstEntry : oneYearAgo;
+    const recentEntries = allScores.filter(s => s.date >= periodStart);
+    
+    const totalDaysInPeriod = Math.floor((now - periodStart) / (1000 * 60 * 60 * 24)) + 1;
+    const entriesCount = recentEntries.length;
+    const currentPercentage = Math.round((entriesCount / totalDaysInPeriod) * 100);
+    
+    // Compare with 30 days ago (same period length, ending 30 days ago)
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(now.getDate() - 30);
-    const thirtyDaysAgoTotal = Math.floor((thirtyDaysAgo - firstEntry) / (1000 * 60 * 60 * 24)) + 1;
-    const entriesThirtyDaysAgo = allScores.filter(s => s.date <= thirtyDaysAgo).length;
-    const previousPercentage = thirtyDaysAgoTotal > 0 ? Math.round((entriesThirtyDaysAgo / thirtyDaysAgoTotal) * 100) : 0;
+    const previousPeriodStart = new Date(periodStart);
+    previousPeriodStart.setDate(periodStart.getDate() - 30);
+    
+    const entriesInPreviousPeriod = allScores.filter(s => 
+      s.date >= previousPeriodStart && s.date <= thirtyDaysAgo
+    ).length;
+    const previousTotalDays = Math.floor((thirtyDaysAgo - previousPeriodStart) / (1000 * 60 * 60 * 24)) + 1;
+    const previousPercentage = previousTotalDays > 0 ? Math.round((entriesInPreviousPeriod / previousTotalDays) * 100) : 0;
     
     const percentageTrend = this.formatPercentageTrend(currentPercentage, previousPercentage);
     
     return {
       percentage: currentPercentage,
       entriesMade: entriesCount,
-      daysPassed: totalDaysSinceFirst,
+      daysPassed: totalDaysInPeriod,
       trend: percentageTrend.trend,
       trendDisplay: percentageTrend.trendDisplay,
       deltaDisplay: percentageTrend.trendDisplay
@@ -1106,19 +1118,13 @@ class WidgetManager {
     const timeDiff = targetDate.getTime() - now.getTime();
     const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
     
-    // Get preview text (first 50 characters)
-    const previewText = nextEntry.notes.length > 50 
-      ? nextEntry.notes.substring(0, 50) + '...'
-      : nextEntry.notes;
-    
     return {
       hasEntry: true,
       daysUntil: daysUntil,
       targetDate: targetDate,
-      previewText: previewText,
       message: daysUntil === 1 ? 'Tomorrow' : 
                daysUntil === 0 ? 'Today' : 
-               `${daysUntil} days`
+               `in ${daysUntil} days`
     };
   }
 
