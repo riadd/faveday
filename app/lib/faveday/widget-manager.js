@@ -29,16 +29,11 @@ class WidgetManager {
   }
 
   /**
-   * Load tag cache from localStorage
+   * Load tag cache from DataManager
    * @returns {Object} Tag cache data
    */
   getTagCache() {
-    try {
-      return JSON.parse(localStorage.getItem('tagCache') || '{}');
-    } catch (e) {
-      console.warn('Could not load tag cache');
-      return {};
-    }
+    return this.dataManager.getTagCache() || {};
   }
 
   /**
@@ -795,6 +790,7 @@ class WidgetManager {
     const recentTopicCounts = {};
     
     recentEntries.forEach(score => {
+      if (!score.notes) return; // Skip entries without notes
       const topicTags = score.notes.match(/#\p{L}[\p{L}\d]*/gu) || [];
       topicTags.forEach(tag => {
         const cleanTag = tag.slice(1).toLowerCase();
@@ -812,14 +808,17 @@ class WidgetManager {
       if (!cacheData || cacheData.isPerson) return; // Skip people tags or missing cache
       
       const totalUses = cacheData.totalUses || 0;
-      const historicalAvg = totalUses > 0 ? totalUses / Math.max(1, Object.keys(cacheData.yearStats || {}).length) : 0;
+      const yearCount = Math.max(1, Object.keys(cacheData.yearStats || {}).length);
+      const historicalAvgPerYear = totalUses > 0 ? totalUses / yearCount : 0;
+      // Convert to monthly average for fair comparison with 30-day recent usage
+      const historicalAvgPerMonth = historicalAvgPerYear / 12;
       
       // Only include tags that:
       // 1. Have recent activity (>= 2 uses in 30 days)  
-      // 2. Show surge (recent usage > 2x historical average)
-      // 3. Aren't super common staples (< 50 total historical uses)
-      if (recentCount >= 2 && recentCount > (historicalAvg * 2) && totalUses < 50) {
-        const surgeRatio = historicalAvg > 0 ? (recentCount / historicalAvg) : recentCount;
+      // 2. Show surge (recent usage > 1.5x historical monthly average - more reasonable threshold)
+      // 3. Aren't super common staples (< 100 total historical uses - increased threshold)
+      if (recentCount >= 2 && recentCount > (historicalAvgPerMonth * 1.5) && totalUses < 100) {
+        const surgeRatio = historicalAvgPerMonth > 0 ? (recentCount / historicalAvgPerMonth) : recentCount;
         trendingTopics.push({
           tag: tag,
           recentCount: recentCount,
@@ -829,8 +828,29 @@ class WidgetManager {
       }
     });
     
-    // Sort by surge ratio (highest surge first)
-    return trendingTopics.sort((a, b) => b.surgeRatio - a.surgeRatio).slice(0, 3);
+    // Sort by surge ratio (highest surge first)  
+    let results = trendingTopics.sort((a, b) => b.surgeRatio - a.surgeRatio).slice(0, 3);
+    
+    // Fallback: If no trending topics found, show most frequently used recent topics
+    if (results.length === 0) {
+      const fallbackTopics = [];
+      Object.entries(recentTopicCounts).forEach(([tag, recentCount]) => {
+        const cacheData = tagCache[tag];
+        // Only require cache data and not being a person - show ANY recent usage as fallback
+        if (cacheData && !cacheData.isPerson && recentCount >= 1) {
+          fallbackTopics.push({
+            tag: tag,
+            recentCount: recentCount,
+            surgeRatio: 1.0, // Flat ratio for fallback items
+            avgScore: cacheData.avgScore || 0,
+            isFallback: true // Mark as fallback for UI
+          });
+        }
+      });
+      results = fallbackTopics.sort((a, b) => b.recentCount - a.recentCount).slice(0, 3);
+    }
+    
+    return results;
   }
 
   /**
@@ -848,6 +868,7 @@ class WidgetManager {
     const recentPeopleCounts = {};
     
     recentEntries.forEach(score => {
+      if (!score.notes) return; // Skip entries without notes
       const peopleTags = score.notes.match(/@\p{L}[\p{L}\d]*/gu) || [];
       peopleTags.forEach(tag => {
         const cleanTag = tag.slice(1).toLowerCase();
@@ -865,14 +886,17 @@ class WidgetManager {
       if (!cacheData || !cacheData.isPerson) return; // Skip non-people or missing cache
       
       const totalUses = cacheData.totalUses || 0;
-      const historicalAvg = totalUses > 0 ? totalUses / Math.max(1, Object.keys(cacheData.yearStats || {}).length) : 0;
+      const yearCount = Math.max(1, Object.keys(cacheData.yearStats || {}).length);
+      const historicalAvgPerYear = totalUses > 0 ? totalUses / yearCount : 0;
+      // Convert to monthly average for fair comparison with 30-day recent usage
+      const historicalAvgPerMonth = historicalAvgPerYear / 12;
       
       // Only include people that:
       // 1. Have recent activity (>= 2 mentions in 30 days)  
-      // 2. Show surge (recent usage > 1.5x historical average - lower threshold for people)
-      // 3. Aren't constant companions (< 100 total historical mentions)
-      if (recentCount >= 2 && recentCount > (historicalAvg * 1.5) && totalUses < 100) {
-        const surgeRatio = historicalAvg > 0 ? (recentCount / historicalAvg) : recentCount;
+      // 2. Show surge (recent usage > 1.2x historical monthly average - lower threshold for people)
+      // 3. Aren't constant companions (< 150 total historical mentions)
+      if (recentCount >= 2 && recentCount > (historicalAvgPerMonth * 1.2) && totalUses < 150) {
+        const surgeRatio = historicalAvgPerMonth > 0 ? (recentCount / historicalAvgPerMonth) : recentCount;
         trendingPeople.push({
           tag: tag,
           recentCount: recentCount,
@@ -883,7 +907,28 @@ class WidgetManager {
     });
     
     // Sort by surge ratio (highest surge first)
-    return trendingPeople.sort((a, b) => b.surgeRatio - a.surgeRatio).slice(0, 3);
+    let results = trendingPeople.sort((a, b) => b.surgeRatio - a.surgeRatio).slice(0, 3);
+    
+    // Fallback: If no trending people found, show most frequently mentioned recent people
+    if (results.length === 0) {
+      const fallbackPeople = [];
+      Object.entries(recentPeopleCounts).forEach(([tag, recentCount]) => {
+        const cacheData = tagCache[tag];
+        // Only require cache data and being a person - show ANY recent usage as fallback
+        if (cacheData && cacheData.isPerson && recentCount >= 1) {
+          fallbackPeople.push({
+            tag: tag,
+            recentCount: recentCount,
+            surgeRatio: 1.0, // Flat ratio for fallback items
+            avgScore: cacheData.avgScore || 0,
+            isFallback: true // Mark as fallback for UI
+          });
+        }
+      });
+      results = fallbackPeople.sort((a, b) => b.recentCount - a.recentCount).slice(0, 3);
+    }
+    
+    return results;
   }
 
   /**
