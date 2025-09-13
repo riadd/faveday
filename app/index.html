@@ -96,6 +96,21 @@
       </div>
       {{/coverage}}
       
+      <!-- 30-day comparison widgets -->
+      {{#thirtyDayStats}}
+      <div class="bento-item trend-{{score.trend}}-widget">
+        <h4>{{scoreTypeIcon}}&nbsp;Recent&nbsp;{{scoreTypeName}}</h4>
+        <div class="bento-main-value">{{score.current}}</div>
+        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
+      </div>
+      
+      <div class="bento-item trend-{{words.trend}}-widget">
+        <h4>📝 Avg Words/Day</h4>
+        <div class="bento-main-value">{{words.current}}</div>
+        <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
+      </div>
+      {{/thirtyDayStats}}
+      
       {{#nextFutureLetter}}
       {{#hasEntry}}
       <div class="bento-item future-letter-countdown">
@@ -111,21 +126,6 @@
       </div>
       {{/hasEntry}}
       {{/nextFutureLetter}}
-      
-      <!-- 30-day comparison widgets -->
-      {{#thirtyDayStats}}
-      <div class="bento-item trend-{{score.trend}}-widget">
-        <h4>{{scoreTypeIcon}}&nbsp;{{scoreTypeName}}</h4>
-        <div class="bento-main-value">{{score.current}}</div>
-        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
-      </div>
-      
-      <div class="bento-item trend-{{words.trend}}-widget">
-        <h4>📝 Avg Words/Day</h4>
-        <div class="bento-main-value">{{words.current}}</div>
-        <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
-      </div>
-      {{/thirtyDayStats}}
     </div>
     
     <div class="analytics-link-section">
@@ -817,6 +817,14 @@
       </div>
       {{/consistency}}
 
+      {{#personMentions}}
+      <div class="analytics-item trend-{{trend}}-widget person-mentions">
+        <h4>👥 Social Connection</h4>
+        <div class="analytics-main-value">{{percentage}}%</div>
+        <small>{{daysWithPeople}}/{{totalDays}} entries mention people {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+      </div>
+      {{/personMentions}}
+
       <!-- Row 4: Lazy Behaviors -->
       {{#lazyWorkweeks}}
       <div class="analytics-item trend-{{trend}}-widget lazy-workweeks">
@@ -940,14 +948,6 @@
       </div>
       {{/lastLowScore}}
       {{/thirtyDayStats}}
-      
-      {{#personMentions}}
-      <div class="analytics-item trend-{{trend}}-widget person-mentions">
-        <h4>👥 Social Connection</h4>
-        <div class="analytics-main-value">{{percentage}}%</div>
-        <small>{{daysWithPeople}}/{{totalDays}} entries mention people {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
-      </div>
-      {{/personMentions}}
 
     </div>
 
@@ -965,7 +965,6 @@
   <div id="topArea">
     <div id="top-area-content">
       <button id="command-palette-trigger" class="command-palette-trigger" onclick="onShowCommandPalette()">
-        <span class="trigger-icon">🔍</span>
         <span class="trigger-text">Search</span>
         <span class="trigger-shortcut">Ctrl+K</span>
       </button>

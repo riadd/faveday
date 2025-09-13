@@ -739,7 +739,6 @@
             icon: '🔍',
             type: 'search-action',
             action: () => {
-              this.hideCommandPalette();
               this.showSearch(query);
             }
           }];
@@ -757,6 +756,8 @@
       }
       
       if (results[indexToExecute]) {
+        // Always hide command palette first, then execute action
+        this.hideCommandPalette();
         results[indexToExecute].action();
       }
     }
@@ -2613,13 +2614,10 @@
       }
       
       // Update the score data - only replace first occurrence
-      // Preserve original capitalization by extracting the marker and using original text
-      const tagMarker = newTag.charAt(0); // '#' or '@'
-      const preservedCapitalizationTag = `${tagMarker}${originalText}`;
-      
+      // Use the full suggested tag (e.g., @ChristophPlewe) instead of just the original text
       targetScore.notes = targetScore.notes.replace(
         new RegExp(`\\b${originalText}\\b`), 
-        preservedCapitalizationTag
+        newTag
       );
       
       // Immediately update the visual display
@@ -2634,7 +2632,7 @@
         
         // Show toaster notification
         const formattedDate = this.formatDateWithOrdinal(targetScore.date);
-        this.showToaster(`"${originalText}" converted to ${preservedCapitalizationTag} on ${formattedDate}.`);
+        this.showToaster(`"${originalText}" converted to ${newTag} on ${formattedDate}.`);
       } catch (error) {
         console.error('Error saving converted tag:', error);
         this.showToaster(`Error converting tag: ${error.message}`, 'error');
@@ -2768,6 +2766,10 @@
   window.onShowSearch = async function(id) {
     // Old search input value setting removed - now using command palette
     return await window.app.showSearch(id);
+  };
+
+  window.onShowCommandPalette = function() {
+    return window.app.showCommandPalette();
   };
 
   window.onToggleSearchType = function(checked) {

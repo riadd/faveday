@@ -2657,13 +2657,16 @@ input[type="date"]:focus, input[type="number"]:focus {
   gap: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
   padding: 8px 12px;
   color: #ccc;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 180px;
+  -webkit-app-region: no-drag;  /* Ensures button is clickable */
+  z-index: 1000;  /* Ensure it's above other elements */
 }
 
 .command-palette-trigger:hover {
