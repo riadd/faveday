@@ -72,7 +72,12 @@ class WidgetManager {
    */
   formatPercentageTrend(current, previous) {
     if (previous === 0) {
-      return { trend: current > 0 ? 'up' : 'same', trendDisplay: current > 0 ? '+∞%' : '0%' };
+      if (current === 0) {
+        return { trend: 'same', trendDisplay: '0%' };
+      } else {
+        // Show the actual percentage instead of "new" when going from 0% to positive
+        return { trend: 'up', trendDisplay: `+${current}%` };
+      }
     }
     
     const percentChange = ((current - previous) / previous) * 100;
