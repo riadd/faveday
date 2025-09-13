@@ -189,6 +189,9 @@
       this.showSearch = this.showSearch.bind(this);
       this.tmplScores = Hogan.compile($('#tmpl-scores').html());
       
+      // Initialize command palette
+      this.initializeCommandPalette();
+      
       // Handle Enter key separately
       $('#search input').keydown((event) => {
         if (event.key === 'Enter') {
@@ -251,6 +254,430 @@
     getScoreTypeInfo() {
       return this.widgetManager.getScoreTypeInfo();
     }
+
+    // ==================== COMMAND PALETTE ====================
+
+    initializeCommandPalette() {
+      this.commandPaletteVisible = false;
+      this.commandSearchIndex = [];
+      this.selectedResultIndex = -1;
+      
+      // Build search index
+      this.buildSearchIndex();
+      
+      // Set up keyboard shortcuts
+      document.addEventListener('keydown', (event) => {
+        // Ctrl+K or Cmd+K to open command palette
+        if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+          event.preventDefault();
+          this.showCommandPalette();
+          return;
+        }
+        
+        // Handle navigation when palette is open
+        if (this.commandPaletteVisible) {
+          switch (event.key) {
+            case 'Escape':
+              event.preventDefault();
+              this.hideCommandPalette();
+              break;
+            case 'ArrowDown':
+              event.preventDefault();
+              this.moveSelection(1);
+              break;
+            case 'ArrowUp':
+              event.preventDefault();
+              this.moveSelection(-1);
+              break;
+            case 'Enter':
+              event.preventDefault();
+              this.executeSelectedResult();
+              break;
+          }
+        }
+      });
+      
+      // Set up search input
+      const searchInput = document.getElementById('command-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (event) => {
+          this.handleSearchInput(event.target.value);
+        });
+      }
+      
+      // Close on overlay click
+      const overlay = document.getElementById('command-palette-overlay');
+      if (overlay) {
+        overlay.addEventListener('click', (event) => {
+          if (event.target === overlay) {
+            this.hideCommandPalette();
+          }
+        });
+      }
+    }
+
+    buildSearchIndex() {
+      this.commandSearchIndex = [];
+      
+      // Add static navigation items
+      this.commandSearchIndex.push({
+        id: 'dashboard',
+        title: 'Dashboard',
+        subtitle: 'Main overview page',
+        icon: '📊',
+        type: 'page',
+        action: () => this.showDashboard()
+      });
+      
+      this.commandSearchIndex.push({
+        id: 'new-entry',
+        title: 'New Entry',
+        subtitle: 'Create a new diary entry',
+        icon: '✏️',
+        type: 'action',
+        searchTerms: ['new', 'entry', 'create', 'add', 'write'],
+        action: () => {
+          const today = new Date().format("{yyyy}-{MM}-{dd}");
+          this.showEditScore(today);
+        }
+      });
+      
+      this.commandSearchIndex.push({
+        id: 'analytics', 
+        title: 'Analytics',
+        subtitle: 'Data analysis and insights',
+        icon: '📈',
+        type: 'page',
+        action: () => this.showJourneyAnalytics()
+      });
+      
+      this.commandSearchIndex.push({
+        id: 'tags',
+        title: 'Tags',
+        subtitle: 'All tags and topics',
+        icon: '🏷️',
+        type: 'page',
+        action: () => this.showTags()
+      });
+      
+      this.commandSearchIndex.push({
+        id: 'years',
+        title: 'Years',
+        subtitle: 'Year overview',
+        icon: '📅',
+        type: 'page',
+        action: () => this.showYears()
+      });
+      
+      this.commandSearchIndex.push({
+        id: 'settings',
+        title: 'Settings',
+        subtitle: 'App configuration and preferences',
+        icon: '⚙️',
+        type: 'page',
+        action: () => this.showSettings()
+      });
+      
+      // Add years dynamically
+      if (this.years && this.years.length > 0) {
+        this.years.forEach(year => {
+          this.commandSearchIndex.push({
+            id: `year-${year}`,
+            title: year.toString(),
+            subtitle: `Year ${year}`,
+            icon: '📆',
+            type: 'year',
+            searchTerms: [year.toString()],
+            action: () => this.showYear(year)
+          });
+        });
+      }
+      
+      // Add months for available years
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      
+      const monthAbbreviations = [
+        'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+        'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+      ];
+      
+      if (this.all && this.all.length > 0) {
+        const availableMonths = new Set();
+        this.all.forEach(entry => {
+          const date = new Date(entry.date);
+          const year = date.getFullYear();
+          const month = date.getMonth();
+          const key = `${year}-${month}`;
+          if (!availableMonths.has(key)) {
+            availableMonths.add(key);
+            this.commandSearchIndex.push({
+              id: `month-${year}-${month + 1}`,
+              title: `${monthNames[month]} ${year}`,
+              subtitle: `Month view`,
+              icon: '📅',
+              type: 'month',
+              searchTerms: [
+                monthNames[month].toLowerCase(),
+                monthAbbreviations[month],
+                `${monthNames[month]} ${year}`,
+                `${monthAbbreviations[month]} ${year}`,
+                year.toString()
+              ],
+              action: () => this.showMonth(year, month + 1)
+            });
+          }
+        });
+      }
+      
+      // Add tags dynamically  
+      if (this.all && this.all.length > 0) {
+        const tags = this.getTags(this.all).slice(0, 50); // Limit to top 50 tags
+        tags.forEach(tag => {
+          const displayName = tag.classes.includes('person') 
+            ? this.formatPersonName(tag.originalCasing || tag.tag)
+            : tag.tag;
+            
+          this.commandSearchIndex.push({
+            id: `tag-${tag.tag}`,
+            title: displayName,
+            subtitle: `${tag.count} uses • Avg score ${tag.avgScore.toFixed(1)}`,
+            icon: tag.classes.includes('person') ? '👤' : '#',
+            type: 'tag',
+            searchTerms: [tag.tag, displayName.toLowerCase()],
+            action: () => this.showSearch(tag.tag)
+          });
+        });
+      }
+    }
+
+    formatPersonName(tagName) {
+      return tagName
+        .replace(/([a-z])([A-Z])/g, '$1 $2')  // camelCase: abc -> a bc
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')  // PascalCase: ABc -> A Bc
+        .replace(/^([a-z])/, (match, p1) => p1.toUpperCase()); // Capitalize first letter
+    }
+
+    getDefaultResults() {
+      // Return only main navigation pages for the default view
+      const defaultIds = ['dashboard', 'new-entry', 'analytics', 'tags', 'years', 'settings'];
+      return this.commandSearchIndex.filter(item => 
+        defaultIds.includes(item.id)
+      ).sort((a, b) => {
+        // Maintain specific order with new-entry second, settings at the end
+        const order = defaultIds.indexOf(a.id) - defaultIds.indexOf(b.id);
+        return order;
+      });
+    }
+
+    showCommandPalette() {
+      this.commandPaletteVisible = true;
+      this.selectedResultIndex = -1;
+      
+      // Rebuild index to get latest data
+      this.buildSearchIndex();
+      
+      const overlay = document.getElementById('command-palette-overlay');
+      const searchInput = document.getElementById('command-search-input');
+      
+      if (overlay && searchInput) {
+        overlay.classList.remove('hidden');
+        searchInput.value = '';
+        searchInput.focus();
+        
+        // Show only main navigation pages as default results
+        const defaultResults = this.getDefaultResults();
+        this.renderSearchResults(defaultResults);
+      }
+    }
+
+    hideCommandPalette() {
+      this.commandPaletteVisible = false;
+      this.selectedResultIndex = -1;
+      
+      const overlay = document.getElementById('command-palette-overlay');
+      if (overlay) {
+        overlay.classList.add('hidden');
+      }
+    }
+
+    handleSearchInput(query) {
+      if (!query.trim()) {
+        // Show only main navigation pages when empty
+        this.renderSearchResults(this.getDefaultResults());
+        return;
+      }
+      
+      const results = this.searchItems(query);
+      this.renderSearchResults(results.slice(0, 10));
+    }
+
+    searchItems(query) {
+      const lowerQuery = query.toLowerCase();
+      const results = [];
+      
+      // Exact matches first
+      for (const item of this.commandSearchIndex) {
+        if (item.title.toLowerCase() === lowerQuery) {
+          results.push({ item, score: 100 });
+          continue;
+        }
+        
+        // Check search terms
+        if (item.searchTerms) {
+          for (const term of item.searchTerms) {
+            if (term === lowerQuery) {
+              results.push({ item, score: 90 });
+              break;
+            }
+          }
+          if (results[results.length - 1]?.item === item) continue;
+        }
+      }
+      
+      // Starts with matches
+      for (const item of this.commandSearchIndex) {
+        if (results.some(r => r.item.id === item.id)) continue;
+        
+        if (item.title.toLowerCase().startsWith(lowerQuery)) {
+          results.push({ item, score: 80 });
+          continue;
+        }
+        
+        if (item.searchTerms) {
+          for (const term of item.searchTerms) {
+            if (term.startsWith(lowerQuery)) {
+              results.push({ item, score: 70 });
+              break;
+            }
+          }
+          if (results[results.length - 1]?.item === item) continue;
+        }
+      }
+      
+      // Contains matches
+      for (const item of this.commandSearchIndex) {
+        if (results.some(r => r.item.id === item.id)) continue;
+        
+        if (item.title.toLowerCase().includes(lowerQuery)) {
+          results.push({ item, score: 60 });
+          continue;
+        }
+        
+        if (item.subtitle.toLowerCase().includes(lowerQuery)) {
+          results.push({ item, score: 50 });
+          continue;
+        }
+        
+        if (item.searchTerms) {
+          for (const term of item.searchTerms) {
+            if (term.includes(lowerQuery)) {
+              results.push({ item, score: 40 });
+              break;
+            }
+          }
+        }
+      }
+      
+      // Sort by score descending
+      results.sort((a, b) => b.score - a.score);
+      
+      return results.map(r => r.item);
+    }
+
+    renderSearchResults(results) {
+      const resultsContainer = document.getElementById('command-results');
+      if (!resultsContainer) return;
+      
+      if (results.length === 0) {
+        this.selectedResultIndex = -1;
+        resultsContainer.innerHTML = `
+          <div class="command-result-item">
+            <div class="result-icon">🔍</div>
+            <div class="result-content">
+              <div class="result-title">No results found</div>
+              <div class="result-subtitle">Try a different search term</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      // Auto-select first result
+      this.selectedResultIndex = 0;
+      
+      resultsContainer.innerHTML = results.map((item, index) => `
+        <div class="command-result-item ${index === 0 ? 'selected' : ''}" data-index="${index}">
+          <div class="result-icon">${item.icon}</div>
+          <div class="result-content">
+            <div class="result-title">${item.title}</div>
+            <div class="result-subtitle">${item.subtitle}</div>
+          </div>
+        </div>
+      `).join('');
+      
+      // Add click handlers
+      resultsContainer.querySelectorAll('.command-result-item').forEach((element, index) => {
+        element.addEventListener('click', () => {
+          this.selectedResultIndex = index;
+          this.executeSelectedResult();
+        });
+      });
+    }
+
+    moveSelection(direction) {
+      const resultsContainer = document.getElementById('command-results');
+      const items = resultsContainer.querySelectorAll('.command-result-item');
+      
+      if (items.length === 0) return;
+      
+      // Remove current selection
+      if (this.selectedResultIndex >= 0) {
+        items[this.selectedResultIndex].classList.remove('selected');
+      }
+      
+      // Calculate new index
+      this.selectedResultIndex += direction;
+      
+      if (this.selectedResultIndex < 0) {
+        this.selectedResultIndex = items.length - 1;
+      } else if (this.selectedResultIndex >= items.length) {
+        this.selectedResultIndex = 0;
+      }
+      
+      // Add new selection
+      items[this.selectedResultIndex].classList.add('selected');
+      
+      // Scroll into view if needed
+      items[this.selectedResultIndex].scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+      });
+    }
+
+    executeSelectedResult() {
+      const resultsContainer = document.getElementById('command-results');
+      const items = resultsContainer.querySelectorAll('.command-result-item');
+      
+      if (items.length === 0) return;
+      
+      const searchInput = document.getElementById('command-search-input');
+      const query = searchInput ? searchInput.value : '';
+      const results = query.trim() ? this.searchItems(query).slice(0, 10) : this.getDefaultResults();
+      
+      // If no result is selected, select the first one
+      let indexToExecute = this.selectedResultIndex;
+      if (indexToExecute < 0 || indexToExecute >= results.length) {
+        indexToExecute = 0;
+      }
+      
+      if (results[indexToExecute]) {
+        this.hideCommandPalette();
+        results[indexToExecute].action();
+      }
+    }
     
     showSummary(scores) {
       const OPENAI_API_KEY = 'XXX';
@@ -312,6 +739,11 @@
       this.tagCache = this.dataManager.getTagCache();
       this.years = this.dataManager.getYears();
         
+      // Rebuild command palette search index with new data
+      if (this.buildSearchIndex) {
+        this.buildSearchIndex();
+      }
+      
       this.onScoreAdded();
     }
 
@@ -320,6 +752,11 @@
       
       // Update legacy properties for backward compatibility  
       this.tagCache = this.dataManager.getTagCache();
+      
+      // Rebuild command palette search index with updated data
+      if (this.buildSearchIndex) {
+        this.buildSearchIndex();
+      }
     }
 
     setupDemoUser() {
@@ -1315,7 +1752,13 @@
         return this.showDashboard();
       }
       
-      id = searchInput.value;
+      // Use passed parameter if provided, otherwise fall back to search input
+      if (!id) {
+        id = searchInput.value;
+      } else {
+        // Update search input to show what we're searching for
+        searchInput.value = id;
+      }
       
       if (id.length < 1) {
         return this.showDashboard();

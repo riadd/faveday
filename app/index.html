@@ -951,9 +951,6 @@
 
     </div>
 
-    <div class="analytics-footer">
-      <p><em>Your journey is unique. These insights help you understand your patterns and celebrate your progress. 🎯</em></p>
-    </div>
   </script>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1029,6 +1026,20 @@
     <div class="toaster-content">
       <span class="toaster-icon">✓</span>
       <span class="toaster-message" id="toaster-message"></span>
+    </div>
+  </div>
+
+  <!-- Command Palette -->
+  <div id="command-palette-overlay" class="command-palette-overlay hidden">
+    <div class="command-palette">
+      <div class="command-search">
+        <div class="search-icon">⌘</div>
+        <input type="text" id="command-search-input" placeholder="Search tags, dates, pages..." autocomplete="off">
+        <div class="search-hint">Ctrl+K</div>
+      </div>
+      <div class="command-results" id="command-results">
+        <!-- Results will be populated by JavaScript -->
+      </div>
     </div>
   </div>
 </body>
