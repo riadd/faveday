@@ -1742,7 +1742,6 @@
       const consistency = this.widgetManager.getScoreConsistency();
       const superTag = this.widgetManager.getSuperTag();
       const seasonProgress = this.widgetManager.getSeasonProgress();
-      const lifeQuality = await this.widgetManager.getLifeQualityStats();
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
       
       this.pushHistory('/analytics', 'Analytics');
@@ -1791,11 +1790,6 @@
         consistency: consistency,
         superTag: superTag,
         seasonProgress: seasonProgress,
-        lifeQuality: lifeQuality ? {
-          ...lifeQuality,
-          current: lifeQuality.currentQuality,
-          previous: lifeQuality.previousQuality
-        } : null,
         scoreTypeIcon: scoreTypeInfo.icon,
         scoreTypeName: scoreTypeInfo.name
       }, {
