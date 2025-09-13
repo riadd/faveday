@@ -700,28 +700,30 @@
     <h1>Tags</h1>
     {{> yearsBar}}
 
-    <table class="box tags">
-      <tr>
-        <th>
-          <span class="tags-header-text">Tags</span>
-          <span class="sort-controls-inline">
-            <a onclick="onShowTagsWithSort('count')" class="sort-btn {{#sortOptions.count}}sort-active{{/sortOptions.count}}">Usage</a>
-            <a onclick="onShowTagsWithSort('avgScore')" class="sort-btn {{#sortOptions.avgScore}}sort-active{{/sortOptions.avgScore}}">Score</a>
-            <a onclick="onShowTagsWithSort('firstUsage')" class="sort-btn {{#sortOptions.firstUsage}}sort-active{{/sortOptions.firstUsage}}">Oldest</a>
-            <a onclick="onShowTagsWithSort('lastUsage')" class="sort-btn {{#sortOptions.lastUsage}}sort-active{{/sortOptions.lastUsage}}">Newest</a>
-          </span>
-        </th>
-      </tr>
-      <tr>
-        <td>
-          {{#tags}} 
-            <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">
-              {{tag}}
-            </a> 
-          {{/tags}}
-        </td>
-      </tr>
-    </table>
+    <div class="box tags">
+      <div class="tags-controls">
+        <span class="sort-controls-inline">
+          Sort by
+          <a onclick="onShowTagsWithSort('count')" class="sort-btn {{#sortOptions.count}}sort-active{{/sortOptions.count}}">Usage</a>
+          <a onclick="onShowTagsWithSort('avgScore')" class="sort-btn {{#sortOptions.avgScore}}sort-active{{/sortOptions.avgScore}}">Score</a>
+          <a onclick="onShowTagsWithSort('firstUsage')" class="sort-btn {{#sortOptions.firstUsage}}sort-active{{/sortOptions.firstUsage}}">First Use</a>
+          <a onclick="onShowTagsWithSort('lastUsage')" class="sort-btn {{#sortOptions.lastUsage}}sort-active{{/sortOptions.lastUsage}}">Recency</a>
+        </span>
+        <span class="sort-controls-inline">
+          Show
+          <a onclick="onShowTagsWithFilter('both')" class="sort-btn {{#filterOptions.both}}sort-active{{/filterOptions.both}}">Both</a>
+          <a onclick="onShowTagsWithFilter('tags')" class="sort-btn {{#filterOptions.tags}}sort-active{{/filterOptions.tags}}"><span class="btn-dot tag-dot"></span>Tags</a>
+          <a onclick="onShowTagsWithFilter('persons')" class="sort-btn {{#filterOptions.persons}}sort-active{{/filterOptions.persons}}"><span class="btn-dot person-dot"></span>Persons</a>
+        </span>
+      </div>
+      <div class="tags-content">
+        {{#tags}} 
+          <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">
+            {{displayName}}
+          </a> 
+        {{/tags}}
+      </div>
+    </div>
   </script>
 
   <!-- tmpl-years-bar -->
@@ -806,7 +808,6 @@
         <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
       </div>
       {{/thirtyDayStats}}
-
 
       {{#consistency}}
       <div class="analytics-item trend-{{trend}}-widget consistency">

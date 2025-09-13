@@ -988,8 +988,8 @@ tr .yearRow {
   background: #444;
 }
 
-.tags a {
-  /* Base tag styling for tags page */
+.tags-content a {
+  /* Base tag styling for tags page - only applies to actual tag links */
   display: inline-block;
   padding: 1px 3px;
   margin: 3px;
@@ -1005,15 +1005,15 @@ tr .yearRow {
   cursor: pointer;
 }
 
-.tags a.person {
+.tags-content a.person {
   background: #a67b8a; /* Person tag color */
 }
 
-.tags a.recent {
+.tags-content a.recent {
   box-shadow: 0 0 3px rgba(90, 128, 168, 0.4);
 }
 
-.tags a.person.recent {
+.tags-content a.person.recent {
   box-shadow: 0 0 3px rgba(154, 111, 125, 0.4);
 }
 
@@ -1027,7 +1027,7 @@ tr .yearRow {
   line-height: 1.5rem;
 }
 
-.tags a:hover {
+.tags-content a:hover {
   transform: translateY(-0.5px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
@@ -2437,38 +2437,74 @@ input[type="date"]:focus, input[type="number"]:focus {
   transform: translateY(-1px);
 }
 
-/* Tags header styling */
-.tags-header-text {
-  font-weight: bold;
-  margin-right: 20px;
+/* Tags controls styling */
+.tags-controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 10px 15px;
+  gap: 20px;
 }
 
 .sort-controls-inline {
   font-weight: normal;
   font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #999;
 }
 
-/* Sort button styling */
+.tags-content {
+  padding: 15px;
+}
+
+/* Sort button styling - pill design that fits the dark theme */
 .sort-btn {
-  color: #aaa;
+  color: #ccc;
   text-decoration: none;
-  padding: 2px 6px;
-  margin: 0 2px;
+  padding: 6px 14px;
+  margin: 0 3px;
   transition: all 0.2s ease;
   cursor: pointer;
-  background: transparent;
-  border-bottom: 1px solid transparent;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 50px;
   font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .sort-btn:hover {
+  background: #333;
+  border-color: #555;
   color: #ddd;
 }
 
 .sort-btn.sort-active {
+  background: #444;
   color: #fff;
-  border-bottom: 1px solid #fff;
-  font-weight: 500;
+  border-color: #666;
+}
+
+/* Button dots for tag/person indicators */
+.btn-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.tag-dot {
+  background-color: #4a90e2;
+}
+
+.person-dot {
+  background-color: #e74c3c;
 }
 
 /* Tag Suggestions */

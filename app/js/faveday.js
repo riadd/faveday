@@ -1063,6 +1063,7 @@
       
       let currentTagCounts = {};
       let personTags = new Set();
+      let originalPersonCasing = {}; // Store original casing for person names
       
       // Only count current tags in the scores (for filtering purposes)
       for (let score of scores) {
@@ -1070,11 +1071,14 @@
         if (matches) {
           matches.forEach(match => {
             let marker = match[0];
-            let tagName = match.slice(1).toLowerCase();
+            let originalName = match.slice(1); // Keep original casing
+            let tagName = originalName.toLowerCase();
             currentTagCounts[tagName] = (currentTagCounts[tagName] || 0) + 1;
             
             if (marker === '@') {
               personTags.add(tagName);
+              // Store the most recent original casing we've seen
+              originalPersonCasing[tagName] = originalName;
             }
           });
         }
@@ -1132,6 +1136,7 @@
         
         results.push({
           tag: tagName,
+          originalCasing: originalPersonCasing[tagName] || tagName, // Store original casing if available
           count: totalUses,
           avgScore: avgScore,
           firstUsage: firstUsage,
@@ -1148,13 +1153,15 @@
         case 'avgScore':
           return results.sort((a, b) => b.avgScore - a.avgScore);
         case 'firstUsage':
+          // "Newest" - sort by first occurrence, newest first (reverse chronological)
           return results.sort((a, b) => {
             if (!a.firstUsage && !b.firstUsage) return 0;
             if (!a.firstUsage) return 1;
             if (!b.firstUsage) return -1;
-            return a.firstUsage - b.firstUsage;
+            return b.firstUsage - a.firstUsage; // Reversed for newest first
           });
         case 'lastUsage':
+          // "Recency" - sort by most recent usage first
           return results.sort((a, b) => {
             if (!a.lastUsage && !b.lastUsage) return 0;
             if (!a.lastUsage) return 1;
@@ -1182,20 +1189,55 @@
       };
     }
     
-    showTags(sortBy = 'count') {
-      let tags = this.getTags(this.all, sortBy).slice(0,250);
+    showTags(sortBy = 'count', filterBy = 'both') {
+      // Store current state
+      this.currentTagSort = sortBy;
+      this.currentTagFilter = filterBy;
+      
+      let allTags = this.getTags(this.all, sortBy).slice(0,250);
+      
+      // Apply filtering
+      let filteredTags = allTags;
+      if (filterBy === 'tags') {
+        filteredTags = allTags.filter(tag => !tag.classes.includes('person'));
+      } else if (filterBy === 'persons') {
+        filteredTags = allTags.filter(tag => tag.classes.includes('person'));
+      }
+      
+      // Format person names (convert @MichaelSchwahn to "Michael Schwahn")
+      const tagsWithFormattedNames = filteredTags.map(tag => {
+        let displayName = tag.tag;
+        if (tag.classes.includes('person')) {
+          // Use original casing if available, then format it properly
+          const nameToFormat = tag.originalCasing || tag.tag;
+          displayName = nameToFormat
+            .replace(/([a-z])([A-Z])/g, '$1 $2')  // camelCase: abc -> a bc
+            .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')  // PascalCase: ABc -> A Bc
+            .replace(/^([a-z])/, (match, p1) => p1.toUpperCase()); // Capitalize first letter
+        }
+        return {
+          ...tag,
+          displayName: displayName
+        };
+      });
       
       this.pushHistory(`/tags`, 'Tags');
 
       return this.render('#tmpl-tags', '#content', {
         years: this.years.map(y => ({year: y})),
-        tags: tags,
+        tags: tagsWithFormattedNames,
         sortBy: sortBy,
+        filterBy: filterBy,
         sortOptions: {
           count: sortBy === 'count',
           avgScore: sortBy === 'avgScore', 
           firstUsage: sortBy === 'firstUsage',
           lastUsage: sortBy === 'lastUsage'
+        },
+        filterOptions: {
+          both: filterBy === 'both',
+          tags: filterBy === 'tags', 
+          persons: filterBy === 'persons'
         }
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
@@ -2158,7 +2200,14 @@
   };
 
   window.onShowTagsWithSort = function(sortBy) {
-    return window.app.showTags(sortBy);
+    const currentFilter = window.app.currentTagFilter || 'both';
+    return window.app.showTags(sortBy, currentFilter);
+  };
+
+  window.onShowTagsWithFilter = function(filterBy) {
+    const currentSort = window.app.currentTagSort || 'count';
+    window.app.currentTagFilter = filterBy;
+    return window.app.showTags(currentSort, filterBy);
   };
 
   window.onShowJourneyAnalytics = async function() {
