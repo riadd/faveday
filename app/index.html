@@ -860,10 +860,10 @@
       {{/trendingTopics}}
 
       {{#trendingPeople}}
-      <div class="analytics-item trending-people clickable-widget" onclick="onShowSearch('{{person}}')">
+      <div class="analytics-item trending-people clickable-widget" onclick="onShowSearch('{{tag}}')">
         <div class="clickable-indicator"></div>
         <h4>🔥 Trending @Person</h4>
-        <div class="analytics-main-value">{{person}}</div>
+        <div class="analytics-main-value">{{tag}}</div>
         <small>{{recentCount}} mentions, {{surgeRatio}}x surge</small>
       </div>
       {{/trendingPeople}}

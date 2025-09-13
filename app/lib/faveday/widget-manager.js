@@ -850,12 +850,13 @@ class WidgetManager {
       results = fallbackTopics.sort((a, b) => b.recentCount - a.recentCount).slice(0, 3);
     }
     
-    return results;
+    // Return null instead of empty array to prevent template double-rendering
+    return results.length > 0 ? results[0] : null;
   }
 
   /**
    * Get trending people tags analysis (similar to topics but for @mentions)
-   * @returns {Array} List of trending person tags with surge ratios
+   * @returns {Object|null} Single trending person tag with surge ratio, or null if none
    */
   getTrendingPeople() {
     // Get recent 30-day usage for person tags (@tags)
@@ -928,7 +929,8 @@ class WidgetManager {
       results = fallbackPeople.sort((a, b) => b.recentCount - a.recentCount).slice(0, 3);
     }
     
-    return results;
+    // Return null instead of empty array to prevent template double-rendering
+    return results.length > 0 ? results[0] : null;
   }
 
   /**
