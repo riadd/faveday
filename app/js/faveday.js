@@ -192,31 +192,7 @@
       // Initialize command palette
       this.initializeCommandPalette();
       
-      // Handle Enter key separately
-      $('#search input').keydown((event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          this.showSearch();
-          return;
-        }
-      });
-      
-      $('#search input').keyup((event) => {
-        // Clear existing timeout
-        if (this.searchTime != null) {
-          window.clearTimeout(this.searchTime);
-        }
-        
-        const searchValue = event.target.value;
-        
-        // Only trigger real-time search for 4+ characters
-        if (searchValue.length >= 4) {
-          this.searchTime = window.setTimeout(this.showSearch, 500);
-        } else if (searchValue.length === 0) {
-          // If search is cleared, show dashboard
-          this.showDashboard();
-        }
-      });
+      // Old search form handling removed - now using command palette
 
       this.showEmpty = false;
       this.tagsOnly = false;
@@ -267,10 +243,14 @@
       
       // Set up keyboard shortcuts
       document.addEventListener('keydown', (event) => {
-        // Ctrl+K or Cmd+K to open command palette
+        // Ctrl+K or Cmd+K to toggle command palette
         if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
           event.preventDefault();
-          this.showCommandPalette();
+          if (this.commandPaletteVisible) {
+            this.hideCommandPalette();
+          } else {
+            this.showCommandPalette();
+          }
           return;
         }
         
@@ -432,22 +412,24 @@
         });
       }
       
-      // Add tags dynamically  
-      if (this.all && this.all.length > 0) {
-        const tags = this.getTags(this.all).slice(0, 50); // Limit to top 50 tags
-        tags.forEach(tag => {
-          const displayName = tag.classes.includes('person') 
-            ? this.formatPersonName(tag.originalCasing || tag.tag)
-            : tag.tag;
+      // Add tags dynamically from tag cache (comprehensive list)
+      if (this.tagCache) {
+        Object.entries(this.tagCache).forEach(([tagName, tagData]) => {
+          // Skip if not enough usage to be relevant
+          if ((tagData.totalUses || 0) < 2) return;
+          
+          const displayName = tagData.isPerson 
+            ? this.formatPersonName(tagData.originalCasing || tagName)
+            : tagName;
             
           this.commandSearchIndex.push({
-            id: `tag-${tag.tag}`,
+            id: `tag-${tagName}`,
             title: displayName,
-            subtitle: `${tag.count} uses • Avg score ${tag.avgScore.toFixed(1)}`,
-            icon: tag.classes.includes('person') ? '👤' : '#',
+            subtitle: `${tagData.totalUses || 0} uses • Avg score ${(tagData.avgScore || 0).toFixed(1)}`,
+            icon: tagData.isPerson ? '👤' : '#',
             type: 'tag',
-            searchTerms: [tag.tag, displayName.toLowerCase()],
-            action: () => this.showSearch(tag.tag)
+            searchTerms: [tagName, displayName.toLowerCase()],
+            action: () => this.showSearch(tagName)
           });
         });
       }
@@ -511,15 +493,57 @@
       }
       
       const results = this.searchItems(query);
+      
+      // If no results found, offer direct search action with result count preview
+      if (results.length === 0) {
+        // Get result count by doing a quick search
+        const resultCount = this.getSearchResultCount(query);
+        
+        const searchAction = {
+          id: `search-${query}`,
+          title: `Search for "${query}"`,
+          subtitle: resultCount > 0 ? `${resultCount} diary entries found` : 'Search diary entries',
+          icon: '🔍',
+          type: 'search-action',
+          action: () => {
+            this.hideCommandPalette();
+            this.showSearch(query);
+          }
+        };
+        this.renderSearchResults([searchAction]);
+        return;
+      }
+      
       this.renderSearchResults(results.slice(0, 10));
     }
 
     searchItems(query) {
-      const lowerQuery = query.toLowerCase();
+      let lowerQuery = query.toLowerCase();
+      let filterType = null; // 'person', 'topic', or null for all
+      
+      // Handle # and @ prefixes
+      if (query.startsWith('#')) {
+        lowerQuery = query.slice(1).toLowerCase();
+        filterType = 'topic';
+      } else if (query.startsWith('@')) {
+        lowerQuery = query.slice(1).toLowerCase();
+        filterType = 'person';
+      }
+      
       const results = [];
       
+      // Filter items based on type if prefix was used
+      const filteredIndex = this.commandSearchIndex.filter(item => {
+        if (filterType === 'person') {
+          return item.type === 'tag' && item.icon === '👤';
+        } else if (filterType === 'topic') {
+          return item.type === 'tag' && item.icon === '#';
+        }
+        return true; // No filter, include all items
+      });
+      
       // Exact matches first
-      for (const item of this.commandSearchIndex) {
+      for (const item of filteredIndex) {
         if (item.title.toLowerCase() === lowerQuery) {
           results.push({ item, score: 100 });
           continue;
@@ -538,7 +562,7 @@
       }
       
       // Starts with matches
-      for (const item of this.commandSearchIndex) {
+      for (const item of filteredIndex) {
         if (results.some(r => r.item.id === item.id)) continue;
         
         if (item.title.toLowerCase().startsWith(lowerQuery)) {
@@ -558,7 +582,7 @@
       }
       
       // Contains matches
-      for (const item of this.commandSearchIndex) {
+      for (const item of filteredIndex) {
         if (results.some(r => r.item.id === item.id)) continue;
         
         if (item.title.toLowerCase().includes(lowerQuery)) {
@@ -585,6 +609,41 @@
       results.sort((a, b) => b.score - a.score);
       
       return results.map(r => r.item);
+    }
+
+    getSearchResultCount(query) {
+      if (!query || !this.all) return 0;
+      
+      let foundScores = this.all;
+      let keywords = query.split(' ');
+      
+      for (let needle of keywords) {
+        if (needle.length < 1) continue;
+        
+        needle = needle.toLowerCase();
+        
+        if (needle[0] === '=') {
+          let score = parseInt(needle[1], 10);
+          foundScores = foundScores.filter(s => s.summary === score);
+        } else if (needle[0] === '>') {
+          let score = parseInt(needle[1], 10);
+          foundScores = foundScores.filter(s => s.summary >= score);
+        } else if (needle[0] === '<') {
+          let score = parseInt(needle[1], 10);
+          foundScores = foundScores.filter(s => s.summary <= score);
+        } else {
+          let date = Date.create(needle);
+          if (date.isValid()) {
+            foundScores = foundScores.filter(s => s.date.is(needle));
+          } else if (needle.length > 0) {
+            const needleLower = needle.toLowerCase();
+            const regex = new RegExp(`\\b${needleLower}`, 'i');
+            foundScores = foundScores.filter(s => regex.test(s.notes));
+          }
+        }
+      }
+      
+      return foundScores.length;
     }
 
     renderSearchResults(results) {
@@ -665,7 +724,31 @@
       
       const searchInput = document.getElementById('command-search-input');
       const query = searchInput ? searchInput.value : '';
-      const results = query.trim() ? this.searchItems(query).slice(0, 10) : this.getDefaultResults();
+      
+      // Get the actual rendered results (including dynamic search actions)
+      let results;
+      if (query.trim()) {
+        const searchResults = this.searchItems(query);
+        if (searchResults.length === 0) {
+          // No command palette results, create search action
+          const resultCount = this.getSearchResultCount(query);
+          results = [{
+            id: `search-${query}`,
+            title: `Search for "${query}"`,
+            subtitle: resultCount > 0 ? `${resultCount} diary entries found` : 'Search diary entries',
+            icon: '🔍',
+            type: 'search-action',
+            action: () => {
+              this.hideCommandPalette();
+              this.showSearch(query);
+            }
+          }];
+        } else {
+          results = searchResults.slice(0, 10);
+        }
+      } else {
+        results = this.getDefaultResults();
+      }
       
       // If no result is selected, select the first one
       let indexToExecute = this.selectedResultIndex;
@@ -674,7 +757,6 @@
       }
       
       if (results[indexToExecute]) {
-        this.hideCommandPalette();
         results[indexToExecute].action();
       }
     }
@@ -1012,7 +1094,7 @@
     }
 
     async showDashboard() {
-      $('#search input')[0].value = "";
+      // Old search input clearing removed - now using command palette
       
       // Safety check for this.all
       if (!this.all || !Array.isArray(this.all)) {
@@ -1746,18 +1828,9 @@
     }
 
     async showSearch(id) {
-      const searchInput = $('#search input')[0];
-      if (!searchInput) {
-        console.error('Search input not found');
-        return this.showDashboard();
-      }
-      
-      // Use passed parameter if provided, otherwise fall back to search input
+      // Use passed parameter or return to dashboard if not provided
       if (!id) {
-        id = searchInput.value;
-      } else {
-        // Update search input to show what we're searching for
-        searchInput.value = id;
+        return this.showDashboard();
       }
       
       if (id.length < 1) {
@@ -2693,15 +2766,14 @@
   }
 
   window.onShowSearch = async function(id) {
-    if (id != null) {
-      $('#search input')[0].value = id;
-    }
+    // Old search input value setting removed - now using command palette
     return await window.app.showSearch(id);
   };
 
   window.onToggleSearchType = function(checked) {
     window.app.tagsOnly = checked;
-    return window.app.showSearch();
+    // Search type toggle functionality may need to be updated for command palette
+    return;
   };
 
   window.onShowSettings = async function() {

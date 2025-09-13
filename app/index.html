@@ -964,9 +964,11 @@
 
   <div id="topArea">
     <div id="top-area-content">
-      <form id="search" class="form-search">
-        <input type="text" class="search-query" placeholder="Search.." />
-      </form>
+      <button id="command-palette-trigger" class="command-palette-trigger" onclick="onShowCommandPalette()">
+        <span class="trigger-icon">🔍</span>
+        <span class="trigger-text">Search</span>
+        <span class="trigger-shortcut">Ctrl+K</span>
+      </button>
   
       <div id="menu">
         <h1><a onclick="onShowDashboard()">FaveDay</a> <a onclick="onShowEditScore()">+</a> </h1>

@@ -2650,6 +2650,47 @@ input[type="date"]:focus, input[type="number"]:focus {
   margin-left: 8px;
 }
 
+/* Command Palette Trigger Button */
+.command-palette-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #ccc;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
+}
+
+.command-palette-trigger:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.trigger-icon {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.trigger-text {
+  flex: 1;
+  text-align: left;
+}
+
+.trigger-shortcut {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #999;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* Tag Suggestions */
 .tag-suggestion {
   cursor: pointer;
