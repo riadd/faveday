@@ -384,9 +384,9 @@
         'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
       ];
       
-      if (this.all && this.all.length > 0) {
+      if (this.dataManager.getAllScores() && this.dataManager.getAllScores().length > 0) {
         const availableMonths = new Set();
-        this.all.forEach(entry => {
+        this.dataManager.getAllScores().forEach(entry => {
           const date = new Date(entry.date);
           const year = date.getFullYear();
           const month = date.getMonth();
@@ -612,9 +612,9 @@
     }
 
     getSearchResultCount(query) {
-      if (!query || !this.all) return 0;
+      if (!query || !this.dataManager.getAllScores()) return 0;
       
-      let foundScores = this.all;
+      let foundScores = this.dataManager.getAllScores();
       let keywords = query.split(' ');
       
       for (let needle of keywords) {
@@ -817,8 +817,7 @@
     async loadScores() {
       await this.dataManager.loadScores();
       
-      // Update legacy properties for backward compatibility
-      this.all = this.dataManager.getAllScores();
+      // Update properties from dataManager
       this.tagCache = this.dataManager.getTagCache();
       this.years = this.dataManager.getYears();
         
@@ -847,8 +846,7 @@
       
       const demoScores = this.dataManager.setupDemoUser();
       
-      // Update legacy properties for backward compatibility
-      this.all = this.dataManager.getAllScores(); 
+      // Update properties from dataManager
       this.years = this.dataManager.getYears();
       
       return this.onScoreAdded();
@@ -868,10 +866,10 @@
       //   return yearRange;
       // }).apply(this);
 
-      this.all.sort((a, b) => b.date - a.date); // sort in descending order
+      this.dataManager.getAllScores().sort((a, b) => b.date - a.date); // sort in descending order
       
-      let minYear = this.all.last().date.getFullYear();
-      let maxYear = this.all.first().date.getFullYear();
+      let minYear = this.dataManager.getAllScores().last().date.getFullYear();
+      let maxYear = this.dataManager.getAllScores().first().date.getFullYear();
       
       this.years = [];
       for (let year = minYear; year <= maxYear; year++) {
@@ -886,10 +884,10 @@
 
     onScoreAddedAndNavigateBack() {
       // Update the data like onScoreAdded but navigate back instead of handling current route
-      this.all.sort((a, b) => b.date - a.date); // sort in descending order
+      this.dataManager.getAllScores().sort((a, b) => b.date - a.date); // sort in descending order
       
-      let minYear = this.all.last().date.getFullYear();
-      let maxYear = this.all.first().date.getFullYear();
+      let minYear = this.dataManager.getAllScores().last().date.getFullYear();
+      let maxYear = this.dataManager.getAllScores().first().date.getFullYear();
       
       this.years = [];
       for (let year = minYear; year <= maxYear; year++) {
@@ -1097,15 +1095,15 @@
     async showDashboard() {
       // Old search input clearing removed - now using command palette
       
-      // Safety check for this.all
-      if (!this.all || !Array.isArray(this.all)) {
+      // Safety check for scores
+      if (!this.dataManager.getAllScores() || !Array.isArray(this.dataManager.getAllScores())) {
         console.warn('No scores loaded yet');
         return;
       }
       
-      let recent = this.all.slice(0, 3);
+      let recent = this.dataManager.getAllScores().slice(0, 3);
       
-      let filteredBestScores = this.all.filter(function(s) {
+      let filteredBestScores = this.dataManager.getAllScores().filter(function(s) {
         return s.summary === 5;
       });
       let bestScores = filteredBestScores.length > 0 ? filteredBestScores.sample() : [];
@@ -1119,12 +1117,12 @@
       let toWeek = today.getISOWeek();
       
       // Get scores for this exact day of the week and week
-      let todayScores = this.all.filter(s =>
+      let todayScores = this.dataManager.getAllScores().filter(s =>
         s.date.getDay() === toDay && s.date.getISOWeek() === toWeek
       );
       
       // Get anniversary days (same month and day across all years)
-      let anniversaryScores = this.all.filter(s =>
+      let anniversaryScores = this.dataManager.getAllScores().filter(s =>
         s.date.getMonth() === today.getMonth() && s.date.getDate() === today.getDate()
       );
       
@@ -1167,9 +1165,9 @@
         todayScores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(todayScores)}),
         anniversaryStats: anniversaryStats,
         years: this.years.map(y => ({year: y})),
-        streak: this.getMaxStreak(this.all, true),
+        streak: this.getMaxStreak(this.dataManager.getAllScores(), true),
         diff: diff,
-        footer: `Total Scores: ${this.all.length}`,
+        footer: `Total Scores: ${this.dataManager.getAllScores().length}`,
         calendarProgress: calendarProgress,
         lifeProgress: lifeProgress,
         coverage: coverage,
@@ -1205,7 +1203,7 @@
       let monthDate = Date.create(`${yearNum}-${monthNum}`);
       let title = monthDate.format('{Month} {yyyy}');
 
-      let monthScores = this.all.filter(s =>
+      let monthScores = this.dataManager.getAllScores().filter(s =>
         s.date.getFullYear() === yearNum &&
         s.date.getMonth() === monthNum-1
       );
@@ -1240,8 +1238,8 @@
       }
       
       let tags = this.getTags(monthScores); 
-      let firstDate = this.all[0].date;
-      let lastDate = this.all.last().date;
+      let firstDate = this.dataManager.getAllScores()[0].date;
+      let lastDate = this.dataManager.getAllScores().last().date;
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
       
       this.render('#tmpl-month', '#content', {
@@ -1281,7 +1279,7 @@
       let date = new Date(2024, monthNum, 1);
 
       // all scores of this month
-      let monthScores = this.all.filter(s =>
+      let monthScores = this.dataManager.getAllScores().filter(s =>
         s.date.getMonth() === monthNum
       );
 
@@ -1341,7 +1339,7 @@
     }
 
     updateRandomInspiration() {
-      let bestScores = this.all.filter(s => s.summary === 5).sample();
+      let bestScores = this.dataManager.getAllScores().filter(s => s.summary === 5).sample();
       if (!Array.isArray(bestScores)) {
         bestScores = bestScores ? [bestScores] : [];
       }
@@ -1407,7 +1405,7 @@
         return inspiration.isEmpty() ? null : this.tmplScores.render({ scores: this.enhanceScoresForDisplay(inspiration) });
       };
 
-      let byYear = this.all.groupBy(s => s.date.getFullYear());
+      let byYear = this.dataManager.getAllScores().groupBy(s => s.date.getFullYear());
       let allYears = [];
       
       for (const year in byYear) {
@@ -1464,14 +1462,14 @@
 
       // Calculate best days in parallel
       const bestDaysPromises = Array.from({ length: 7 }, (_, i) => {
-        const dayScores = this.all.filter(d => d.date.getDay() === i);
+        const dayScores = this.dataManager.getAllScores().filter(d => d.date.getDay() === i);
         return this.scoreCalculator.calculate(dayScores);
       });
       const bestDays = await Promise.all(bestDaysPromises);
 
       // Calculate best months in parallel
       const bestMonthsPromises = Array.from({ length: 12 }, (_, i) => {
-        const monthScores = this.all.filter(d => d.date.getMonth() === i);
+        const monthScores = this.dataManager.getAllScores().filter(d => d.date.getMonth() === i);
         return this.scoreCalculator.calculate(monthScores);
       });
       const bestMonths = await Promise.all(bestMonthsPromises);
@@ -1486,7 +1484,7 @@
           case 2: seasonMonths = [5, 6, 7]; break;  // Summer: Jun, Jul, Aug
           case 3: seasonMonths = [8, 9, 10]; break; // Autumn: Sep, Oct, Nov
         }
-        const seasonScores = this.all.filter(d => seasonMonths.includes(d.date.getMonth()));
+        const seasonScores = this.dataManager.getAllScores().filter(d => seasonMonths.includes(d.date.getMonth()));
         return this.scoreCalculator.calculate(seasonScores);
       });
       const bestSeasons = await Promise.all(bestSeasonsPromises);
@@ -1497,15 +1495,15 @@
       const maxSeason = Math.max(...bestSeasons);
 
       // Calculate overall statistics across all entries
-      const overallAvg = this.all.length > 0 ? this.scoreCalculator.calculate(this.all) : 0;
+      const overallAvg = this.dataManager.getAllScores().length > 0 ? this.scoreCalculator.calculate(this.dataManager.getAllScores()) : 0;
       
-      const overallLifeQuality = this.all.length > 0 
-        ? this.scoreCalculator.calculateQuality(this.scoreCalculator.prepareScores(this.all))
+      const overallLifeQuality = this.dataManager.getAllScores().length > 0 
+        ? this.scoreCalculator.calculateQuality(this.scoreCalculator.prepareScores(this.dataManager.getAllScores()))
         : 0;
 
       // Calculate display scores for each year
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
-      const overallDisplayScore = this.calculateDisplayScore(this.all);
+      const overallDisplayScore = this.calculateDisplayScore(this.dataManager.getAllScores());
       
       // Use already calculated totalAvg for medal ranking
       for (let yearData of allYears) {
@@ -1553,8 +1551,8 @@
           value: s.format(2),
           isMax: s === maxSeason
         })),
-        streak: this.getMaxStreak(this.all),
-        overview: this.getOverview(this.all),
+        streak: this.getMaxStreak(this.dataManager.getAllScores()),
+        overview: this.getOverview(this.dataManager.getAllScores()),
         overallDisplayScore: overallDisplayScore.format(1),
         scoreTypeIcon: scoreTypeInfo.icon,
         scoreTypeName: scoreTypeInfo.name
@@ -1709,7 +1707,7 @@
       this.currentTagSort = sortBy;
       this.currentTagFilter = filterBy;
       
-      let allTags = this.getTags(this.all, sortBy).slice(0,250);
+      let allTags = this.getTags(this.dataManager.getAllScores(), sortBy).slice(0,250);
       
       // Apply filtering
       let filteredTags = allTags;
@@ -1838,7 +1836,7 @@
         return this.showDashboard();
       }
       
-      let foundScores = this.all;
+      let foundScores = this.dataManager.getAllScores();
       let keywords = [];
       let ref = id.split(' ');
       
@@ -2012,7 +2010,7 @@
       this.isFutureEntry = date > today;
       
       // Find the last entry for this date (most recent if multiple exist)
-      let matches = this.all.filter(s => s.dateId() === dateId)
+      let matches = this.dataManager.getAllScores().filter(s => s.dateId() === dateId)
       let score = matches.length > 0 ? matches[matches.length - 1] : null
       
       if (score == null) {
@@ -2131,13 +2129,13 @@
         this.showToaster(`Future entry saved for ${this.formatDateWithOrdinal(new Date(dateId))}.`);
       } else {
         // Handle regular diary entry
-        let score = this.all.find(s => s.dateId() === dateId)
+        let score = this.dataManager.getAllScores().find(s => s.dateId() === dateId)
         let isNew = false;
         
         if (score == null)
         {
           score = new Score(new Date(), 3, '')
-          this.all.push(score)
+          this.dataManager.getAllScores().push(score)
           isNew = true;
         }
         
@@ -2181,10 +2179,10 @@
       sixtyDaysAgo.setDate(now.getDate() - 60);
 
       // Current 30 days
-      const currentPeriod = this.all.filter(s => s.date >= thirtyDaysAgo && s.date <= now);
+      const currentPeriod = this.dataManager.getAllScores().filter(s => s.date >= thirtyDaysAgo && s.date <= now);
       
       // Previous 30 days (31-60 days ago)
-      const previousPeriod = this.all.filter(s => s.date >= sixtyDaysAgo && s.date < thirtyDaysAgo);
+      const previousPeriod = this.dataManager.getAllScores().filter(s => s.date >= sixtyDaysAgo && s.date < thirtyDaysAgo);
 
       // Word count comparison
       const currentWordCount = currentPeriod.reduce((sum, score) => sum + (score.notes ? score.notes.split(/\s+/).length : 0), 0);
@@ -2384,7 +2382,7 @@
       const dateMap = new Map();
       
       // Check for duplicate dates
-      this.all.forEach(entry => {
+      this.dataManager.getAllScores().forEach(entry => {
         const dateId = entry.dateId();
         if (dateMap.has(dateId)) {
           dateMap.get(dateId).push(entry);
@@ -2402,12 +2400,12 @@
       });
       
       // Check for missing scores
-      const missingScores = this.all.filter(entry => 
+      const missingScores = this.dataManager.getAllScores().filter(entry => 
         entry.summary === null || entry.summary === undefined
       );
       
       // Check for invalid dates
-      const invalidDates = this.all.filter(entry => {
+      const invalidDates = this.dataManager.getAllScores().filter(entry => {
         const date = entry.date;
         return isNaN(date.getTime()) || 
                date.getFullYear() < 1900 || 
@@ -2415,7 +2413,7 @@
       });
       
       // Check for entries with no notes
-      const emptyNotes = this.all.filter(entry => 
+      const emptyNotes = this.dataManager.getAllScores().filter(entry => 
         !entry.notes || entry.notes.trim() === ''
       );
       
@@ -2600,11 +2598,11 @@
         const dateId = dateElement.getAttribute('data-date-id');
         
         if (dateId) {
-          targetScore = this.all.find(score => score.dateId() === dateId);
+          targetScore = this.dataManager.getAllScores().find(score => score.dateId() === dateId);
         } else {
           // Fallback to text matching for older entries
           const dateText = dateElement.textContent.replace(/\s+/g, ' ').trim();
-          targetScore = this.all.find(score => score.dateStr() === dateText);
+          targetScore = this.dataManager.getAllScores().find(score => score.dateStr() === dateText);
         }
       }
       
