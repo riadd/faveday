@@ -1048,16 +1048,11 @@
 
     pushHistory(url, title) {
       const fullTitle = (title.length > 0) ? `Faveday - ${title}` : 'Faveday';
+      // Let the router handle all history management - no duplicate calls
       this.router.pushHistory(url, fullTitle);
-      
-      // Only push to browser history if we're not currently handling a popstate event
-      // and if the current URL is different from the one we're trying to push
-      if (!window.poppingState && window.location.pathname !== url) {
-        history.pushState({}, '', url);
-      }
     }
     
-    getTags(scores, sortBy = 'count') {
+    getTags(scores, sortBy = 'lastUsage') {
       // Use cached tag statistics instead of recalculating
       const re = /([#@])\p{L}[\p{L}\d]*/gui;
       
@@ -1174,7 +1169,7 @@
       }
     }
     
-    getGroupedTags(scores, sortBy = 'count') {
+    getGroupedTags(scores, sortBy = 'lastUsage') {
       // Get all tags and separate by type
       const allTags = this.getTags(scores, sortBy);
       
@@ -1189,7 +1184,7 @@
       };
     }
     
-    showTags(sortBy = 'count', filterBy = 'both') {
+    showTags(sortBy = 'lastUsage', filterBy = 'both') {
       // Store current state
       this.currentTagSort = sortBy;
       this.currentTagFilter = filterBy;
@@ -2205,7 +2200,7 @@
   };
 
   window.onShowTagsWithFilter = function(filterBy) {
-    const currentSort = window.app.currentTagSort || 'count';
+    const currentSort = window.app.currentTagSort || 'lastUsage';
     window.app.currentTagFilter = filterBy;
     return window.app.showTags(currentSort, filterBy);
   };

@@ -704,10 +704,10 @@
       <div class="tags-controls">
         <span class="sort-controls-inline">
           Sort by
+          <a onclick="onShowTagsWithSort('lastUsage')" class="sort-btn {{#sortOptions.lastUsage}}sort-active{{/sortOptions.lastUsage}}">Recency</a>
           <a onclick="onShowTagsWithSort('count')" class="sort-btn {{#sortOptions.count}}sort-active{{/sortOptions.count}}">Usage</a>
           <a onclick="onShowTagsWithSort('avgScore')" class="sort-btn {{#sortOptions.avgScore}}sort-active{{/sortOptions.avgScore}}">Score</a>
           <a onclick="onShowTagsWithSort('firstUsage')" class="sort-btn {{#sortOptions.firstUsage}}sort-active{{/sortOptions.firstUsage}}">First Use</a>
-          <a onclick="onShowTagsWithSort('lastUsage')" class="sort-btn {{#sortOptions.lastUsage}}sort-active{{/sortOptions.lastUsage}}">Recency</a>
         </span>
         <span class="sort-controls-inline">
           Show

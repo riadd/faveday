@@ -2443,7 +2443,7 @@ input[type="date"]:focus, input[type="number"]:focus {
   justify-content: flex-end;
   align-items: center;
   padding: 10px 15px;
-  gap: 20px;
+  gap: 15px;
 }
 
 .sort-controls-inline {
@@ -2451,8 +2451,8 @@ input[type="date"]:focus, input[type="number"]:focus {
   font-size: 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #999;
+  gap: 6px;
+  color: #ccc;
 }
 
 .tags-content {
@@ -2463,18 +2463,18 @@ input[type="date"]:focus, input[type="number"]:focus {
 .sort-btn {
   color: #ccc;
   text-decoration: none;
-  padding: 6px 14px;
-  margin: 0 3px;
+  padding: 6px 12px;
+  margin: 0 2px;
   transition: all 0.2s ease;
   cursor: pointer;
   background: #2a2a2a;
   border: 1px solid #444;
   border-radius: 50px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .sort-btn:hover {
