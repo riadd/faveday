@@ -14,6 +14,7 @@
   <script type="text/javascript" src="./lib/bootstrap.min.js"></script>
   <script type="text/javascript" src="./lib/sugar-2.0.4.dev.custom.js"></script>
   <script type="text/javascript" src="./lib/hogan-2.0.0.js"></script>
+  <script type="text/javascript" src="./lib/finisher-header.es5.min.js"></script>
 
   <script type="text/javascript" src="./lib/faveday/tag-parser.js"></script>
   <script type="text/javascript" src="./lib/faveday/tag-cache.js"></script>
@@ -957,9 +958,80 @@
 </head>
 
 <body>
-  <div id="loading">
-    Loading files...
-    <button onclick="onSelectFolder()">Select Folder</button>
+  <div id="loading" class="welcome-screen finisher-header">
+    <script type="text/javascript">
+      new FinisherHeader({
+        "count": 20,
+        "size": {
+          "min": 5,
+          "max": 120,
+          "pulse": 0.1
+        },
+        "speed": {
+          "x": {
+            "min": 0,
+            "max": 0.2
+          },
+          "y": {
+            "min": 0,
+            "max": 0.4
+          }
+        },
+        "colors": {
+          "background": "#181819",
+          "particles": [
+            "#9e2800",
+            "#ff794d",
+            "#d68400",
+            "#75a300",
+            "#27824e"
+          ]
+        },
+        "blending": "screen",
+        "opacity": {
+          "center": 1,
+          "edge": 1
+        },
+        "skew": -0.7,
+        "shapes": [
+          "c"
+        ]
+      });
+    </script>
+    
+    <div class="welcome-container">
+      <div class="welcome-header">
+        <p class="welcome-subtitle">Welcome to Faveday</p>
+      </div>
+      
+      <div class="welcome-content">
+        <p>Your personal journal helps you track your daily experiences with simple scores and notes. 
+           Over time, you'll discover patterns and insights about your life through elegant analytics.</p>
+        
+        <div class="welcome-features">
+          <div class="feature">
+            <span class="feature-icon">⭐</span>
+            <span>Rate your days 1-5</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">#️⃣</span>
+            <span>Tag people & topics</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">📊</span>
+            <span>Discover life patterns</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="welcome-action">
+        <p class="setup-text">To get started, choose where to store your journal data</p>
+        <button class="welcome-button" onclick="onSelectFolder()">
+          📁 Choose Data Folder
+        </button>
+        <p class="setup-note">Your data stays private and local on your device</p>
+      </div>
+    </div>
   </div>
 
   <div id="topArea">
