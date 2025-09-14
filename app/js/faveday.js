@@ -880,21 +880,19 @@
     onScoreAdded() {
       const allScores = this.dataManager.getAllScores();
       
-      // Check if we have any scores
-      if (allScores.length === 0) {
-        // No scores yet, keep the welcome screen visible
-        return;
-      }
-      
       // Sort scores in descending order
       allScores.sort((a, b) => b.date - a.date);
       
-      let minYear = allScores[allScores.length - 1].date.getFullYear();
-      let maxYear = allScores[0].date.getFullYear();
-      
-      this.years = [];
-      for (let year = minYear; year <= maxYear; year++) {
-        this.years.push(year);
+      if (allScores.length > 0) {
+        let minYear = allScores[allScores.length - 1].date.getFullYear();
+        let maxYear = allScores[0].date.getFullYear();
+        
+        this.years = [];
+        for (let year = minYear; year <= maxYear; year++) {
+          this.years.push(year);
+        }
+      } else {
+        this.years = [];
       }
 
       $('#topArea').show();
@@ -3225,4 +3223,7 @@
       }
     }
   }
+
+  // Start the app when the page loads
+  window.addEventListener('DOMContentLoaded', onAppStart);
 
