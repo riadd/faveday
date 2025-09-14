@@ -1855,6 +1855,9 @@
         return this.showDashboard();
       }
       
+      // Store current search term for toggle functionality
+      this.currentSearchTerm = id;
+      
       let foundScores = this.dataManager.getAllScores();
       let keywords = [];
       let ref = id.split(' ');
@@ -1889,13 +1892,13 @@
           // text criteria
           } else if (needle.length > 0) {
             if (this.tagsOnly) {
-              // Tag-only search: look for #needle or @needle
+              // Tag-only search: look for exact #needle or @needle with word boundaries
               const tagRegex = new RegExp(`[#@]${needle.toLowerCase()}\\b`, 'i');
               foundScores = foundScores.filter(s => tagRegex.test(s.notes.toLowerCase()));
             } else {
-              // Regular text search
+              // Regular text search - strict word boundaries
               const needleLower = needle.toLowerCase();
-              const regex = new RegExp(`\\b${needleLower}`, 'i'); // 'i' makes it case-insensitive
+              const regex = new RegExp(`\\b${needleLower}\\b`, 'i'); // Word boundaries on both ends
               foundScores = foundScores.filter(s => regex.test(s.notes));
             }
             
@@ -2797,7 +2800,10 @@
 
   window.onToggleSearchType = function(checked) {
     window.app.tagsOnly = checked;
-    // Search type toggle functionality may need to be updated for command palette
+    // Re-run the current search with the new toggle state
+    if (window.app.currentSearchTerm) {
+      window.app.showSearch(window.app.currentSearchTerm);
+    }
     return;
   };
 
