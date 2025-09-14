@@ -197,6 +197,7 @@
       this.showEmpty = false;
       this.tagsOnly = false;
       this.tagCache = {};
+      this.years = []; // Initialize as empty array to prevent map errors
 
       // loadScores will be called after initialization in onAppStart
     }
