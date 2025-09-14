@@ -2770,9 +2770,9 @@
   window.onSelectFolder = async function () {
     const result = await window.api.selectFolder();
     if (result && result.success) {
-      // Hide loading screen and initialize app with new data
+      // Hide welcome screen and initialize app with new data
+      document.getElementById('welcome-screen').style.display = 'none';
       await window.app.init(result.scores);
-      document.getElementById('loading').style.display = 'none';
       window.app.showDashboard();
     }
   }
@@ -2863,46 +2863,61 @@
     window.poppingState = false;
   });
 
-  // Call onAppStart when the window 
+  // Show welcome screen when no data folder is configured
+  function showWelcomeScreen() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('welcome-screen').style.display = 'block';
+  }
+
+  // Call onAppStart when the window loads
   async function onAppStart() {
-    window.app = new FaveDayApp();
-    await window.app.initializeConfig();
-    await window.app.loadScores();
+    try {
+      window.app = new FaveDayApp();
+      await window.app.initializeConfig();
+      await window.app.loadScores();
 
-    document.getElementById('minimize-btn').addEventListener('click', () => {
-      window.api.minimize();
-    });
+      // If we get here, data was loaded successfully - hide loading and show app
+      document.getElementById('loading').style.display = 'none';
 
-    document.getElementById('maximize-btn').addEventListener('click', () => {
-      window.api.maximize();
-    });
+      document.getElementById('minimize-btn').addEventListener('click', () => {
+        window.api.minimize();
+      });
 
-    document.getElementById('close-btn').addEventListener('click', () => {
-      window.api.close();
-    });
+      document.getElementById('maximize-btn').addEventListener('click', () => {
+        window.api.maximize();
+      });
 
-    document.getElementById('editScoreText').addEventListener('input', function() {
-      window.app.updateScoreProgress(this.value.trim())
-    });
+      document.getElementById('close-btn').addEventListener('click', () => {
+        window.api.close();
+      });
 
-    document.getElementById('editScoreText').addEventListener('keydown', function() {
-      if (event.ctrlKey && event.key === 'Enter') {
-        event.preventDefault(); // Prevents default behavior (optional, depending on your needs)
+      document.getElementById('editScoreText').addEventListener('input', function() {
+        window.app.updateScoreProgress(this.value.trim())
+      });
 
-        // Call your submit function or trigger a form submission here
-        window.app.submitScore();
-      }
+      document.getElementById('editScoreText').addEventListener('keydown', function() {
+        if (event.ctrlKey && event.key === 'Enter') {
+          event.preventDefault(); // Prevents default behavior (optional, depending on your needs)
 
-      if (event.key === 'Escape') {
-        window.app.hideEditScore();
-      }
-    });
+          // Call your submit function or trigger a form submission here
+          window.app.submitScore();
+        }
 
-    // Handle initial route on app startup
-    handleRoute();
-    
-    // Initialize tag hover popups
-    initializeTagPopups();
+        if (event.key === 'Escape') {
+          window.app.hideEditScore();
+        }
+      });
+
+      // Handle initial route on app startup
+      handleRoute();
+      
+      // Initialize tag hover popups
+      initializeTagPopups();
+    } catch (error) {
+      console.error('Error loading app data:', error);
+      // Show welcome screen if data loading fails (no folder configured)
+      showWelcomeScreen();
+    }
   }
 
   // Tag hover popup functionality
