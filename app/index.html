@@ -162,18 +162,15 @@
     {{}}
     
     {{#hasTags}}
-      <table class="box tags">
-        <tr>
-          <th>Tags</th>
-        </tr>
-        <tr>
-          <td>
+      <div class="box journey-tags-box">
+        <div class="journey-section">
+          <div class="tags-grid">
             {{#tags}} 
-              <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
+              <a class="{{classes}} journey-tag" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">{{tag}}</a> 
             {{/tags}}
-          </td>
-        </tr>
-      </table>
+          </div>
+        </div>
+      </div>
     {{/hasTags}}
     
 <!--    <div id="ai">-->
@@ -717,12 +714,17 @@
           <a onclick="onShowTagsWithFilter('persons')" class="sort-btn {{#filterOptions.persons}}sort-active{{/filterOptions.persons}}"><span class="btn-dot person-dot"></span>Persons</a>
         </span>
       </div>
-      <div class="tags-content">
-        {{#tags}} 
-          <a class="{{classes}}" style="--weight:{{weight}}; background-color:{{color}}" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">
-            {{displayName}}
-          </a> 
-        {{/tags}}
+    </div>
+    
+    <div class="box journey-tags-box">
+      <div class="journey-section">
+        <div class="tags-grid">
+          {{#tags}} 
+            <a class="{{classes}} journey-tag" {{{dataAttrs}}} onclick="onShowSearch('{{tag}}')">
+              {{displayName}}
+            </a> 
+          {{/tags}}
+        </div>
       </div>
     </div>
   </script>

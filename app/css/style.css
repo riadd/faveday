@@ -963,7 +963,6 @@ tr .yearRow {
 .tags {
   margin: 20px 0;
   text-align: justify;
-  margin-bottom: 40px;
 }
 
 .tags span {
@@ -2206,6 +2205,7 @@ input[type="date"]:focus, input[type="number"]:focus {
   box-shadow: #222 0px 8px 16px;
   position: relative;
   overflow: hidden;
+  margin: 15px 0;
 }
 
 .years-chart-box::before {
@@ -2227,11 +2227,6 @@ input[type="date"]:focus, input[type="number"]:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.years-chart-header::before {
-  content: '📈';
-  font-size: 16px;
 }
 
 .year-range {
@@ -2408,32 +2403,48 @@ input[type="date"]:focus, input[type="number"]:focus {
 .journey-tag {
   text-decoration: none;
   transition: all 0.2s ease;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 /* Journey tags inherit their base styling from existing tag classes */
 .journey-tags-box .person {
-  background: #3b4f7a !important;
-  color: #dbeafe;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
+  background: #a67b8a !important;
+  color: #ffffff;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.journey-tags-box .person.recent {
+  background: #9a6f7d !important;
+  box-shadow: 0 0 6px rgba(154, 111, 125, 0.6);
 }
 
 .journey-tags-box .person:hover {
-  background: #4c63a8 !important;
+  background: #b8869c !important;
   transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
 }
 
 .journey-tags-box .tag {
-  background: #2d5a4a !important;
-  color: #d1fae5;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
+  background: #6b8db5 !important;
+  color: #ffffff;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.journey-tags-box .tag.recent {
+  background: #5a80a8 !important;
+  box-shadow: 0 0 6px rgba(90, 128, 168, 0.6);
 }
 
 .journey-tags-box .tag:hover {
-  background: #3f7560 !important;
+  background: #7a9bc6 !important;
   transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
 }
 
 /* Tags controls styling */
