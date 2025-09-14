@@ -65,9 +65,24 @@ ipcMain.handle('save-future-entries', async (event, futureEntries) => {
   }
 });
 
-ipcMain.on('select-folder', async (event) => {
-  config.filesPath = await selectFolder();
-  return await loadScores(config.filesPath);
+ipcMain.handle('select-folder', async (event) => {
+  const selectedPath = await selectFolder();
+  
+  if (selectedPath) {
+    config.filesPath = selectedPath;
+    saveConfig();
+    
+    // Load scores from the new path
+    const scores = await loadScores(config.filesPath);
+    // Check if cache exists, if not create it
+    const cacheFile = `${config.filesPath}/tag-cache.json`;
+    if (!fs.existsSync(cacheFile)) {
+      await calculateTagCache(config.filesPath, scores);
+    }
+    return { success: true, scores };
+  }
+  
+  return { success: false, scores: [] };
 });
 
 ipcMain.handle('get-config', () => {

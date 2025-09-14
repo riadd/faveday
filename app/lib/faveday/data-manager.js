@@ -248,6 +248,24 @@ class DataManager {
   }
 
   /**
+   * Set scores from raw data (used when loading new folder data)
+   * @param {Array} rawScores - Raw score objects
+   */
+  setScores(rawScores) {
+    this.scores = rawScores.map(s => new Score(new Date(s.date), s.summary, s.notes))
+                           .sort((a, b) => a.date - b.date);
+    this.years = [...new Set(this.scores.map(s => s.date.getFullYear()))].sort();
+  }
+
+  /**
+   * Set future entries
+   * @param {Array} entries - Future entry objects
+   */
+  setFutureEntries(entries) {
+    this.futureEntries = entries;
+  }
+
+  /**
    * Get statistics about the current dataset
    * @returns {Object} Dataset statistics
    */

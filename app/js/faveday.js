@@ -209,6 +209,31 @@
       const config = await window.api.getConfig();
       window.configStore.load(config);
     }
+
+    /**
+     * Initialize app with provided scores data
+     * Used when user selects a new data folder
+     */
+    async init(scores) {
+      // Initialize dataManager with the provided scores
+      this.dataManager.setScores(scores || []);
+      
+      // Update properties from dataManager
+      this.tagCache = this.dataManager.getTagCache();
+      this.years = this.dataManager.getYears();
+      
+      // Load tag cache and future entries
+      this.tagCache = await window.api.getTagCache();
+      this.dataManager.setFutureEntries(await window.api.loadFutureEntries());
+        
+      // Rebuild command palette search index with new data
+      if (this.buildSearchIndex) {
+        this.buildSearchIndex();
+      }
+      
+      // Trigger UI update
+      this.onScoreAdded();
+    }
     
     fmtDiff(val, currentVal) {
       if (val === 0) return '';
@@ -853,23 +878,19 @@
     }
 
     onScoreAdded() {
-      // todo: rename to allYears or something
-      // this.years = (() => {
-      //   const startYear = this.all.first().date.getFullYear();
-      //   const endYear = this.all.last().date.getFullYear();
-      //   const yearRange = [];
-      //
-      //   for (let year = startYear; year <= endYear; year++) {
-      //     yearRange.push(year);
-      //   }
-      //
-      //   return yearRange;
-      // }).apply(this);
-
-      this.dataManager.getAllScores().sort((a, b) => b.date - a.date); // sort in descending order
+      const allScores = this.dataManager.getAllScores();
       
-      let minYear = this.dataManager.getAllScores().last().date.getFullYear();
-      let maxYear = this.dataManager.getAllScores().first().date.getFullYear();
+      // Check if we have any scores
+      if (allScores.length === 0) {
+        // No scores yet, keep the welcome screen visible
+        return;
+      }
+      
+      // Sort scores in descending order
+      allScores.sort((a, b) => b.date - a.date);
+      
+      let minYear = allScores[allScores.length - 1].date.getFullYear();
+      let maxYear = allScores[0].date.getFullYear();
       
       this.years = [];
       for (let year = minYear; year <= maxYear; year++) {
@@ -2745,8 +2766,14 @@
     return window.app.submitScore();
   }
   
-  window.onSelectFolder = function () {
-    window.api.selectFolder();
+  window.onSelectFolder = async function () {
+    const result = await window.api.selectFolder();
+    if (result && result.success) {
+      // Hide loading screen and initialize app with new data
+      await window.app.init(result.scores);
+      document.getElementById('loading').style.display = 'none';
+      window.app.showDashboard();
+    }
   }
 
   window.onSelectScoreVal = function (val) {
