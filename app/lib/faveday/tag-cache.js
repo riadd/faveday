@@ -66,7 +66,8 @@ class TagCacheBuilder {
     
     // Calculate derived statistics
     for (const tag of Object.values(tagStats)) {
-      tag.avgScore = tag.scores.length > 0 ? tag.scores.reduce((a, b) => a + b, 0) / tag.scores.length : 0;
+      tag.totalScore = tag.scores.length > 0 ? tag.scores.reduce((a, b) => a + b, 0) : 0;
+      tag.avgScore = tag.scores.length > 0 ? tag.totalScore / tag.scores.length : 0;
       
       // Find peak year
       let maxYear = null;

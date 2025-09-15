@@ -1630,6 +1630,7 @@
         // Use cached statistics when available, fallback to current data
         const totalUses = cachedStats?.totalUses || currentCount;
         const avgScore = cachedStats?.avgScore || 0;
+        const totalScore = cachedStats?.totalScore || 0;
         
         // For date sorting, calculate from current scores if cache doesn't have dates yet
         let firstUsage = null;
@@ -1672,6 +1673,7 @@
           originalCasing: originalPersonCasing[tagName] || tagName, // Store original casing if available
           count: totalUses,
           avgScore: avgScore,
+          totalScore: totalScore,
           firstUsage: firstUsage,
           lastUsage: lastUsage,
           weight: 1, // No weight-based sizing
@@ -1685,6 +1687,8 @@
       switch (sortBy) {
         case 'avgScore':
           return results.sort((a, b) => b.avgScore - a.avgScore);
+        case 'totalScore':
+          return results.sort((a, b) => b.totalScore - a.totalScore);
         case 'firstUsage':
           // "Newest" - sort by first occurrence, newest first (reverse chronological)
           return results.sort((a, b) => {
@@ -1763,7 +1767,8 @@
         filterBy: filterBy,
         sortOptions: {
           count: sortBy === 'count',
-          avgScore: sortBy === 'avgScore', 
+          avgScore: sortBy === 'avgScore',
+          totalScore: sortBy === 'totalScore',
           firstUsage: sortBy === 'firstUsage',
           lastUsage: sortBy === 'lastUsage'
         },
