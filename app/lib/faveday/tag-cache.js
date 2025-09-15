@@ -9,6 +9,36 @@ class TagCacheBuilder {
   }
 
   /**
+   * Calculate hotness score by weighting each individual score by its recency
+   * @param {Array} scores - All scores with dates for this tag
+   * @param {Date} currentDate - Current date for comparison
+   * @returns {number} Hotness score
+   */
+  calculateHotness(scores, currentDate) {
+    if (!scores || scores.length === 0) return 0;
+    
+    let totalWeightedScore = 0;
+    
+    // Weight each individual score based on its own date
+    for (const score of scores) {
+      const daysAgo = Math.floor((currentDate - score.date) / (1000 * 60 * 60 * 24));
+      const yearsAgo = daysAgo / 365.25;
+      
+      // Exponential decay: more aggressive falloff for older entries
+      // Formula: 0.8^yearsAgo with minimum of 0.05
+      // 1 year ago: ~80%, 2 years: ~64%, 3 years: ~51%, 5 years: ~33%, 10 years: ~11%
+      const weight = Math.max(0.05, Math.pow(0.8, yearsAgo));
+      
+      totalWeightedScore += score.summary * weight;
+    }
+    
+    // Return total weighted score (no normalization by count)
+    // This way, consistent activity over time can compete with single recent mentions
+    const hotness = totalWeightedScore;
+    return Math.round(hotness * 100) / 100; // Round to 2 decimal places
+  }
+
+  /**
    * Calculate tag cache from scores data
    * @param {Array} scores - Array of score objects with date, summary, notes
    * @returns {Object} Tag cache object
@@ -16,6 +46,7 @@ class TagCacheBuilder {
   calculateTagCache(scores) {
     const tagStats = {};
     const currentYear = new Date().getFullYear();
+    const currentDate = new Date();
     
     // Extract and analyze all tags
     for (const score of scores) {
@@ -43,7 +74,7 @@ class TagCacheBuilder {
         
         const tag = tagStats[tagName];
         tag.totalUses++;
-        tag.scores.push(score.summary);
+        tag.scores.push({summary: score.summary, date: score.date});
         tag.hasPersonUsage = tag.hasPersonUsage || isPersonTag;
         tag.recentActivity = tag.recentActivity || (year >= currentYear - 1);
         
@@ -66,8 +97,9 @@ class TagCacheBuilder {
     
     // Calculate derived statistics
     for (const tag of Object.values(tagStats)) {
-      tag.totalScore = tag.scores.length > 0 ? tag.scores.reduce((a, b) => a + b, 0) : 0;
+      tag.totalScore = tag.scores.length > 0 ? tag.scores.reduce((a, b) => a + b.summary, 0) : 0;
       tag.avgScore = tag.scores.length > 0 ? tag.totalScore / tag.scores.length : 0;
+      tag.hotness = this.calculateHotness(tag.scores, currentDate);
       
       // Find peak year
       let maxYear = null;

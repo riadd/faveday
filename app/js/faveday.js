@@ -1631,6 +1631,7 @@
         const totalUses = cachedStats?.totalUses || currentCount;
         const avgScore = cachedStats?.avgScore || 0;
         const totalScore = cachedStats?.totalScore || 0;
+        const hotness = cachedStats?.hotness || 0;
         
         // For date sorting, calculate from current scores if cache doesn't have dates yet
         let firstUsage = null;
@@ -1674,6 +1675,7 @@
           count: totalUses,
           avgScore: avgScore,
           totalScore: totalScore,
+          hotness: hotness,
           firstUsage: firstUsage,
           lastUsage: lastUsage,
           weight: 1, // No weight-based sizing
@@ -1689,6 +1691,8 @@
           return results.sort((a, b) => b.avgScore - a.avgScore);
         case 'totalScore':
           return results.sort((a, b) => b.totalScore - a.totalScore);
+        case 'hotness':
+          return results.sort((a, b) => b.hotness - a.hotness);
         case 'firstUsage':
           // "Newest" - sort by first occurrence, newest first (reverse chronological)
           return results.sort((a, b) => {
@@ -1769,6 +1773,7 @@
           count: sortBy === 'count',
           avgScore: sortBy === 'avgScore',
           totalScore: sortBy === 'totalScore',
+          hotness: sortBy === 'hotness',
           firstUsage: sortBy === 'firstUsage',
           lastUsage: sortBy === 'lastUsage'
         },
