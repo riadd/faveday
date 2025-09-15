@@ -1693,6 +1693,8 @@
           return results.sort((a, b) => b.totalScore - a.totalScore);
         case 'hotness':
           return results.sort((a, b) => b.hotness - a.hotness);
+        case 'alphabetical':
+          return results.sort((a, b) => a.tag.localeCompare(b.tag));
         case 'firstUsage':
           // "Newest" - sort by first occurrence, newest first (reverse chronological)
           return results.sort((a, b) => {
@@ -1774,6 +1776,7 @@
           avgScore: sortBy === 'avgScore',
           totalScore: sortBy === 'totalScore',
           hotness: sortBy === 'hotness',
+          alphabetical: sortBy === 'alphabetical',
           firstUsage: sortBy === 'firstUsage',
           lastUsage: sortBy === 'lastUsage'
         },

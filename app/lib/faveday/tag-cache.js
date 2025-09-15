@@ -24,10 +24,10 @@ class TagCacheBuilder {
       const daysAgo = Math.floor((currentDate - score.date) / (1000 * 60 * 60 * 24));
       const yearsAgo = daysAgo / 365.25;
       
-      // Exponential decay: more aggressive falloff for older entries
-      // Formula: 0.8^yearsAgo with minimum of 0.05
-      // 1 year ago: ~80%, 2 years: ~64%, 3 years: ~51%, 5 years: ~33%, 10 years: ~11%
-      const weight = Math.max(0.05, Math.pow(0.8, yearsAgo));
+      // Extremely aggressive exponential decay: harsh falloff for older entries
+      // Formula: 0.6^yearsAgo with minimum of 0.01
+      // 1 year ago: ~60%, 2 years: ~36%, 3 years: ~22%, 5 years: ~8%, 10 years: ~0.6%
+      const weight = Math.max(0.01, Math.pow(0.6, yearsAgo));
       
       totalWeightedScore += score.summary * weight;
     }
