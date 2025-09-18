@@ -6,19 +6,17 @@
 // Import ScoreCalculator
 const ScoreCalculator = require('../app/lib/faveday/score-calculator');
 
-// Mock window.api for testing
+// Mock window.configStore for testing
 global.window = {
-  api: {
-    getConfig: () => ({
-      scoreType: 'average',
-      defaultEmptyScore: null,
-      lifeQualityWeights: {
-        1: 0.2,
-        2: 1.0,
-        3: 3.0,
-        4: 8.0,
-        5: 25.0
-      }
+  configStore: {
+    getScoreType: () => 'average',
+    getDefaultEmptyScore: () => null,
+    getLifeQualityWeights: () => ({
+      1: 0.2,
+      2: 1.0,
+      3: 3.0,
+      4: 8.0,
+      5: 25.0
     })
   }
 };
@@ -124,13 +122,13 @@ addTest('Scores with undefined summary should not return NaN', () => {
 // Test expected days calculation with default empty score
 addTest('Expected days calculation with default empty score', () => {
   // Mock config with default empty score
-  global.window.api.getConfig = () => ({
-    scoreType: 'average',
-    defaultEmptyScore: 2.5,
-    lifeQualityWeights: {
+  global.window.configStore = {
+    getScoreType: () => 'average',
+    getDefaultEmptyScore: () => 2.5,
+    getLifeQualityWeights: () => ({
       1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0
-    }
-  });
+    })
+  };
   
   const calculator = new ScoreCalculator();
   const scores = [
@@ -148,13 +146,13 @@ addTest('Expected days calculation with default empty score', () => {
 // Test expected days calculation without default empty score
 addTest('Expected days calculation without default empty score', () => {
   // Mock config without default empty score
-  global.window.api.getConfig = () => ({
-    scoreType: 'average',
-    defaultEmptyScore: null,
-    lifeQualityWeights: {
+  global.window.configStore = {
+    getScoreType: () => 'average',
+    getDefaultEmptyScore: () => null,
+    getLifeQualityWeights: () => ({
       1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0
-    }
-  });
+    })
+  };
   
   const calculator = new ScoreCalculator();
   const scores = [
@@ -198,10 +196,11 @@ addTest('Median calculation with odd number of scores', () => {
   const calculator = new ScoreCalculator();
   
   // Mock config for median
-  global.window.api.getConfig = () => ({
-    scoreType: 'median',
-    defaultEmptyScore: null
-  });
+  global.window.configStore = {
+    getScoreType: () => 'median',
+    getDefaultEmptyScore: () => null,
+    getLifeQualityWeights: () => ({ 1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0 })
+  };
   
   const scores = [
     { summary: 1 }, { summary: 3 }, { summary: 5 }
@@ -215,10 +214,11 @@ addTest('Median calculation with even number of scores', () => {
   const calculator = new ScoreCalculator();
   
   // Mock config for median
-  global.window.api.getConfig = () => ({
-    scoreType: 'median',
-    defaultEmptyScore: null
-  });
+  global.window.configStore = {
+    getScoreType: () => 'median',
+    getDefaultEmptyScore: () => null,
+    getLifeQualityWeights: () => ({ 1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0 })
+  };
   
   const scores = [
     { summary: 2 }, { summary: 4 }, { summary: 6 }, { summary: 8 }
@@ -233,13 +233,13 @@ addTest('Quality calculation', () => {
   const calculator = new ScoreCalculator();
   
   // Mock config for quality
-  global.window.api.getConfig = () => ({
-    scoreType: 'quality',
-    defaultEmptyScore: null,
-    lifeQualityWeights: {
+  global.window.configStore = {
+    getScoreType: () => 'quality',
+    getDefaultEmptyScore: () => null,
+    getLifeQualityWeights: () => ({
       1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0
-    }
-  });
+    })
+  };
   
   const scores = [
     { summary: 1 }, { summary: 5 }
@@ -253,7 +253,7 @@ addTest('Quality calculation', () => {
 // Test edge case: Division by zero protection
 addTest('Division by zero protection', () => {
   const calculator = new ScoreCalculator();
-  const result = calculator.calculateAverage([], 0, 0);
+  const result = calculator.calculateAverage([], 0);
   assertEqual(result, 0);
 });
 
@@ -269,6 +269,82 @@ addTest('Invalid expectedCount should not cause NaN', () => {
   assertFalse(isNaN(result1), 'NaN expectedCount should not return NaN');
   assertFalse(isNaN(result2), 'Undefined expectedCount should not return NaN');
   assertFalse(isNaN(result3), 'String expectedCount should not return NaN');
+});
+
+// Test empty array with default score + expectedCount (should return default score)
+addTest('Empty array with default score returns default score', () => {
+  // Mock config with default empty score
+  global.window.configStore = {
+    getScoreType: () => 'average',
+    getDefaultEmptyScore: () => 3,
+    getLifeQualityWeights: () => ({ 1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0 })
+  };
+  
+  const calculator = new ScoreCalculator();
+  const result = calculator.calculateAverage([], 30);
+  assertEqual(result, 3); // All 30 days get default score of 3
+});
+
+// Test empty array without default score (should return 0)
+addTest('Empty array without default score returns 0', () => {
+  global.window.configStore = {
+    getScoreType: () => 'average',
+    getDefaultEmptyScore: () => null,
+    getLifeQualityWeights: () => ({ 1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0 })
+  };
+  
+  const calculator = new ScoreCalculator();
+  const result = calculator.calculateAverage([], 30);
+  assertEqual(result, 0);
+});
+
+// Test median with default scores
+addTest('Median with default scores', () => {
+  global.window.configStore = {
+    getScoreType: () => 'median',
+    getDefaultEmptyScore: () => 3,
+    getLifeQualityWeights: () => ({ 1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0 })
+  };
+  
+  const calculator = new ScoreCalculator();
+  const scores = [{ summary: 5 }]; // 1 score of 5
+  const result = calculator.calculateMedian(scores, 3); // Expected 3 total scores
+  // Array becomes [3, 3, 5], median is 3
+  assertEqual(result, 3);
+});
+
+// Test quality with default scores
+addTest('Quality with default scores', () => {
+  global.window.configStore = {
+    getScoreType: () => 'quality',
+    getDefaultEmptyScore: () => 2,
+    getLifeQualityWeights: () => ({ 1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0 })
+  };
+  
+  const calculator = new ScoreCalculator();
+  const scores = [{ summary: 5 }]; // 1 score of 5 (weight 25.0)
+  const result = calculator.calculateQuality(scores, 3); // Expected 3 total scores
+  // Quality = (25.0 + 2*1.0) / 3 = 27.0 / 3 = 9.0
+  assertEqual(result, 9.0);
+});
+
+// Test that all three methods handle null scores elegantly
+addTest('All methods handle null scores', () => {
+  global.window.configStore = {
+    getScoreType: () => 'average',
+    getDefaultEmptyScore: () => 3,
+    getLifeQualityWeights: () => ({ 1: 0.2, 2: 1.0, 3: 3.0, 4: 8.0, 5: 25.0 })
+  };
+  
+  const calculator = new ScoreCalculator();
+  
+  const avgResult = calculator.calculateAverage(null, 5);
+  const medResult = calculator.calculateMedian(null, 5);
+  const qualResult = calculator.calculateQuality(null, 5);
+  
+  assertEqual(avgResult, 3); // All default scores
+  assertEqual(medResult, 3); // All default scores
+  assertEqual(qualResult, 3.0); // All default quality weights
 });
 
 // Run the tests

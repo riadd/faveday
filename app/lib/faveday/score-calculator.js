@@ -24,7 +24,6 @@ class ScoreCalculator {
     };
   }
 
-
   /**
    * Calculate average score from scores
    * @param {Array} scores - Array of score objects
@@ -32,36 +31,47 @@ class ScoreCalculator {
    * @returns {number} - Average score
    */
   calculateAverage(scores, expectedCount = null) {
-    if (!scores || scores.length === 0) return 0;
+    if (!scores) scores = [];
+
+    const validScores = scores.filter(s => (s.summary || 0) > 0);
+    const defaultEmptyScore = this.getDefaultEmptyScore();
+    if (expectedCount == null || defaultEmptyScore == null) expectedCount = validScores.length;
+
+    let sum = validScores.reduce((total, s) => total + s.summary, 0);
+    sum += (expectedCount - validScores.length) * defaultEmptyScore;
     
-    // Filter out empty scores
-    const validScores = scores.filter(s => s.summary > 0);
-    if (validScores.length === 0) return 0;
-    
-    const sum = validScores.reduce((total, s) => total + (s.summary || 0), 0);
-    const result = sum / validScores.length;
+    const result = sum / expectedCount;
     return isNaN(result) ? 0 : result;
   }
 
   /**
    * Calculate median score from scores
    * @param {Array} scores - Array of score objects
+   * @param {number} expectedCount - Optional expected count for handling missing days
    * @returns {number} - Median score
    */
-  calculateMedian(scores) {
-    if (!scores || scores.length === 0) return 0;
+  calculateMedian(scores, expectedCount = null) {
+    if (!scores) scores = [];
+
+    const validScores = scores.filter(s => s.summary > 0);
+    const defaultEmptyScore = this.getDefaultEmptyScore();
+    if (expectedCount == null || defaultEmptyScore == null) expectedCount = validScores.length;
+
+    // Build array with valid scores and default scores for missing entries
+    let allScores = validScores.map(s => s.summary);
+    const missingCount = expectedCount - validScores.length;
+    for (let i = 0; i < missingCount; i++) {
+      allScores.push(defaultEmptyScore || 0);
+    }
     
-    // Filter out empty scores
-    const validScores = scores.filter(s => s.summary > 0).map(s => s.summary).sort((a, b) => a - b);
-    if (validScores.length === 0) return 0;
+    allScores.sort((a, b) => a - b);
+    const middle = Math.floor(allScores.length / 2);
     
-    const middle = Math.floor(validScores.length / 2);
-    
-    if (validScores.length % 2 === 0) {
-      const result = (validScores[middle - 1] + validScores[middle]) / 2;
+    if (allScores.length % 2 === 0) {
+      const result = (allScores[middle - 1] + allScores[middle]) / 2;
       return isNaN(result) ? 0 : result;
     } else {
-      const result = validScores[middle];
+      const result = allScores[middle];
       return isNaN(result) ? 0 : result;
     }
   }
@@ -69,22 +79,28 @@ class ScoreCalculator {
   /**
    * Calculate quality score from scores
    * @param {Array} scores - Array of score objects
+   * @param {number} expectedCount - Optional expected count for handling missing days
    * @returns {number} - Quality score using life quality weights
    */
-  calculateQuality(scores) {
-    if (!scores || scores.length === 0) return 0;
-    
-    // Filter out empty scores
+  calculateQuality(scores, expectedCount = null) {
+    if (!scores) scores = [];
+
     const validScores = scores.filter(s => s.summary > 0);
-    if (validScores.length === 0) return 0;
-    
+    const defaultEmptyScore = this.getDefaultEmptyScore();
+    if (expectedCount == null || defaultEmptyScore == null) expectedCount = validScores.length;
+
     const weights = this.getLifeQualityWeights();
-    const totalQuality = validScores.reduce((sum, entry) => {
+    let totalQuality = validScores.reduce((sum, entry) => {
       const score = entry.summary || 0;
       const weight = weights[score] || 0;
       return sum + weight;
     }, 0);
-    const result = totalQuality / validScores.length;
+    
+    // Add quality weight for default scores applied to missing entries
+    const defaultWeight = weights[defaultEmptyScore] || 0;
+    totalQuality += (expectedCount - validScores.length) * defaultWeight;
+    
+    const result = totalQuality / expectedCount;
     return isNaN(result) ? 0 : result;
   }
 
@@ -95,7 +111,7 @@ class ScoreCalculator {
    * @returns {number} - Calculated score based on current score type setting
    */
   calculate(scores, expectedCount = null) {
-    if (!scores || scores.length === 0) return 0;
+    if (!scores) scores = [];
     
     const scoreType = this.getScoreType();
     
@@ -103,9 +119,9 @@ class ScoreCalculator {
       case 'average':
         return this.calculateAverage(scores, expectedCount);
       case 'median':
-        return this.calculateMedian(scores);
+        return this.calculateMedian(scores, expectedCount);
       case 'quality':
-        return this.calculateQuality(scores);
+        return this.calculateQuality(scores, expectedCount);
       default:
         return this.calculateAverage(scores, expectedCount);
     }

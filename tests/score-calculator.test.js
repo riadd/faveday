@@ -80,9 +80,10 @@ class ScoreCalculatorTest {
       { summary: 4 }, { summary: 0 }, { summary: 3 }, { summary: 0 }, { summary: 5 }
     ];
     
-    const result = this.calculator.calculate(scores);
+    // Test with expectedCount to trigger default score behavior
+    const result = this.calculator.calculate(scores, 5);
     const expected = (4 + 2.5 + 3 + 2.5 + 5) / 5; // 17 / 5 = 3.4
-    this.assertEqual(result, expected, 'Should use 2.5 for empty scores');
+    this.assertEqual(result, expected, 'Should use 2.5 for empty scores with expectedCount');
 
     // Test with null (skip empty)
     configStore.load({
