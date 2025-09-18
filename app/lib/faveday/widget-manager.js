@@ -544,36 +544,35 @@ class WidgetManager {
   getSeasonProgress() {
     const now = new Date();
     const month = now.getMonth(); // 0-11
-    const date = now.getDate();
     
-    // Define seasons with their start dates
+    // Define meteorological seasons (3 months each, starting 1st of month)
     const seasons = [
-      { name: 'Winter', start: { month: 11, date: 21 }, end: { month: 2, date: 20 } }, // Dec 21 - Mar 20
-      { name: 'Spring', start: { month: 2, date: 21 }, end: { month: 5, date: 20 } },  // Mar 21 - Jun 20
-      { name: 'Summer', start: { month: 5, date: 21 }, end: { month: 8, date: 22 } },  // Jun 21 - Sep 22
-      { name: 'Autumn', start: { month: 8, date: 23 }, end: { month: 11, date: 20 } }  // Sep 23 - Dec 20
+      { name: 'Winter', months: [11, 0, 1] }, // Dec, Jan, Feb
+      { name: 'Spring', months: [2, 3, 4] },  // Mar, Apr, May
+      { name: 'Summer', months: [5, 6, 7] },  // Jun, Jul, Aug
+      { name: 'Autumn', months: [8, 9, 10] }  // Sep, Oct, Nov
     ];
     
     // Determine current season
     let currentSeason;
     let seasonStart, seasonEnd;
     
-    if ((month === 11 && date >= 21) || month === 0 || month === 1 || (month === 2 && date <= 20)) {
+    if (month >= 11 || month <= 1) {
       currentSeason = seasons[0]; // Winter
-      seasonStart = new Date(month >= 11 ? now.getFullYear() : now.getFullYear() - 1, 11, 21);
-      seasonEnd = new Date(month <= 2 ? now.getFullYear() : now.getFullYear() + 1, 2, 20);
-    } else if ((month === 2 && date >= 21) || month === 3 || month === 4 || (month === 5 && date <= 20)) {
+      seasonStart = new Date(month >= 11 ? now.getFullYear() : now.getFullYear() - 1, 11, 1);
+      seasonEnd = new Date(month <= 1 ? now.getFullYear() : now.getFullYear() + 1, 1, 28); // Feb 28/29
+    } else if (month >= 2 && month <= 4) {
       currentSeason = seasons[1]; // Spring
-      seasonStart = new Date(now.getFullYear(), 2, 21);
-      seasonEnd = new Date(now.getFullYear(), 5, 20);
-    } else if ((month === 5 && date >= 21) || month === 6 || month === 7 || (month === 8 && date <= 22)) {
+      seasonStart = new Date(now.getFullYear(), 2, 1);
+      seasonEnd = new Date(now.getFullYear(), 4, 31);
+    } else if (month >= 5 && month <= 7) {
       currentSeason = seasons[2]; // Summer
-      seasonStart = new Date(now.getFullYear(), 5, 21);
-      seasonEnd = new Date(now.getFullYear(), 8, 22);
+      seasonStart = new Date(now.getFullYear(), 5, 1);
+      seasonEnd = new Date(now.getFullYear(), 7, 31);
     } else {
       currentSeason = seasons[3]; // Autumn
-      seasonStart = new Date(now.getFullYear(), 8, 23);
-      seasonEnd = new Date(now.getFullYear(), 11, 20);
+      seasonStart = new Date(now.getFullYear(), 8, 1);
+      seasonEnd = new Date(now.getFullYear(), 10, 30);
     }
     
     // Calculate progress through season
