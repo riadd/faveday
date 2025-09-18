@@ -1094,7 +1094,7 @@ class WidgetManager {
       if (entries.length === 0) return 0;
       
       // Use scoreCalculator for quality calculation, then normalize by 30 days
-      const qualityPerEntry = this.scoreCalculator.calculateQuality(this.scoreCalculator.prepareScores(entries));
+      const qualityPerEntry = this.scoreCalculator.calculateQuality(entries);
       const totalQuality = qualityPerEntry * entries.length;
       
       // Normalize by number of days (not entries) to get daily average

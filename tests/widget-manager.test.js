@@ -34,9 +34,6 @@ const MockScoreCalculator = {
     }, 0);
     return totalQuality / scores.length;
   },
-  prepareScores: function(scores) {
-    return scores.filter(s => s.summary > 0);
-  },
   getScoreTypeInfo: function() {
     return { icon: '⭐', name: 'Average' };
   }

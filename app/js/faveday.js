@@ -249,9 +249,6 @@
     }
 
 
-    calculateDisplayScore(scores) {
-      return this.scoreCalculator.calculate(scores);
-    }
 
     getScoreTypeInfo() {
       return this.widgetManager.getScoreTypeInfo();
@@ -1275,14 +1272,8 @@
         nextMonth: this.isValidMonth(nextMonthDate, firstDate, lastDate),
         nextYear: this.isValidMonth(nextYearDate, firstDate, lastDate),
         
-        displayScore: this.calculateDisplayScore(monthScores).format(2),
+        displayScore: this.scoreCalculator.calculate(monthScores, new Date(yearNum, monthNum, 0).getDate()).format(2),
         scoreTypeIcon: scoreTypeInfo.icon,
-        average: this.scoreCalculator.calculate(monthScores, new Date(yearNum, monthNum, 0).getDate()).format(2),
-        lifeQuality: (() => {
-          const preparedScores = this.scoreCalculator.prepareScores(monthScores);
-          const qualityScore = this.scoreCalculator.calculateQuality(preparedScores);
-          return qualityScore.toFixed(2);
-        })(),
         overview: this.getOverview(monthScores)
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html()),
@@ -1336,12 +1327,7 @@
       let randomScores = monthScores.filter(s => s.summary >=3).sample(5);
       let bestScores = monthScores.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
 
-      // Calculate life quality for this months view using scoreCalculator
-      const monthsLifeQuality = monthScores.length > 0 
-        ? this.scoreCalculator.calculateQuality(this.scoreCalculator.prepareScores(monthScores))
-        : 0;
-
-      const displayScore = this.calculateDisplayScore(monthScores);
+      const displayScore = this.scoreCalculator.calculate(monthScores);
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
 
       return this.render('#tmpl-months', '#content', {
@@ -1515,15 +1501,8 @@
       const maxSeason = Math.max(...bestSeasons);
 
       // Calculate overall statistics across all entries
-      const overallAvg = this.dataManager.getAllScores().length > 0 ? this.scoreCalculator.calculate(this.dataManager.getAllScores()) : 0;
-      
-      const overallLifeQuality = this.dataManager.getAllScores().length > 0 
-        ? this.scoreCalculator.calculateQuality(this.scoreCalculator.prepareScores(this.dataManager.getAllScores()))
-        : 0;
-
-      // Calculate display scores for each year
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
-      const overallDisplayScore = this.calculateDisplayScore(this.dataManager.getAllScores());
+      const overallDisplayScore = this.dataManager.getAllScores().length > 0 ? this.scoreCalculator.calculate(this.dataManager.getAllScores()) : 0;
       
       // Use already calculated totalAvg for medal ranking
       for (let yearData of allYears) {
@@ -1816,7 +1795,7 @@
         for (let i=0; i<offset; i++)
           days.splice(i, 0, {val:"X", weekday:i});
         
-        const monthDisplayScore = await this.calculateDisplayScore(scores);
+        const monthDisplayScore = this.scoreCalculator.calculate(scores);
         
         months.push({
           date: date.format('{Mon} {yyyy}'),
@@ -1834,12 +1813,7 @@
 
       this.pushHistory(`/year/${year}`, year);
       
-      // Calculate life quality for this year using scoreCalculator
-      const yearLifeQuality = oneYear.length > 0 
-        ? this.scoreCalculator.calculateQuality(this.scoreCalculator.prepareScores(oneYear))
-        : 0;
-
-      const displayScore = this.calculateDisplayScore(oneYear);
+      const displayScore = this.scoreCalculator.calculate(oneYear);
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
 
       return this.render('#tmpl-year', '#content', {
@@ -1961,7 +1935,7 @@
       }
       
       // Calculate life quality for search results using configurable weights
-      const displayScore = foundScores.length > 0 ? this.calculateDisplayScore(foundScores) : 0;
+      const displayScore = foundScores.length > 0 ? this.scoreCalculator.calculate(foundScores) : 0;
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
 
       this.render('#tmpl-search', '#content', {

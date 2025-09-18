@@ -24,123 +24,90 @@ class ScoreCalculator {
     };
   }
 
-  /**
-   * Prepares scores for calculation by handling empty scores according to config
-   * @param {Array} scores - Array of score objects with .summary property
-   * @returns {Array} - Processed scores ready for calculation
-   */
-  prepareScores(scores) {
-    if (!scores || scores.length === 0) return [];
-    
-    const defaultEmptyScore = this.getDefaultEmptyScore();
-    
-    if (defaultEmptyScore !== null) {
-      // Replace empty scores with default value
-      return scores.map(s => ({
-        ...s,
-        summary: (s.summary > 0) ? s.summary : defaultEmptyScore
-      }));
-    } else {
-      // Skip empty scores (original behavior)
-      return scores.filter(s => s.summary > 0);
-    }
-  }
 
   /**
-   * Calculate average score from prepared scores
-   * @param {Array} preparedScores - Scores already processed by prepareScores
-   * @param {number} expectedCount - Optional expected count for handling missing days not in array
-   * @param {number} originalCount - Original count before prepareScores processing
+   * Calculate average score from scores
+   * @param {Array} scores - Array of score objects
+   * @param {number} expectedCount - Optional expected count for handling missing days
    * @returns {number} - Average score
    */
-  calculateAverage(preparedScores, expectedCount = null, originalCount = null) {
-    if (preparedScores.length === 0 && !expectedCount) return 0;
+  calculateAverage(scores, expectedCount = null) {
+    if (!scores || scores.length === 0) return 0;
     
-    // If expectedCount provided and we have fewer original scores than expected,
-    // add missing days with default score
-    if (expectedCount && originalCount !== null && expectedCount > originalCount) {
-      const defaultEmptyScore = this.getDefaultEmptyScore();
-      if (defaultEmptyScore !== null && !isNaN(defaultEmptyScore)) {
-        // Calculate sum of existing scores (already includes defaults from prepareScores)
-        const existingSum = preparedScores.reduce((sum, s) => sum + (s.summary || 0), 0);
-        // Add contribution from completely missing days (not even in the original array)
-        const missingDays = expectedCount - originalCount;
-        const missingSum = missingDays * defaultEmptyScore;
-        const result = (existingSum + missingSum) / expectedCount;
-        return isNaN(result) ? 0 : result;
-      }
-    }
+    // Filter out empty scores
+    const validScores = scores.filter(s => s.summary > 0);
+    if (validScores.length === 0) return 0;
     
-    // Standard calculation using prepared scores
-    if (preparedScores.length === 0) return 0;
-    
-    // Use manual average calculation to avoid potential Sugar.js issues
-    const sum = preparedScores.reduce((total, s) => total + (s.summary || 0), 0);
-    const result = sum / preparedScores.length;
+    const sum = validScores.reduce((total, s) => total + (s.summary || 0), 0);
+    const result = sum / validScores.length;
     return isNaN(result) ? 0 : result;
   }
 
   /**
-   * Calculate median score from prepared scores
-   * @param {Array} preparedScores - Scores already processed by prepareScores
+   * Calculate median score from scores
+   * @param {Array} scores - Array of score objects
    * @returns {number} - Median score
    */
-  calculateMedian(preparedScores) {
-    if (preparedScores.length === 0) return 0;
+  calculateMedian(scores) {
+    if (!scores || scores.length === 0) return 0;
     
-    // Manual median calculation to avoid potential Sugar.js issues
-    const scores = preparedScores.map(s => s.summary || 0).sort((a, b) => a - b);
-    const middle = Math.floor(scores.length / 2);
+    // Filter out empty scores
+    const validScores = scores.filter(s => s.summary > 0).map(s => s.summary).sort((a, b) => a - b);
+    if (validScores.length === 0) return 0;
     
-    if (scores.length % 2 === 0) {
-      const result = (scores[middle - 1] + scores[middle]) / 2;
+    const middle = Math.floor(validScores.length / 2);
+    
+    if (validScores.length % 2 === 0) {
+      const result = (validScores[middle - 1] + validScores[middle]) / 2;
       return isNaN(result) ? 0 : result;
     } else {
-      const result = scores[middle];
+      const result = validScores[middle];
       return isNaN(result) ? 0 : result;
     }
   }
 
   /**
-   * Calculate quality score from prepared scores
-   * @param {Array} preparedScores - Scores already processed by prepareScores
+   * Calculate quality score from scores
+   * @param {Array} scores - Array of score objects
    * @returns {number} - Quality score using life quality weights
    */
-  calculateQuality(preparedScores) {
-    if (preparedScores.length === 0) return 0;
+  calculateQuality(scores) {
+    if (!scores || scores.length === 0) return 0;
+    
+    // Filter out empty scores
+    const validScores = scores.filter(s => s.summary > 0);
+    if (validScores.length === 0) return 0;
     
     const weights = this.getLifeQualityWeights();
-    const totalQuality = preparedScores.reduce((sum, entry) => {
+    const totalQuality = validScores.reduce((sum, entry) => {
       const score = entry.summary || 0;
       const weight = weights[score] || 0;
       return sum + weight;
     }, 0);
-    const result = totalQuality / preparedScores.length;
+    const result = totalQuality / validScores.length;
     return isNaN(result) ? 0 : result;
   }
 
   /**
    * Main calculation method - calculates score based on current settings
-   * @param {Array} scores - Raw score array
+   * @param {Array} scores - Array of score objects
    * @param {number} expectedCount - Optional expected count for handling missing days
    * @returns {number} - Calculated score based on current score type setting
    */
   calculate(scores, expectedCount = null) {
-    const originalCount = scores ? scores.length : 0;
-    const preparedScores = this.prepareScores(scores);
-    if (preparedScores.length === 0 && !expectedCount) return 0;
+    if (!scores || scores.length === 0) return 0;
     
     const scoreType = this.getScoreType();
     
     switch (scoreType) {
       case 'average':
-        return this.calculateAverage(preparedScores, expectedCount, originalCount);
+        return this.calculateAverage(scores, expectedCount);
       case 'median':
-        return this.calculateMedian(preparedScores);
+        return this.calculateMedian(scores);
       case 'quality':
-        return this.calculateQuality(preparedScores);
+        return this.calculateQuality(scores);
       default:
-        return this.calculateAverage(preparedScores, expectedCount, originalCount);
+        return this.calculateAverage(scores, expectedCount);
     }
   }
 
