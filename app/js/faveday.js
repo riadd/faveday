@@ -1100,8 +1100,8 @@
       
       return {
         count: maxStreakCount, 
-        start: maxStreakEnd.format("{d} {Mon} {yyyy}"), 
-        end: maxStreakStart.format("{d} {Mon} {yyyy}")
+        start: maxStreakEnd ? maxStreakEnd.format("{d} {Mon} {yyyy}") : "", 
+        end: maxStreakStart ? maxStreakStart.format("{d} {Mon} {yyyy}") : ""
       }
     }
     
