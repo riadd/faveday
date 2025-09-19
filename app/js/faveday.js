@@ -1257,6 +1257,7 @@
       let tags = this.getTags(monthScores); 
       let firstDate = this.dataManager.getAllScores()[0].date;
       let lastDate = this.dataManager.getAllScores().last().date;
+      let daysInMonth = new Date(yearNum, monthNum, 0).getDate();
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
       
       this.render('#tmpl-month', '#content', {
@@ -1272,7 +1273,7 @@
         nextMonth: this.isValidMonth(nextMonthDate, firstDate, lastDate),
         nextYear: this.isValidMonth(nextYearDate, firstDate, lastDate),
         
-        displayScore: this.scoreCalculator.calculate(monthScores, new Date(yearNum, monthNum, 0).getDate()).format(2),
+        displayScore: this.scoreCalculator.calculate(monthScores, daysInMonth).format(2),
         scoreTypeIcon: scoreTypeInfo.icon,
         overview: this.getOverview(monthScores)
       }, {
@@ -1795,7 +1796,8 @@
         for (let i=0; i<offset; i++)
           days.splice(i, 0, {val:"X", weekday:i});
         
-        const monthDisplayScore = this.scoreCalculator.calculate(scores);
+        const daysInThisMonth = new Date(year, month + 1, 0).getDate();
+        const monthDisplayScore = this.scoreCalculator.calculate(scores, daysInThisMonth);
         
         months.push({
           date: date.format('{Mon} {yyyy}'),
