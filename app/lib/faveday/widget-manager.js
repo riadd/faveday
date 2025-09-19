@@ -1076,54 +1076,7 @@ class WidgetManager {
       trendDisplay: trendDisplay
     };
   }
-
-  /**
-   * Get life quality statistics using weighted calculations
-   * @returns {Object} Life quality metrics with trend comparison
-   */
-  getLifeQualityStats() {
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now);
-    thirtyDaysAgo.setDate(now.getDate() - 30);
-    const sixtyDaysAgo = new Date(now);
-    sixtyDaysAgo.setDate(now.getDate() - 60);
-
-    const allScores = this.getAllScores();
-    
-    const calculateLifeQuality = (entries) => {
-      if (entries.length === 0) return 0;
-      
-      // Use scoreCalculator for quality calculation, then normalize by 30 days
-      const qualityPerEntry = this.scoreCalculator.calculateQuality(entries, 30);
-      const totalQuality = qualityPerEntry * entries.length;
-      
-      // Normalize by number of days (not entries) to get daily average
-      return Math.round((totalQuality / 30) * 100) / 100;
-    };
-
-    // Current 30 days
-    const currentPeriod = allScores.filter(s => s.date >= thirtyDaysAgo && s.date <= now);
-    
-    // Previous 30 days (31-60 days ago)
-    const previousPeriod = allScores.filter(s => s.date >= sixtyDaysAgo && s.date < thirtyDaysAgo);
-
-    const currentLifeQuality = calculateLifeQuality(currentPeriod);
-    const previousLifeQuality = calculateLifeQuality(previousPeriod);
-    const qualityDiff = currentLifeQuality - previousLifeQuality;
-
-    const trend = this.formatTrend(qualityDiff);
-
-    return {
-      currentQuality: currentLifeQuality,
-      previousQuality: previousLifeQuality,
-      qualityDiff: Math.round(qualityDiff * 100) / 100,
-      trend: trend.trend,
-      trendDisplay: trend.trendDisplay,
-      entriesThisPeriod: currentPeriod.length,
-      entriesPreviousPeriod: previousPeriod.length
-    };
-  }
-
+  
   /**
    * Get score type information (delegated to ScoreCalculator)
    * @returns {Object} Score type metadata with icon and name
