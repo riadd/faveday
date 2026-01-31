@@ -206,31 +206,37 @@ class MockFaveDayApp {
     const previousAvgScore = previousPeriod.length > 0 ? previousPeriod.reduce((sum, s) => sum + s.summary, 0) / previousPeriod.length : 0;
     const scoreDiff = currentAvgScore - previousAvgScore;
 
-    const formatTrend = (diff, trend) => {
-      if (diff === 0) return '';
-      const arrow = trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→';
-      return ` ${arrow} ${Math.abs(diff)}`;
+    const formatPctTrend = (current, previous) => {
+      if (previous === 0 && current === 0) return { trend: 'same', trendDisplay: '' };
+      if (previous === 0) return { trend: 'up', trendDisplay: `↗ +${Math.round(current)}%` };
+      const pct = ((current - previous) / previous) * 100;
+      if (Math.abs(pct) < 0.5) return { trend: 'same', trendDisplay: '' };
+      if (pct > 0) return { trend: 'up', trendDisplay: `↗ +${Math.abs(pct).toFixed(1)}%` };
+      return { trend: 'down', trendDisplay: `↘ -${Math.abs(pct).toFixed(1)}%` };
     };
+
+    const entriesTrend = formatPctTrend(currentEntries, previousEntries);
+    const scoreTrend = formatPctTrend(currentAvgScore, previousAvgScore);
 
     return {
       entries: {
         current: currentEntries,
         previous: previousEntries,
         diff: entriesDiff,
-        trend: entriesDiff > 0 ? 'up' : entriesDiff < 0 ? 'down' : 'same',
-        trendDisplay: formatTrend(entriesDiff, entriesDiff > 0 ? 'up' : entriesDiff < 0 ? 'down' : 'same')
+        trend: entriesTrend.trend,
+        trendDisplay: entriesTrend.trendDisplay
       },
       score: {
         current: Math.round(currentAvgScore * 10) / 10,
         previous: Math.round(previousAvgScore * 10) / 10,
         diff: Math.round(scoreDiff * 10) / 10,
-        trend: scoreDiff > 0 ? 'up' : scoreDiff < 0 ? 'down' : 'same',
-        trendDisplay: formatTrend(Math.round(scoreDiff * 10) / 10, scoreDiff > 0 ? 'up' : scoreDiff < 0 ? 'down' : 'same')
+        trend: scoreTrend.trend,
+        trendDisplay: scoreTrend.trendDisplay
       }
     };
   }
 
-  getLazyWorkweeks() {
+  getActiveWorkweeks() {
     const now = new Date();
     const threeSixtyFiveDaysAgo = new Date(now);
     threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
@@ -258,18 +264,17 @@ class MockFaveDayApp {
       }
     });
 
-    const currentLazyWorkweeks = Array.from(currentWorkweeks.values()).filter(total => total <= 10);
+    const currentActiveWorkweeks = Array.from(currentWorkweeks.values()).filter(total => total > 10);
     const currentTotalWorkweeks = currentWorkweeks.size;
-    
-    const currentPercentage = currentTotalWorkweeks > 0 ? 
-      Math.round((currentLazyWorkweeks.length / currentTotalWorkweeks) * 100) : 0;
 
-    // For trend, assume 50% or higher is bad (down trend), lower is good (up trend)
-    const trend = currentPercentage > 30 ? 'down' : currentPercentage < 30 ? 'up' : 'same';
+    const currentPercentage = currentTotalWorkweeks > 0 ?
+      Math.round((currentActiveWorkweeks.length / currentTotalWorkweeks) * 100) : 0;
+
+    const trend = currentPercentage > 50 ? 'up' : currentPercentage < 50 ? 'down' : 'same';
 
     return {
       percentage: currentPercentage,
-      lazyCount: currentLazyWorkweeks.length,
+      activeCount: currentActiveWorkweeks.length,
       totalWorkweeks: currentTotalWorkweeks,
       trend: trend
     };

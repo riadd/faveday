@@ -328,29 +328,45 @@ class MockFaveDayApp {
     const previousAvgScore = previousPeriod.length > 0 ? previousPeriod.reduce((sum, s) => sum + s.summary, 0) / previousPeriod.length : 0;
     const scoreDiff = currentAvgScore - previousAvgScore;
 
+    const formatPctTrend = (current, previous) => {
+      if (previous === 0 && current === 0) return { trend: 'same', trendDisplay: '' };
+      if (previous === 0) return { trend: 'up', trendDisplay: `↗ +${Math.round(current)}%` };
+      const pct = ((current - previous) / previous) * 100;
+      if (Math.abs(pct) < 0.5) return { trend: 'same', trendDisplay: '' };
+      if (pct > 0) return { trend: 'up', trendDisplay: `↗ +${Math.abs(pct).toFixed(1)}%` };
+      return { trend: 'down', trendDisplay: `↘ -${Math.abs(pct).toFixed(1)}%` };
+    };
+
+    const entriesTrend = formatPctTrend(currentEntries, previousEntries);
+    const wordsTrend = formatPctTrend(currentAvgWords, previousAvgWords);
+    const scoreTrend = formatPctTrend(currentAvgScore, previousAvgScore);
+
     return {
       entries: {
         current: currentEntries,
         previous: previousEntries,
         diff: entriesDiff,
-        trend: entriesDiff > 0 ? 'up' : entriesDiff < 0 ? 'down' : 'same'
+        trend: entriesTrend.trend,
+        trendDisplay: entriesTrend.trendDisplay
       },
       words: {
         current: currentAvgWords,
         previous: previousAvgWords,
         diff: wordsDiff,
-        trend: wordsDiff > 0 ? 'up' : wordsDiff < 0 ? 'down' : 'same'
+        trend: wordsTrend.trend,
+        trendDisplay: wordsTrend.trendDisplay
       },
       score: {
         current: Math.round(currentAvgScore * 10) / 10,
         previous: Math.round(previousAvgScore * 10) / 10,
         diff: Math.round(scoreDiff * 10) / 10,
-        trend: scoreDiff > 0 ? 'up' : scoreDiff < 0 ? 'down' : 'same'
+        trend: scoreTrend.trend,
+        trendDisplay: scoreTrend.trendDisplay
       }
     };
   }
 
-  getLazyWorkweeks() {
+  getActiveWorkweeks() {
     const now = new Date();
     const threeSixtyFiveDaysAgo = new Date(now);
     threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
@@ -378,17 +394,17 @@ class MockFaveDayApp {
       }
     });
 
-    const currentLazyWorkweeks = Array.from(currentWorkweeks.values()).filter(total => total <= 10);
+    const currentActiveWorkweeks = Array.from(currentWorkweeks.values()).filter(total => total > 10);
     const currentTotalWorkweeks = currentWorkweeks.size;
-    
-    const currentPercentage = currentTotalWorkweeks > 0 ? 
-      Math.round((currentLazyWorkweeks.length / currentTotalWorkweeks) * 100) : 0;
+
+    const currentPercentage = currentTotalWorkweeks > 0 ?
+      Math.round((currentActiveWorkweeks.length / currentTotalWorkweeks) * 100) : 0;
 
     return {
       percentage: currentPercentage,
-      lazyCount: currentLazyWorkweeks.length,
+      activeCount: currentActiveWorkweeks.length,
       totalWorkweeks: currentTotalWorkweeks,
-      trend: currentPercentage > 30 ? 'down' : currentPercentage < 30 ? 'up' : 'same'
+      trend: currentPercentage > 50 ? 'up' : currentPercentage < 50 ? 'down' : 'same'
     };
   }
 
@@ -482,18 +498,26 @@ class MockFaveDayApp {
     );
     const previousAvgDuration = calculateAverageDuration(previousYearEntries);
     
-    // Calculate trend (note: for duration, lower is better, so trend logic is inverted)
+    // Calculate trend (lower duration = better, so invert args)
     let trend = 'same';
     let trendDisplay = '';
-    
+
     if (currentAvgDuration !== null && previousAvgDuration !== null) {
-      const diff = currentAvgDuration - previousAvgDuration;
-      if (diff < 0) {
-        trend = 'up'; // Getting better (lower duration)
-        trendDisplay = `↗ ${Math.abs(diff)} days less`;
-      } else if (diff > 0) {
-        trend = 'down'; // Getting worse (higher duration)
-        trendDisplay = `↘ +${diff} days more`;
+      if (previousAvgDuration === 0) {
+        trend = 'same';
+        trendDisplay = '';
+      } else {
+        const pct = ((previousAvgDuration - currentAvgDuration) / currentAvgDuration) * 100;
+        if (Math.abs(pct) < 0.5) {
+          trend = 'same';
+          trendDisplay = '';
+        } else if (pct > 0) {
+          trend = 'up';
+          trendDisplay = `↗ +${Math.abs(pct).toFixed(1)}%`;
+        } else {
+          trend = 'down';
+          trendDisplay = `↘ -${Math.abs(pct).toFixed(1)}%`;
+        }
       }
     }
     
@@ -538,31 +562,30 @@ class MockFaveDayApp {
       Math.floor((thirtyDaysAgo - previousPeriodScores.sort((a, b) => b.date - a.date)[0].date) / (1000 * 60 * 60 * 24)) : 
       null;
     
-    // Calculate trend based on score type
+    // Calculate trend as percentage change
     let trend = 'same';
     let trendDisplay = '';
-    
+
     if (currentDays !== null && previousDays !== null) {
-      const diff = currentDays - previousDays;
-      
+      const formatPct = (cur, prev) => {
+        if (prev === 0 && cur === 0) return { trend: 'same', trendDisplay: '' };
+        if (prev === 0) return { trend: 'up', trendDisplay: `↗ +${Math.round(cur)}%` };
+        const pct = ((cur - prev) / prev) * 100;
+        if (Math.abs(pct) < 0.5) return { trend: 'same', trendDisplay: '' };
+        if (pct > 0) return { trend: 'up', trendDisplay: `↗ +${Math.abs(pct).toFixed(1)}%` };
+        return { trend: 'down', trendDisplay: `↘ -${Math.abs(pct).toFixed(1)}%` };
+      };
+
       if (targetScore >= 4) {
-        // For high scores (4+): lower days since = better (inverted logic)
-        if (diff < 0) {
-          trend = 'up'; // More recent high score = better
-          trendDisplay = `↗ ${Math.abs(diff)} days more recent`;
-        } else if (diff > 0) {
-          trend = 'down'; // Less recent high score = worse
-          trendDisplay = `↘ +${diff} days longer ago`;
-        }
+        // For high scores (4+): lower days since = better, so invert args
+        const pctTrend = formatPct(previousDays, currentDays);
+        trend = pctTrend.trend;
+        trendDisplay = pctTrend.trendDisplay;
       } else {
-        // For low scores (1-2): higher days since = better (normal logic)
-        if (diff > 0) {
-          trend = 'up'; // Longer since low score = better
-          trendDisplay = `↗ +${diff} days longer ago`;
-        } else if (diff < 0) {
-          trend = 'down'; // More recent low score = worse
-          trendDisplay = `↘ ${Math.abs(diff)} days more recent`;
-        }
+        // For low scores (1-2): higher days since = better
+        const pctTrend = formatPct(currentDays, previousDays);
+        trend = pctTrend.trend;
+        trendDisplay = pctTrend.trendDisplay;
       }
     }
     

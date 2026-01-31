@@ -1387,6 +1387,7 @@
           const daysInMonth = new Date(yearForDateId, m + 1, 0).getDate();
           
           const monthScore = this.scoreCalculator.calculate(scores, daysInMonth);
+          console.log(`Month ${m+1}: scores=${scores.length}, daysInMonth=${daysInMonth}, result=${monthScore}, defaultScore=${this.scoreCalculator.getDefaultEmptyScore()}`);
           
           // Calculate size: minimum 8px, scale with entry count, max 25px
           const entryCount = scores.length;
@@ -2293,14 +2294,14 @@
       
       // New analytics widgets  
       const personMentions = this.widgetManager.getPersonMentionsRatio();
-      const lazySundays = this.widgetManager.getLazySundays();
-      const lazySaturdays = this.widgetManager.getLazySaturdays();
+      const activeSundays = this.widgetManager.getActiveSundays();
+      const activeSaturdays = this.widgetManager.getActiveSaturdays();
       const totalOverview = this.widgetManager.getTotalOverview();
       const fiveScoreDays = this.widgetManager.getFiveScoreDaysCount();
       const avgDurationHighScores = this.widgetManager.getAverageDurationBetweenHighScores();
       
       // Latest widget additions
-      const lazyWorkweeks = this.widgetManager.getLazyWorkweeks();
+      const activeWorkweeks = this.widgetManager.getActiveWorkweeks();
       const trendingTopics = this.widgetManager.getTrendingTopics(); 
       const trendingPeople = this.widgetManager.getTrendingPeople();
       const consistency = this.widgetManager.getScoreConsistency();
@@ -2336,8 +2337,8 @@
           }
         } : null,
         personMentions: personMentions,
-        lazySundays: lazySundays,
-        lazySaturdays: lazySaturdays,
+        activeSundays: activeSundays,
+        activeSaturdays: activeSaturdays,
         totalOverview: totalOverview,
         fiveScoreDays: fiveScoreDays ? {
           ...fiveScoreDays,
@@ -2348,7 +2349,7 @@
           averageDays: avgDurationHighScores.currentAvgDuration
         } : null,
         // New widgets
-        lazyWorkweeks: lazyWorkweeks,
+        activeWorkweeks: activeWorkweeks,
         trendingTopics: trendingTopics,
         trendingPeople: trendingPeople,
         consistency: consistency,

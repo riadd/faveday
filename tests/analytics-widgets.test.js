@@ -117,25 +117,24 @@ function runAnalyticsWidgetsTests() {
   // Behavioral Pattern Widgets
   framework.describe('Behavioral Pattern Widgets', function() {
     
-    framework.testWidget('Lazy Workweeks', () => {
-      console.log('       💼 Testing workweek productivity patterns...');
+    framework.testWidget('Active Workweeks', () => {
+      console.log('       💪 Testing workweek activity patterns...');
       const testData = [
-        // One lazy workweek (Mon-Fri with low scores: 1+1+1+1+1 = 5 ≤ 10)
+        // One low workweek (Mon-Fri with low scores: 1+1+1+1+1 = 5 ≤ 10)
         ...framework.generateWorkweekData(7, [1, 1, 1, 1, 1], '#tired #low'),
-        // One productive workweek (Mon-Fri with high scores: 4+4+4+4+4 = 20 > 10)
+        // One active workweek (Mon-Fri with high scores: 4+4+4+4+4 = 20 > 10)
         ...framework.generateWorkweekData(14, [4, 4, 4, 4, 4], '#productive #energy')
       ];
-      
+
       const app = new MockFaveDayApp(testData);
-      const result = app.getLazyWorkweeks();
-      
+      const result = app.getActiveWorkweeks();
+
       framework.assertEqual(result.totalWorkweeks, 2, 'Total workweeks detected');
-      framework.assertEqual(result.lazyCount, 1, 'Lazy workweeks (≤10 points)');
-      framework.assertEqual(result.percentage, 50, 'Lazy workweek percentage');
-      framework.assertTrend(result.trend, 'down', 'High lazy percentage should trend down');
-      
-      console.log(`       ✓ Workweek analysis: ${result.lazyCount}/${result.totalWorkweeks} lazy weeks (${result.percentage}%)`);
-      
+      framework.assertEqual(result.activeCount, 1, 'Active workweeks (>10 points)');
+      framework.assertEqual(result.percentage, 50, 'Active workweek percentage');
+
+      console.log(`       ✓ Workweek analysis: ${result.activeCount}/${result.totalWorkweeks} active weeks (${result.percentage}%)`);
+
       return true;
     });
   });

@@ -15,14 +15,30 @@ const fs = require('fs');
 ipcMain.handle('load-scores', async () => {
   if (config.filesPath != null)
   {
-    const scores = await loadScores(config.filesPath);
+    // Retry logic for cloud-synced drives (e.g. Google Drive) where files
+    // may not be locally available immediately on startup
+    let scores = await loadScores(config.filesPath);
+
+    if (scores.length === 0) {
+      const maxRetries = 5;
+      const delayMs = 2000;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        console.log(`No scores found, retrying in ${delayMs}ms (attempt ${attempt}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        scores = await loadScores(config.filesPath);
+        if (scores.length > 0) {
+          console.log(`Scores loaded successfully on retry ${attempt}`);
+          break;
+        }
+      }
+    }
+
     // Check if cache exists, if not create it
     const cacheFile = `${config.filesPath}/tag-cache.json`;
     if (!fs.existsSync(cacheFile)) {
       await calculateTagCache(config.filesPath, scores);
     }
     return scores;
-    //  TODO verify that it worked
   }
   else
   {

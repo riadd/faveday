@@ -93,7 +93,7 @@
       <div class="bento-item trend-{{trend}}-widget coverage">
         <h4>📊 Coverage</h4>
         <div class="bento-main-value">{{percentage}}%</div>
-        <small>{{entriesMade}}/{{daysPassed}} tracked {{#deltaDisplay}}<span class="trend-indicator trend-{{trend}}">{{deltaDisplay}}</span>{{/deltaDisplay}}</small>
+        <small>{{entriesMade}}/{{daysPassed}} tracked {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
       {{/coverage}}
       
@@ -102,13 +102,13 @@
       <div class="bento-item trend-{{score.trend}}-widget">
         <h4>{{scoreTypeIcon}}&nbsp;Recent&nbsp;{{scoreTypeName}}</h4>
         <div class="bento-main-value">{{score.current}}</div>
-        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
+        <small>vs {{score.previous}} past 30 days {{#score.trendDisplay}}<span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span>{{/score.trendDisplay}}</small>
       </div>
-      
+
       <div class="bento-item trend-{{words.trend}}-widget">
         <h4>📝 Avg Words/Day</h4>
         <div class="bento-main-value">{{words.current}}</div>
-        <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
+        <small>vs {{words.previous}} past 30 days {{#words.trendDisplay}}<span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span>{{/words.trendDisplay}}</small>
       </div>
       {{/thirtyDayStats}}
       
@@ -788,7 +788,7 @@
       <div class="analytics-item trend-{{trend}}-widget coverage">
         <h4>📊 Coverage</h4>
         <div class="analytics-main-value">{{percentage}}%</div>
-        <small>{{entriesMade}}/{{daysPassed}} tracked {{#deltaDisplay}}<span class="trend-indicator trend-{{trend}}">{{deltaDisplay}}</span>{{/deltaDisplay}}</small>
+        <small>{{entriesMade}}/{{daysPassed}} tracked {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
       {{/coverage}}
 
@@ -796,13 +796,13 @@
       <div class="analytics-item trend-{{entries.trend}}-widget">
         <h4>📊 Recent Entries</h4>
         <div class="analytics-main-value">{{entries.current}}</div>
-        <small>vs {{entries.previous}} past 30 days <span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span></small>
+        <small>vs {{entries.previous}} past 30 days {{#entries.trendDisplay}}<span class="trend-indicator trend-{{entries.trend}}">{{entries.trendDisplay}}</span>{{/entries.trendDisplay}}</small>
       </div>
-      
+
       <div class="analytics-item trend-{{words.trend}}-widget">
         <h4>📝 Avg Words/Day</h4>
         <div class="analytics-main-value">{{words.current}}</div>
-        <small>vs {{words.previous}} past 30 days <span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span></small>
+        <small>vs {{words.previous}} past 30 days {{#words.trendDisplay}}<span class="trend-indicator trend-{{words.trend}}">{{words.trendDisplay}}</span>{{/words.trendDisplay}}</small>
       </div>
       {{/thirtyDayStats}}
 
@@ -811,7 +811,7 @@
       <div class="analytics-item trend-{{score.trend}}-widget">
         <h4>{{scoreTypeIcon}} Recent {{scoreTypeName}}</h4>
         <div class="analytics-main-value">{{score.current}}</div>
-        <small>vs {{score.previous}} past 30 days <span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span></small>
+        <small>vs {{score.previous}} past 30 days {{#score.trendDisplay}}<span class="trend-indicator trend-{{score.trend}}">{{score.trendDisplay}}</span>{{/score.trendDisplay}}</small>
       </div>
       {{/thirtyDayStats}}
 
@@ -831,30 +831,30 @@
       </div>
       {{/personMentions}}
 
-      <!-- Row 4: Lazy Behaviors -->
-      {{#lazyWorkweeks}}
-      <div class="analytics-item trend-{{trend}}-widget lazy-workweeks">
-        <h4>💼 Lazy Workweeks</h4>
+      <!-- Row 4: Active Behaviors -->
+      {{#activeWorkweeks}}
+      <div class="analytics-item trend-{{trend}}-widget active-workweeks">
+        <h4>💪 Active Workweeks</h4>
         <div class="analytics-main-value">{{percentage}}%</div>
-        <small>{{lazyCount}}/{{totalWorkweeks}} weeks ≤10 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+        <small>{{activeCount}}/{{totalWorkweeks}} weeks >10 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
-      {{/lazyWorkweeks}}
+      {{/activeWorkweeks}}
 
-      {{#lazySaturdays}}
-      <div class="analytics-item trend-{{trend}}-widget lazy-saturdays">
-        <h4>🛋️ Lazy Saturdays</h4>
+      {{#activeSaturdays}}
+      <div class="analytics-item trend-{{trend}}-widget active-saturdays">
+        <h4>🎉 Active Saturdays</h4>
         <div class="analytics-main-value">{{percentage}}%</div>
-        <small>{{lazyCount}}/{{totalSaturdays}} Saturdays ≤2 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+        <small>{{activeCount}}/{{totalSaturdays}} Saturdays ≥3 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
-      {{/lazySaturdays}}
+      {{/activeSaturdays}}
 
-      {{#lazySundays}}
-      <div class="analytics-item trend-{{trend}}-widget lazy-sundays">
-        <h4>😴 Lazy Sundays</h4>
+      {{#activeSundays}}
+      <div class="analytics-item trend-{{trend}}-widget active-sundays">
+        <h4>☀️ Active Sundays</h4>
         <div class="analytics-main-value">{{percentage}}%</div>
-        <small>{{lazyCount}}/{{totalSundays}} Sundays ≤2 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
+        <small>{{activeCount}}/{{totalSundays}} Sundays ≥3 points {{#trendDisplay}}<span class="trend-indicator trend-{{trend}}">{{trendDisplay}}</span>{{/trendDisplay}}</small>
       </div>
-      {{/lazySundays}}
+      {{/activeSundays}}
 
       <!-- Row 5: Tag Intelligence -->
       {{#trendingTopics}}

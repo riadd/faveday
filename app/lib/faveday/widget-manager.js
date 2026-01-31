@@ -68,20 +68,24 @@ class WidgetManager {
   formatPercentageTrend(current, previous) {
     if (previous === 0) {
       if (current === 0) {
-        return { trend: 'same', trendDisplay: '0%' };
+        return { trend: 'same', trendDisplay: '' };
       } else {
-        // Show the actual percentage instead of "new" when going from 0% to positive
-        return { trend: 'up', trendDisplay: `+${current}%` };
+        return { trend: 'up', trendDisplay: `↗ +${Math.round(current)}%` };
       }
     }
-    
+
     const percentChange = ((current - previous) / previous) * 100;
-    const { trend, trendDisplay } = this.formatTrend(percentChange);
-    
-    return { 
-      trend, 
-      trendDisplay: trendDisplay + '%' 
-    };
+    const absChange = Math.abs(percentChange);
+
+    if (absChange < 0.5) {
+      return { trend: 'same', trendDisplay: '' };
+    }
+
+    if (percentChange > 0) {
+      return { trend: 'up', trendDisplay: `↗ +${absChange.toFixed(1)}%` };
+    } else {
+      return { trend: 'down', trendDisplay: `↘ -${absChange.toFixed(1)}%` };
+    }
   }
 
   // =============================================================================
@@ -150,10 +154,10 @@ class WidgetManager {
     const previousAvgScore = previousPeriod.length > 0 ? this.scoreCalculator.calculate(previousPeriod) : 0;
     const scoreDiff = currentAvgScore - previousAvgScore;
 
-    // Format trends
-    const wordsTrend = this.formatTrend(wordsDiff);
-    const entriesTrend = this.formatTrend(entriesDiff);
-    const scoreTrend = this.formatTrend(scoreDiff);
+    // Format trends as percentage changes
+    const wordsTrend = this.formatPercentageTrend(currentAvgWords, previousAvgWords);
+    const entriesTrend = this.formatPercentageTrend(currentEntries, previousEntries);
+    const scoreTrend = this.formatPercentageTrend(currentAvgScore, previousAvgScore);
 
     return {
       // Words per day
@@ -303,8 +307,7 @@ class WidgetManager {
       entriesMade: entriesCount,
       daysPassed: totalDaysInPeriod,
       trend: percentageTrend.trend,
-      trendDisplay: percentageTrend.trendDisplay,
-      deltaDisplay: percentageTrend.trendDisplay
+      trendDisplay: percentageTrend.trendDisplay
     };
   }
 
@@ -351,31 +354,21 @@ class WidgetManager {
       Math.floor((thirtyDaysAgo - previousPeriodScores.sort((a, b) => b.date - a.date)[0].date) / (1000 * 60 * 60 * 24)) : 
       null;
     
-    // Calculate trend based on score type
+    // Calculate trend as percentage change
     let trend = 'same';
     let trendDisplay = '';
-    
+
     if (currentDays !== null && previousDays !== null) {
-      const diff = currentDays - previousDays;
-      
       if (targetScore >= 4) {
-        // For high scores (4+): lower days since = better (inverted logic)
-        if (diff < 0) {
-          trend = 'up'; // More recent high score = better
-          trendDisplay = `↗ ${Math.abs(diff)} days more recent`;
-        } else if (diff > 0) {
-          trend = 'down'; // Less recent high score = worse
-          trendDisplay = `↘ +${diff} days longer ago`;
-        }
+        // For high scores (4+): lower days since = better, so invert args
+        const pctTrend = this.formatPercentageTrend(previousDays, currentDays);
+        trend = pctTrend.trend;
+        trendDisplay = pctTrend.trendDisplay;
       } else {
-        // For low scores (1-2): higher days since = better (normal logic)
-        if (diff > 0) {
-          trend = 'up'; // Longer since low score = better
-          trendDisplay = `↗ +${diff} days longer ago`;
-        } else if (diff < 0) {
-          trend = 'down'; // More recent low score = worse
-          trendDisplay = `↘ ${Math.abs(diff)} days more recent`;
-        }
+        // For low scores (1-2): higher days since = better
+        const pctTrend = this.formatPercentageTrend(currentDays, previousDays);
+        trend = pctTrend.trend;
+        trendDisplay = pctTrend.trendDisplay;
       }
     }
     
@@ -415,14 +408,14 @@ class WidgetManager {
     const previousCount = previousFiveScoreDays.length;
     const countDiff = currentCount - previousCount;
     
-    const trend = this.formatTrend(countDiff);
-    
+    const percentageTrend = this.formatPercentageTrend(currentCount, previousCount);
+
     return {
       currentCount: currentCount,
       previousCount: previousCount,
       countDiff: countDiff,
-      trend: trend.trend,
-      trendDisplay: trend.trendDisplay
+      trend: percentageTrend.trend,
+      trendDisplay: percentageTrend.trendDisplay
     };
   }
 
@@ -466,19 +459,14 @@ class WidgetManager {
     );
     const previousAvgDuration = calculateAverageDuration(previousYearEntries);
     
-    // Calculate trend (lower duration = better, so invert the logic)
+    // Calculate trend (lower duration = better, so invert args)
     let trend = 'same';
     let trendDisplay = '';
-    
+
     if (currentAvgDuration !== null && previousAvgDuration !== null) {
-      const diff = currentAvgDuration - previousAvgDuration;
-      if (diff < 0) {
-        trend = 'up'; // Shorter duration = better
-        trendDisplay = `↗ ${Math.abs(diff)} days shorter`;
-      } else if (diff > 0) {
-        trend = 'down'; // Longer duration = worse
-        trendDisplay = `↘ +${diff} days longer`;
-      }
+      const pctTrend = this.formatPercentageTrend(previousAvgDuration, currentAvgDuration);
+      trend = pctTrend.trend;
+      trendDisplay = pctTrend.trendDisplay;
     }
     
     return {
@@ -522,17 +510,14 @@ class WidgetManager {
       Math.round((previousEntriesWithPeople.length / previousEntries.length) * 100) : 0;
     
     // Calculate trend
-    const diff = currentPercentage - previousPercentage;
-    const trend = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
-    const trendDisplay = diff === 0 ? '' : 
-      diff > 0 ? `↗ +${Math.abs(diff)}%` : `↘ -${Math.abs(diff)}%`;
-    
+    const percentageTrend = this.formatPercentageTrend(currentPercentage, previousPercentage);
+
     return {
       percentage: currentPercentage,
       daysWithPeople: currentEntriesWithPeople.length,
       totalDays: currentEntries.length,
-      trend: trend,
-      trendDisplay: trendDisplay,
+      trend: percentageTrend.trend,
+      trendDisplay: percentageTrend.trendDisplay,
       previousPercentage: previousPercentage
     };
   }
@@ -606,38 +591,38 @@ class WidgetManager {
   // =============================================================================
 
   /**
-   * Get lazy Sunday statistics
-   * @returns {Object} Sunday productivity analysis with trend
+   * Get active Sunday statistics
+   * @returns {Object} Sunday activity analysis with trend
    */
-  getLazySundays() {
+  getActiveSundays() {
     const now = new Date();
     const threeSixtyFiveDaysAgo = new Date(now);
     threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
     const sevenThirtyDaysAgo = new Date(now);
     sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-    
+
     const allScores = this.getAllScores();
-    
+
     // Current period
     const currentSundays = allScores.filter(s => s.date >= threeSixtyFiveDaysAgo && s.date.getDay() === 0);
-    const currentLazySundays = currentSundays.filter(s => s.summary <= 2);
-    
+    const currentActiveSundays = currentSundays.filter(s => s.summary >= 3);
+
     // Previous period
-    const previousSundays = allScores.filter(s => 
+    const previousSundays = allScores.filter(s =>
       s.date >= sevenThirtyDaysAgo && s.date < threeSixtyFiveDaysAgo && s.date.getDay() === 0
     );
-    const previousLazySundays = previousSundays.filter(s => s.summary <= 2);
-    
-    const currentPercentage = currentSundays.length > 0 ? 
-      Math.round((currentLazySundays.length / currentSundays.length) * 100) : 0;
-    const previousPercentage = previousSundays.length > 0 ? 
-      Math.round((previousLazySundays.length / previousSundays.length) * 100) : 0;
-    
+    const previousActiveSundays = previousSundays.filter(s => s.summary >= 3);
+
+    const currentPercentage = currentSundays.length > 0 ?
+      Math.round((currentActiveSundays.length / currentSundays.length) * 100) : 0;
+    const previousPercentage = previousSundays.length > 0 ?
+      Math.round((previousActiveSundays.length / previousSundays.length) * 100) : 0;
+
     const percentageTrend = this.formatPercentageTrend(currentPercentage, previousPercentage);
-    
+
     return {
       percentage: currentPercentage,
-      lazyCount: currentLazySundays.length,
+      activeCount: currentActiveSundays.length,
       totalSundays: currentSundays.length,
       trend: percentageTrend.trend,
       trendDisplay: percentageTrend.trendDisplay,
@@ -646,38 +631,38 @@ class WidgetManager {
   }
 
   /**
-   * Get lazy Saturday statistics  
-   * @returns {Object} Saturday productivity analysis with trend
+   * Get active Saturday statistics
+   * @returns {Object} Saturday activity analysis with trend
    */
-  getLazySaturdays() {
+  getActiveSaturdays() {
     const now = new Date();
     const threeSixtyFiveDaysAgo = new Date(now);
     threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
     const sevenThirtyDaysAgo = new Date(now);
     sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-    
+
     const allScores = this.getAllScores();
-    
+
     // Current period
     const currentSaturdays = allScores.filter(s => s.date >= threeSixtyFiveDaysAgo && s.date.getDay() === 6);
-    const currentLazySaturdays = currentSaturdays.filter(s => s.summary <= 2);
-    
+    const currentActiveSaturdays = currentSaturdays.filter(s => s.summary >= 3);
+
     // Previous period
-    const previousSaturdays = allScores.filter(s => 
+    const previousSaturdays = allScores.filter(s =>
       s.date >= sevenThirtyDaysAgo && s.date < threeSixtyFiveDaysAgo && s.date.getDay() === 6
     );
-    const previousLazySaturdays = previousSaturdays.filter(s => s.summary <= 2);
-    
-    const currentPercentage = currentSaturdays.length > 0 ? 
-      Math.round((currentLazySaturdays.length / currentSaturdays.length) * 100) : 0;
-    const previousPercentage = previousSaturdays.length > 0 ? 
-      Math.round((previousLazySaturdays.length / previousSaturdays.length) * 100) : 0;
-    
+    const previousActiveSaturdays = previousSaturdays.filter(s => s.summary >= 3);
+
+    const currentPercentage = currentSaturdays.length > 0 ?
+      Math.round((currentActiveSaturdays.length / currentSaturdays.length) * 100) : 0;
+    const previousPercentage = previousSaturdays.length > 0 ?
+      Math.round((previousActiveSaturdays.length / previousSaturdays.length) * 100) : 0;
+
     const percentageTrend = this.formatPercentageTrend(currentPercentage, previousPercentage);
-    
+
     return {
       percentage: currentPercentage,
-      lazyCount: currentLazySaturdays.length,
+      activeCount: currentActiveSaturdays.length,
       totalSaturdays: currentSaturdays.length,
       trend: percentageTrend.trend,
       trendDisplay: percentageTrend.trendDisplay,
@@ -686,18 +671,18 @@ class WidgetManager {
   }
 
   /**
-   * Get lazy workweeks statistics
-   * @returns {Object} Workweek productivity analysis with trend
+   * Get active workweeks statistics
+   * @returns {Object} Workweek activity analysis with trend
    */
-  getLazyWorkweeks() {
+  getActiveWorkweeks() {
     const now = new Date();
     const threeSixtyFiveDaysAgo = new Date(now);
     threeSixtyFiveDaysAgo.setDate(now.getDate() - 365);
     const sevenThirtyDaysAgo = new Date(now);
     sevenThirtyDaysAgo.setDate(now.getDate() - 730);
-    
+
     const allScores = this.getAllScores();
-    
+
     // Helper function to get Monday of the week for a given date
     const getMondayOfWeek = (date) => {
       const d = new Date(date);
@@ -705,67 +690,63 @@ class WidgetManager {
       const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
       return new Date(d.setDate(diff));
     };
-    
+
     // Current period workweeks
     const currentEntries = allScores.filter(score => score.date >= threeSixtyFiveDaysAgo);
     const currentWorkweeks = new Map();
-    
+
     currentEntries.forEach(entry => {
       const dayOfWeek = entry.date.getDay();
       // Only count Monday (1) through Friday (5)
       if (dayOfWeek >= 1 && dayOfWeek <= 5) {
         const monday = getMondayOfWeek(entry.date);
         const weekKey = monday.toISOString().split('T')[0];
-        
+
         if (!currentWorkweeks.has(weekKey)) {
           currentWorkweeks.set(weekKey, 0);
         }
         currentWorkweeks.set(weekKey, currentWorkweeks.get(weekKey) + entry.summary);
       }
     });
-    
-    const currentLazyWorkweeks = Array.from(currentWorkweeks.values()).filter(total => total <= 10);
+
+    const currentActiveWorkweeks = Array.from(currentWorkweeks.values()).filter(total => total > 10);
     const currentTotalWorkweeks = currentWorkweeks.size;
-    
+
     // Previous period workweeks
-    const previousEntries = allScores.filter(score => 
+    const previousEntries = allScores.filter(score =>
       score.date >= sevenThirtyDaysAgo && score.date < threeSixtyFiveDaysAgo
     );
     const previousWorkweeks = new Map();
-    
+
     previousEntries.forEach(entry => {
       const dayOfWeek = entry.date.getDay();
       if (dayOfWeek >= 1 && dayOfWeek <= 5) {
         const monday = getMondayOfWeek(entry.date);
         const weekKey = monday.toISOString().split('T')[0];
-        
+
         if (!previousWorkweeks.has(weekKey)) {
           previousWorkweeks.set(weekKey, 0);
         }
         previousWorkweeks.set(weekKey, previousWorkweeks.get(weekKey) + entry.summary);
       }
     });
-    
-    const previousLazyWorkweeks = Array.from(previousWorkweeks.values()).filter(total => total <= 10);
+
+    const previousActiveWorkweeks = Array.from(previousWorkweeks.values()).filter(total => total > 10);
     const previousTotalWorkweeks = previousWorkweeks.size;
-    
-    const currentPercentage = currentTotalWorkweeks > 0 ? 
-      Math.round((currentLazyWorkweeks.length / currentTotalWorkweeks) * 100) : 0;
-    const previousPercentage = previousTotalWorkweeks > 0 ? 
-      Math.round((previousLazyWorkweeks.length / previousTotalWorkweeks) * 100) : 0;
-    
-    // Calculate trend (note: for lazy workweeks, more is bad, so invert the trend logic)
-    const diff = currentPercentage - previousPercentage;
-    const trend = diff > 0 ? 'down' : diff < 0 ? 'up' : 'same'; // Inverted: more lazy = down trend
-    const trendDisplay = diff === 0 ? '' : 
-      diff > 0 ? `↘ +${Math.abs(diff)}%` : `↗ -${Math.abs(diff)}%`;
-    
+
+    const currentPercentage = currentTotalWorkweeks > 0 ?
+      Math.round((currentActiveWorkweeks.length / currentTotalWorkweeks) * 100) : 0;
+    const previousPercentage = previousTotalWorkweeks > 0 ?
+      Math.round((previousActiveWorkweeks.length / previousTotalWorkweeks) * 100) : 0;
+
+    const percentageTrend = this.formatPercentageTrend(currentPercentage, previousPercentage);
+
     return {
       percentage: currentPercentage,
-      lazyCount: currentLazyWorkweeks.length,
+      activeCount: currentActiveWorkweeks.length,
       totalWorkweeks: currentTotalWorkweeks,
-      trend: trend,
-      trendDisplay: trendDisplay,
+      trend: percentageTrend.trend,
+      trendDisplay: percentageTrend.trendDisplay,
       previousPercentage: previousPercentage
     };
   }
@@ -1060,20 +1041,16 @@ class WidgetManager {
     const previousConsistency = previousStdDev > 0 ? Math.round((2.0 / previousStdDev) * 100) / 100 : 5.0;
     
     // Calculate trend (higher consistency = better trend)
-    const diff = currentConsistency - previousConsistency;
-    const trend = diff > 0.1 ? 'up' : diff < -0.1 ? 'down' : 'same';
-    
-    const trendDisplay = Math.abs(diff) < 0.1 ? '' : 
-      diff > 0 ? `↗ +${Math.round(Math.abs(diff) * 100) / 100}` : `↘ -${Math.round(Math.abs(diff) * 100) / 100}`;
-    
+    const percentageTrend = this.formatPercentageTrend(currentConsistency, previousConsistency);
+
     return {
       consistency: currentConsistency,
       stdDev: Math.round(currentStdDev * 100) / 100,
       previousConsistency: previousConsistency,
       previousStdDev: Math.round(previousStdDev * 100) / 100,
       entryCount: currentEntries.length,
-      trend: trend,
-      trendDisplay: trendDisplay
+      trend: percentageTrend.trend,
+      trendDisplay: percentageTrend.trendDisplay
     };
   }
   
