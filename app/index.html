@@ -1084,12 +1084,6 @@
   <!-- new score form -->
   <div id="editScore">
     <progress id="editScoreProgress" value="0" max="100"></progress>
-    <div class="entry-mode-toggle">
-      <button id="futureEntryBtn" class="future-entry-btn" onclick="onSwitchToFutureEntry()">
-        Write to Future Self
-      </button>
-      <div id="entryModeLabel" class="entry-mode-label">Diary Entry</div>
-    </div>
     <form>
       <textarea id="editScoreText" placeholder="Notes"></textarea>
     </form>
@@ -1108,6 +1102,9 @@
       </div>
       <button class="submit" onclick="onSubmitScore()">
         <span id="submitButtonText">Add Score</span>
+      </button>
+      <button id="futureEntryBtn" class="future-toggle-btn" onclick="onSwitchToFutureEntry()">
+        Write to Future
       </button>
     </div>
   </div>

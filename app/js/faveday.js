@@ -2065,36 +2065,37 @@
     }
 
     switchToFutureEntry() {
-      // Set date to one year from today
-      let futureDate = new Date();
-      futureDate.addYears(1);
-      let futureDateId = futureDate.format("{yyyy}-{MM}-{dd}");
-      
-      // Show edit score with future date
-      this.showEditScore(futureDateId);
+      if (this.isFutureEntry) {
+        // Toggle back to diary mode
+        let dateId = this.previousDiaryDateId || null;
+        this.previousDiaryDateId = null;
+        this.showEditScore(dateId);
+      } else {
+        // Save current diary date, switch to future
+        let currentDateLabel = $('#editScore .date .thisDay').text();
+        this.previousDiaryDateId = new Date(currentDateLabel).format("{yyyy}-{MM}-{dd}");
+        let futureDate = new Date();
+        futureDate.addYears(1);
+        this.showEditScore(futureDate.format("{yyyy}-{MM}-{dd}"));
+      }
     }
 
     updateEntryModeUI() {
       const editScore = $('#editScore');
-      const modeLabel = $('#entryModeLabel');
       const submitButtonText = $('#submitButtonText');
       const scoreButtons = $('#scoreButtons');
       const futureBtn = $('#futureEntryBtn');
-      
+
       if (this.isFutureEntry) {
-        // Future entry mode
         editScore.addClass('future-entry-mode');
-        modeLabel.text('Future Entry');
         submitButtonText.text('Save Future Entry');
         scoreButtons.hide();
-        futureBtn.hide();
+        futureBtn.text('Write Diary');
       } else {
-        // Diary entry mode
         editScore.removeClass('future-entry-mode');
-        modeLabel.text('Diary Entry');
         submitButtonText.text('Add Score');
         scoreButtons.show();
-        futureBtn.show();
+        futureBtn.text('Write to Future');
       }
     }
     

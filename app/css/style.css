@@ -670,7 +670,12 @@ tr .yearRow {
 #editScore .editScoreProperties {
   position: fixed;
   bottom: 20px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
+  align-items: center;
   padding: 20px;
   opacity: 50%;
 }
@@ -750,42 +755,25 @@ tr .yearRow {
   background-color: #942a25 !important;
 }
 
-/* Future Entry Styling */
+/* Future Entry Toggle */
 
-.entry-mode-toggle {
-  position: absolute;
-  top: 15px;
-  left: 20px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.future-entry-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
+#editScore .editScoreProperties .future-toggle-btn {
+  margin-left: auto;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
+  transition: all 0.2s ease;
+  opacity: 0.6;
 }
 
-.future-entry-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+.future-toggle-btn:hover {
+  opacity: 1;
 }
 
-.entry-mode-label {
-  font-size: 12px;
-  color: #aaa;
-  font-weight: 500;
-  padding: 6px 12px;
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.1);
+#editScore.future-entry-mode .future-toggle-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-color: #764ba2 !important;
+  color: white !important;
+  opacity: 1;
 }
 
 /* Future Entry Mode Styling */
@@ -793,29 +781,15 @@ tr .yearRow {
   background: linear-gradient(135deg, #232741 0%, #2d1b43 50%, #232741 100%);
 }
 
+#editScore.future-entry-mode form {
+  background: transparent;
+}
+
 #editScore.future-entry-mode textarea {
-  background: linear-gradient(135deg, #2a2f4a 0%, #332545 50%, #2a2f4a 100%);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  position: relative;
+  background: transparent;
 }
 
-#editScore.future-entry-mode textarea::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #00f2fe);
-  border-radius: inherit;
-  z-index: -1;
-}
 
-#editScore.future-entry-mode .entry-mode-label {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
 
 .score-buttons {
   display: flex;
