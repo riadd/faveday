@@ -2703,9 +2703,6 @@
 
   //   $.plot($("#plot"), plotData, plotOptions);
   
-  window.onload = function() {
-    return window.app = new FaveDayApp();
-  };
 
   window.onConnect = function() {
     return window.app.setupDropbox();
