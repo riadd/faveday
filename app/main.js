@@ -129,6 +129,12 @@ ipcMain.handle('set-default-empty-score', async (event, defaultEmptyScore) => {
   return config;
 });
 
+ipcMain.handle('set-word-count-goal', async (event, wordCountGoal) => {
+  config.wordCountGoal = wordCountGoal === '' ? 100 : parseInt(wordCountGoal, 10);
+  saveConfig();
+  return config;
+});
+
 async function selectFolder() {
   const folder = await dialog.showOpenDialog({
     properties: ['openDirectory'],

@@ -277,6 +277,16 @@
           return;
         }
         
+        // ESC on settings page goes back to dashboard
+        if (event.key === 'Escape' && !this.commandPaletteVisible) {
+          const route = this.router.getCurrentRoute();
+          if (route && route.url === '/settings') {
+            event.preventDefault();
+            this.showDashboard();
+          }
+          return;
+        }
+
         // Handle navigation when palette is open
         if (this.commandPaletteVisible) {
           switch (event.key) {
@@ -2171,13 +2181,11 @@
     }
     
     updateScoreProgress(text) {
-      const maxWords = 100; // Set the maximum word count for full progress
-      const wordCount = text === '' ? 0 : text.split(/\s+/).length; // Split the text by spaces
+      const maxWords = window.configStore.getWordCountGoal();
+      const wordCount = text === '' ? 0 : text.split(/\s+/).length;
 
-      // Calculate progress percentage
-      const progressValue = Math.min((wordCount / maxWords) * 100, 100); // Limit to 100%
+      const progressValue = Math.min((wordCount / maxWords) * 100, 100);
 
-      // Update the progress bar
       document.getElementById('editScoreProgress').value = progressValue;
     }
 
@@ -2388,6 +2396,10 @@
 
     async saveDefaultEmptyScore() {
       return await this.settingsManager.saveDefaultEmptyScore();
+    }
+
+    async saveWordCountGoal() {
+      return await this.settingsManager.saveWordCountGoal();
     }
 
     runDiagnostics() {
@@ -2820,6 +2832,10 @@
 
   window.onSaveDefaultEmptyScore = async function() {
     return await window.app.saveDefaultEmptyScore();
+  };
+
+  window.onSaveWordCountGoal = async function() {
+    return await window.app.saveWordCountGoal();
   };
 
   window.onRunDiagnostics = function() {

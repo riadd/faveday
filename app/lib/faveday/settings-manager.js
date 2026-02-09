@@ -33,7 +33,9 @@ class SettingsManager {
       scoreTypeAverage: scoreType === 'average',
       scoreTypeQuality: scoreType === 'quality',
       scoreTypeMedian: scoreType === 'median',
-      defaultEmptyScore: config.defaultEmptyScore !== null ? config.defaultEmptyScore : ''
+      defaultEmptyScore: config.defaultEmptyScore !== null ? config.defaultEmptyScore : '',
+      wordCountGoal: config.wordCountGoal || 100,
+      recentYearAvgWords: this.getRecentYearAvgWords()
     }, {
       yearsBar: window.Hogan.compile($('#tmpl-years-bar').html())
     });
@@ -261,6 +263,59 @@ class SettingsManager {
     if (this.router.getCurrentRoute() !== '/settings') {
       this.refreshCurrentView();
     }
+  }
+
+  /**
+   * Save the word count goal
+   */
+  async saveWordCountGoal() {
+    const input = document.getElementById('word-count-goal-input');
+    const goal = parseInt(input.value, 10);
+
+    if (!goal || goal < 10) {
+      this.showSuccessMessage('Goal must be at least 10 words');
+      return;
+    }
+
+    await window.api.setWordCountGoal(goal);
+    window.configStore.set('wordCountGoal', goal);
+
+    this.showSuccessMessage(`Word count goal set to ${goal}`);
+
+    const button = input.nextElementSibling;
+    if (button) {
+      const originalText = button.textContent;
+      button.textContent = '✓ Saved!';
+      button.style.background = '#28a745';
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.style.background = '#007cba';
+      }, 2000);
+    }
+  }
+
+  /**
+   * Calculate average words per entry for the most recent year
+   * @returns {number|null} Average word count or null if no data
+   */
+  getRecentYearAvgWords() {
+    const years = this.dataManager.getYears();
+    if (!years || years.length === 0) return null;
+
+    const recentYear = years[years.length - 1];
+    const allScores = this.dataManager.getAllScores();
+    const yearEntries = allScores.filter(s => {
+      const d = s.date instanceof Date ? s.date : new Date(s.date);
+      return d.getFullYear() === recentYear && s.notes;
+    });
+
+    if (yearEntries.length === 0) return null;
+
+    const totalWords = yearEntries.reduce((sum, s) => {
+      return sum + (s.notes ? s.notes.split(/\s+/).length : 0);
+    }, 0);
+
+    return Math.round(totalWords / yearEntries.length);
   }
 
   /**

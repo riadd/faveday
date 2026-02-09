@@ -619,6 +619,21 @@
         </div>
       </div>
 
+      <!-- Word Count Goal Section -->
+      <div class="settings-card">
+        <h3>Writing Goal</h3>
+        <div class="settings-row">
+          <div class="settings-label">
+            <label for="word-count-goal-input">Words per entry</label>
+            <small>Target word count shown as a progress bar when writing. {{#recentYearAvgWords}}Your avg this year: <strong>{{recentYearAvgWords}} words/entry</strong>{{/recentYearAvgWords}}</small>
+          </div>
+          <div class="settings-control">
+            <input type="number" id="word-count-goal-input" min="10" max="10000" step="10" value="{{wordCountGoal}}" />
+            <button class="btn-primary" onclick="onSaveWordCountGoal()">Save</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Life Quality Formula Section (conditional) -->
       {{#scoreTypeQuality}}
       <div class="settings-card">

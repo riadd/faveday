@@ -18,7 +18,8 @@ class ConfigStore {
         5: 25.0  // Unforgettable days are 25x routine
       },
       birthdate: null,
-      filesPath: null
+      filesPath: null,
+      wordCountGoal: 100
     };
   }
 
@@ -79,6 +80,10 @@ class ConfigStore {
 
   getFilesPath() {
     return this.config.filesPath;
+  }
+
+  getWordCountGoal() {
+    return this.config.wordCountGoal || 100;
   }
 }
 

@@ -14,5 +14,6 @@ contextBridge.exposeInMainWorld('api', {
   setBirthdate: (birthdate) => ipcRenderer.invoke('set-birthdate', birthdate),
   setLifeQualityWeights: (weights) => ipcRenderer.invoke('set-life-quality-weights', weights),
   setScoreType: (scoreType) => ipcRenderer.invoke('set-score-type', scoreType),
-  setDefaultEmptyScore: (defaultEmptyScore) => ipcRenderer.invoke('set-default-empty-score', defaultEmptyScore)
+  setDefaultEmptyScore: (defaultEmptyScore) => ipcRenderer.invoke('set-default-empty-score', defaultEmptyScore),
+  setWordCountGoal: (wordCountGoal) => ipcRenderer.invoke('set-word-count-goal', wordCountGoal)
 });
