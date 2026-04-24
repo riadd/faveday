@@ -177,3 +177,12 @@ Successfully extracted core functionality from monolithic FaveDayApp class into 
 - Data attributes used for popups: `data-tag`, `data-uses`, `data-avg`, etc.
 - Sorting implementations handle null values gracefully
 - Templates kept simple, logic in JavaScript
+
+## Product Goals
+
+- **Vision**: A privacy-first desktop journal for daily mood and productivity tracking that turns simple 1-5 ratings into meaningful personal insights through analytics and pattern discovery.
+- **Target users**: Individuals who want to reflect on their daily life, identify patterns in mood or productivity, and track personal wellness—with all data staying local and private.
+- **Key pain points it solves**: Balancing quick daily logging (5-second entries) with meaningful analytics; maintaining privacy over journaling data without cloud dependency; understanding personal patterns across months and years.
+- **Current stage**: Production—fully featured desktop app with calendar, analytics, tag system, streak tracking, and search functionality.
+
+> _Product Goals section auto-bootstrapped from a codebase scan — a FIRST DRAFT to be refined by the alignment/review loop._
