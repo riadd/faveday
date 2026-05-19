@@ -11,6 +11,16 @@
 
 FaveDay is a personal daily scoring/journaling application built with Electron. Users rate their days with scores and add notes with tags.
 
+## Audit Before Proposing — Five Aborts in a Single Week from Duplicate Features
+
+Five speculative tasks aborted in May 2026 mostly because the proposed feature already shipped or duplicated a closely-adjacent one: #1242 (per-person name frequency tracking — *"this already is in the tool"*), #1332 (Person Impact analytics view duplicating #1331's Tag Impact section, which already includes @person tags), #1331 (Tag Impact view itself, abandoned), #1235 (phrase-and-tag time-travel search — overlaps existing tag/search functionality), #1236 (auto year-wrap summary). Before pitching any new analytics/search/timeline feature for faveday:
+
+1. **Open the live app and use the existing analytics page, tag detail view, and Tags page sorts for 60 seconds** — those surfaces already aggregate tag/person/score relationships.
+2. **Search the codebase for prior implementations.** `getTagImpacts`, `tagCache`, the People view on `/analytics`, and `data-tag` popups already cover most cross-tag cuts.
+3. **Confirm the new feature answers a question the existing surfaces cannot.** If a verbatim "I want to see X" gets answered by clicking 2 existing controls, drop the idea.
+
+The cost of one careful 5-minute audit is far below the cost of writing, reviewing, and aborting a duplicate. New ideas should land on the "uncovered question" axis (something analytics/tag pages legitimately don't show), not the "different visual for the same number" axis.
+
 ## Architecture
 
 - **Frontend**: HTML/CSS/JavaScript with Mustache templates
