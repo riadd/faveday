@@ -1067,45 +1067,73 @@ class WidgetManager {
    * @returns {Object} Countdown information for next future letter
    */
   getNextFutureLetter() {
-    const futureEntries = this.dataManager.getFutureEntries();
-    
-    if (!futureEntries || futureEntries.length === 0) {
-      return {
-        hasEntry: false,
-        message: 'No future letters'
-      };
-    }
+    const futureEntries = this.dataManager.getFutureEntries() || [];
 
     const now = new Date();
     now.setHours(0, 0, 0, 0); // Reset time for date comparison
-    
-    // Find the next future entry (earliest date after today)
+
+    const totalCount = futureEntries.length;
+
+    // Arrived letters: due/arrival date is today or already in the past.
+    // These are the letters that are now readable (including any that slipped by).
+    const arrivedCount = futureEntries.filter(entry => {
+      const d = new Date(entry.date);
+      d.setHours(0, 0, 0, 0);
+      return d <= now;
+    }).length;
+    const hasArrived = arrivedCount > 0;
+
+    // Upcoming letters: due date strictly in the future — stay teased.
     const upcomingEntries = futureEntries
-      .filter(entry => new Date(entry.date) > now)
+      .filter(entry => {
+        const d = new Date(entry.date);
+        d.setHours(0, 0, 0, 0);
+        return d > now;
+      })
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    if (upcomingEntries.length === 0) {
+
+    // Base payload shared by every branch so the widget can always decide how
+    // to render (and is always clickable to open the full list).
+    const base = {
+      hasEntry: totalCount > 0,
+      hasArrived: hasArrived,
+      arrivedCount: arrivedCount,
+      totalCount: totalCount
+    };
+
+    if (upcomingEntries.length > 0) {
+      const nextEntry = upcomingEntries[0];
+      const targetDate = new Date(nextEntry.date);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const timeDiff = targetDate.getTime() - now.getTime();
+      const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+      const countdownMessage = daysUntil === 1 ? 'Tomorrow' :
+                               daysUntil === 0 ? 'Today' :
+                               `in ${daysUntil} days`;
+
       return {
-        hasEntry: false,
-        message: 'No upcoming letters'
+        ...base,
+        hasUpcoming: true,
+        daysUntil: daysUntil,
+        targetDate: targetDate,
+        // An arrived-but-unread letter takes headline priority over the
+        // countdown — surfacing it is the whole point of the widget.
+        message: hasArrived
+          ? (arrivedCount === 1 ? '1 letter arrived' : `${arrivedCount} letters arrived`)
+          : countdownMessage,
+        countdownMessage: countdownMessage
       };
     }
 
-    const nextEntry = upcomingEntries[0];
-    const targetDate = new Date(nextEntry.date);
-    targetDate.setHours(0, 0, 0, 0);
-    
-    // Calculate days until
-    const timeDiff = targetDate.getTime() - now.getTime();
-    const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    
+    // No upcoming letters — but there may be arrived ones waiting to be read.
     return {
-      hasEntry: true,
-      daysUntil: daysUntil,
-      targetDate: targetDate,
-      message: daysUntil === 1 ? 'Tomorrow' : 
-               daysUntil === 0 ? 'Today' : 
-               `in ${daysUntil} days`
+      ...base,
+      hasUpcoming: false,
+      message: hasArrived
+        ? (arrivedCount === 1 ? '1 letter arrived' : `${arrivedCount} letters arrived`)
+        : 'No future letters'
     };
   }
 

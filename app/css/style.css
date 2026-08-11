@@ -836,6 +836,256 @@ tr .yearRow {
   text-decoration: underline;
 }
 
+/* Future letter widget with an arrived (unread) letter — gentle attention pulse */
+.future-letter-has-arrived {
+  animation: futureLetterPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes futureLetterPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.0); }
+  50% { box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.35); }
+}
+
+/* Future letter widget on the analytics grid (reuses future-letter gradient) */
+.analytics-item.future-letter-analytics {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.analytics-item.future-letter-analytics h4,
+.analytics-item.future-letter-analytics .analytics-main-value,
+.analytics-item.future-letter-analytics small {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.analytics-item.future-letter-analytics small a {
+  color: #fff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* =========================================================================
+   Future Letters — list + read modals (reuse command-palette overlay style)
+   ========================================================================= */
+.future-letters-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+  z-index: 10000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.future-letters-read-overlay {
+  /* Layer above the list modal when reading a letter */
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.future-letters-overlay.hidden {
+  display: none;
+}
+
+.future-letters-modal {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 12px;
+  width: 560px;
+  max-width: 92vw;
+  max-height: 76vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.future-letters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #333;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.25) 100%);
+  flex-shrink: 0;
+}
+
+.future-letters-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.future-letters-close {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.15s ease;
+}
+
+.future-letters-close:hover {
+  color: #fff;
+}
+
+.future-letters-body {
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.future-letters-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.future-letter-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #333;
+}
+
+.future-letter-item:last-child {
+  border-bottom: none;
+}
+
+.future-letter-item .letter-icon {
+  font-size: 22px;
+  width: 26px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.future-letter-item .letter-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.future-letter-item .letter-date {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.future-letter-item .letter-status {
+  color: #9aa0b4;
+  font-size: 12px;
+}
+
+/* Arrived (readable) letters */
+.future-letter-item.arrived {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.future-letter-item.arrived:hover {
+  background: #333;
+}
+
+.future-letter-item.arrived .letter-date {
+  color: #cdd3ff;
+}
+
+.future-letter-item .letter-chevron {
+  color: #667eea;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* Teased (still-future) letters — locked, dimmed, no content revealed */
+.future-letter-item.teased {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.future-letter-item.teased .letter-icon {
+  filter: grayscale(0.4);
+}
+
+.future-letter-item.teased .letter-date {
+  color: #cfcfcf;
+}
+
+.future-letter-item .letter-lock-note {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #7d7d90;
+  background: #383848;
+  padding: 3px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* Empty state — muted, not accented */
+.future-letters-empty {
+  text-align: center;
+  padding: 40px 24px;
+  color: #999;
+}
+
+.future-letters-empty-icon {
+  font-size: 40px;
+  opacity: 0.45;
+  margin-bottom: 12px;
+}
+
+.future-letters-empty p {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+}
+
+.future-letters-write {
+  display: inline-block;
+  color: #cdd3ff;
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 13px;
+  transition: background-color 0.15s ease;
+}
+
+.future-letters-write:hover {
+  background: rgba(102, 126, 234, 0.18);
+}
+
+/* Read modal body */
+.future-letter-read-body {
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+}
+
+.future-letter-read-meta {
+  color: #8a90a4;
+  font-size: 12px;
+  font-style: italic;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #333;
+}
+
+.future-letter-read-content {
+  color: #e8e8ec;
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
 /* years bar */
 
 .yearsBar {

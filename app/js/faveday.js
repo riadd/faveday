@@ -276,7 +276,19 @@
           }
           return;
         }
-        
+
+        // ESC closes the future-letter read modal first, then the list modal
+        if (event.key === 'Escape' && this.futureLetterReadVisible) {
+          event.preventDefault();
+          this.hideFutureLetterRead();
+          return;
+        }
+        if (event.key === 'Escape' && this.futureLettersVisible) {
+          event.preventDefault();
+          this.hideFutureLetters();
+          return;
+        }
+
         // ESC on settings page goes back to dashboard
         if (event.key === 'Escape' && !this.commandPaletteVisible) {
           const route = this.router.getCurrentRoute();
@@ -958,6 +970,112 @@
       const ordinalSuffix = this.getOrdinalSuffix(day);
       
       return `${month} ${day}${ordinalSuffix}, ${year}`;
+    }
+
+    // ==================== FUTURE LETTERS ====================
+
+    /**
+     * Build the classified list of future letters for the list modal.
+     * Arrived (past/today) letters are readable; still-future letters stay teased.
+     */
+    getFutureLettersData() {
+      const futureEntries = this.dataManager.getFutureEntries() || [];
+
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      const items = futureEntries.map(entry => {
+        const d = new Date(entry.date);
+        d.setHours(0, 0, 0, 0);
+        const isPast = d <= now; // arrived: today or earlier
+        const dayDiff = Math.round((d.getTime() - now.getTime()) / (1000 * 3600 * 24));
+
+        let statusText;
+        if (isPast) {
+          if (dayDiff === 0) statusText = 'Arrived today';
+          else if (dayDiff === -1) statusText = 'Arrived yesterday';
+          else statusText = `Arrived ${Math.abs(dayDiff)} days ago`;
+        } else {
+          if (dayDiff === 1) statusText = 'Arrives tomorrow';
+          else statusText = `Arrives in ${dayDiff} days`;
+        }
+
+        return {
+          dateId: d.format("{yyyy}-{MM}-{dd}"),
+          dateLabel: this.formatDateWithOrdinal(d),
+          isPast: isPast,
+          sortDate: d.getTime(),
+          statusText: statusText
+        };
+      });
+
+      // Arrived first (most recent arrival on top so a just-arrived letter is
+      // prominent), then still-teased upcoming letters (soonest first).
+      const past = items.filter(i => i.isPast).sort((a, b) => b.sortDate - a.sortDate);
+      const future = items.filter(i => !i.isPast).sort((a, b) => a.sortDate - b.sortDate);
+      const letters = [...past, ...future];
+
+      return {
+        hasLetters: letters.length > 0,
+        letters: letters,
+        hasArrived: past.length > 0,
+        arrivedCount: past.length
+      };
+    }
+
+    showFutureLetters() {
+      const data = this.getFutureLettersData();
+      this.render('#tmpl-future-letters', '#future-letters-body', data, {});
+      const overlay = document.getElementById('future-letters-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+      this.futureLettersVisible = true;
+    }
+
+    hideFutureLetters() {
+      const overlay = document.getElementById('future-letters-overlay');
+      if (overlay) overlay.classList.add('hidden');
+      this.futureLettersVisible = false;
+    }
+
+    readFutureLetter(dateId) {
+      const futureEntries = this.dataManager.getFutureEntries() || [];
+      const entry = futureEntries.find(e =>
+        new Date(e.date).format("{yyyy}-{MM}-{dd}") === dateId
+      );
+      if (!entry) return;
+
+      // Safety: never reveal a letter whose arrival date is still in the future.
+      const d = new Date(entry.date);
+      d.setHours(0, 0, 0, 0);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      if (d > now) return;
+
+      // Reuse the Score note formatting so tag links / line-breaks render like
+      // everywhere else in the app.
+      const tempScore = new Score(new Date(entry.date), null, entry.notes || '');
+      const notesHtml = tempScore.enhancedText
+        ? tempScore.enhancedText(this.tagCache)
+        : tempScore.text();
+
+      const titleEl = document.getElementById('future-letter-read-title');
+      const bodyEl = document.getElementById('future-letter-read-body');
+      if (titleEl) titleEl.textContent = `💌 ${this.formatDateWithOrdinal(d)}`;
+      if (bodyEl) {
+        bodyEl.innerHTML =
+          `<div class="future-letter-read-meta">A letter you wrote to your future self · arrived ${this.formatDateWithOrdinal(d)}</div>` +
+          `<div class="future-letter-read-content">${notesHtml || '<em>This letter has no content.</em>'}</div>`;
+      }
+
+      const overlay = document.getElementById('future-letter-read-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+      this.futureLetterReadVisible = true;
+    }
+
+    hideFutureLetterRead() {
+      const overlay = document.getElementById('future-letter-read-overlay');
+      if (overlay) overlay.classList.add('hidden');
+      this.futureLetterReadVisible = false;
     }
 
     showToaster(message, type = 'success', duration = 3000) {
@@ -2317,7 +2435,8 @@
       const superTag = this.widgetManager.getSuperTag();
       const seasonProgress = this.widgetManager.getSeasonProgress();
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
-      
+      const nextFutureLetter = this.widgetManager.getNextFutureLetter();
+
       this.pushHistory('/analytics', 'Analytics');
       
       return this.render('#tmpl-journey-analytics', '#content', {
@@ -2365,7 +2484,8 @@
         superTag: superTag,
         seasonProgress: seasonProgress,
         scoreTypeIcon: scoreTypeInfo.icon,
-        scoreTypeName: scoreTypeInfo.name
+        scoreTypeName: scoreTypeInfo.name,
+        nextFutureLetter: nextFutureLetter
       }, {
         yearsBar: Hogan.compile($('#tmpl-years-bar').html())
       });
@@ -2788,6 +2908,34 @@
 
   window.onSwitchToFutureEntry = function() {
     return window.app.switchToFutureEntry();
+  }
+
+  window.onShowFutureLetters = function() {
+    return window.app.showFutureLetters();
+  }
+
+  window.onHideFutureLetters = function() {
+    return window.app.hideFutureLetters();
+  }
+
+  window.onReadFutureLetter = function(dateId) {
+    return window.app.readFutureLetter(dateId);
+  }
+
+  window.onHideFutureLetterRead = function() {
+    return window.app.hideFutureLetterRead();
+  }
+
+  window.onFutureLettersOverlayClick = function(event) {
+    if (event.target === document.getElementById('future-letters-overlay')) {
+      window.app.hideFutureLetters();
+    }
+  }
+
+  window.onFutureLetterReadOverlayClick = function(event) {
+    if (event.target === document.getElementById('future-letter-read-overlay')) {
+      window.app.hideFutureLetterRead();
+    }
   }
 
   window.onShowSearch = async function(id) {

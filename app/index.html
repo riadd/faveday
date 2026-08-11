@@ -113,19 +113,22 @@
       {{/thirtyDayStats}}
       
       {{#nextFutureLetter}}
-      {{#hasEntry}}
-      <div class="bento-item future-letter-countdown">
+      {{#totalCount}}
+      <div class="bento-item future-letter-countdown clickable-widget {{#hasArrived}}future-letter-has-arrived{{/hasArrived}}" onclick="onShowFutureLetters()">
+        <div class="clickable-indicator"></div>
         <h4>💌 Future Letter</h4>
         <div class="bento-main-value">{{message}}</div>
+        {{#hasArrived}}<small>tap to read</small>{{/hasArrived}}
+        {{^hasArrived}}<small>tap to view all</small>{{/hasArrived}}
       </div>
-      {{/hasEntry}}
-      {{^hasEntry}}
-      <div class="bento-item future-letter-empty">
+      {{/totalCount}}
+      {{^totalCount}}
+      <div class="bento-item future-letter-empty clickable-widget" onclick="onShowFutureLetters()">
         <h4>💌 Future Letter</h4>
         <div class="bento-main-value">-/-</div>
-        <small><a onclick="onSwitchToFutureEntry()">Write to future self</a></small>
+        <small><a onclick="event.stopPropagation(); onSwitchToFutureEntry()">Write to future self</a></small>
       </div>
-      {{/hasEntry}}
+      {{/totalCount}}
       {{/nextFutureLetter}}
     </div>
     
@@ -970,8 +973,65 @@
       {{/lastLowScore}}
       {{/thirtyDayStats}}
 
+      <!-- Future Letters -->
+      {{#nextFutureLetter}}
+      {{#totalCount}}
+      <div class="analytics-item future-letter-analytics clickable-widget {{#hasArrived}}future-letter-has-arrived{{/hasArrived}}" onclick="onShowFutureLetters()">
+        <div class="clickable-indicator"></div>
+        <h4>💌 Future Letter</h4>
+        <div class="analytics-main-value">{{message}}</div>
+        <small>{{#hasArrived}}tap to read{{/hasArrived}}{{^hasArrived}}tap to view all{{/hasArrived}}</small>
+      </div>
+      {{/totalCount}}
+      {{^totalCount}}
+      <div class="analytics-item future-letter-analytics clickable-widget" onclick="onShowFutureLetters()">
+        <div class="clickable-indicator"></div>
+        <h4>💌 Future Letter</h4>
+        <div class="analytics-main-value">-/-</div>
+        <small><a onclick="event.stopPropagation(); onSwitchToFutureEntry()">Write to future self</a></small>
+      </div>
+      {{/totalCount}}
+      {{/nextFutureLetter}}
+
     </div>
 
+  </script>
+
+  <!-- tmpl-future-letters (list body) -->
+  <script type="text/mustache" id="tmpl-future-letters">
+    {{#hasLetters}}
+    <ul class="future-letters-list">
+      {{#letters}}
+      {{#isPast}}
+      <li class="future-letter-item arrived" onclick="onReadFutureLetter('{{dateId}}')">
+        <div class="letter-icon">💌</div>
+        <div class="letter-info">
+          <div class="letter-date">{{dateLabel}}</div>
+          <div class="letter-status">{{statusText}}</div>
+        </div>
+        <div class="letter-chevron">›</div>
+      </li>
+      {{/isPast}}
+      {{^isPast}}
+      <li class="future-letter-item teased" title="This letter is still on its way — the surprise is preserved until it arrives.">
+        <div class="letter-icon">🔒</div>
+        <div class="letter-info">
+          <div class="letter-date">{{dateLabel}}</div>
+          <div class="letter-status">{{statusText}}</div>
+        </div>
+        <div class="letter-lock-note">Sealed</div>
+      </li>
+      {{/isPast}}
+      {{/letters}}
+    </ul>
+    {{/hasLetters}}
+    {{^hasLetters}}
+    <div class="future-letters-empty">
+      <div class="future-letters-empty-icon">💌</div>
+      <p>You haven't written any letters to your future self yet.</p>
+      <a class="future-letters-write" onclick="onHideFutureLetters(); onSwitchToFutureEntry()">Write to future self</a>
+    </div>
+    {{/hasLetters}}
   </script>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1137,6 +1197,32 @@
       </div>
       <div class="command-results" id="command-results">
         <!-- Results will be populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Future Letters list overlay -->
+  <div id="future-letters-overlay" class="future-letters-overlay hidden" onclick="onFutureLettersOverlayClick(event)">
+    <div class="future-letters-modal">
+      <div class="future-letters-header">
+        <h3>💌 Future Letters</h3>
+        <button class="future-letters-close" onclick="onHideFutureLetters()" aria-label="Close">×</button>
+      </div>
+      <div class="future-letters-body" id="future-letters-body">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Future Letter read overlay -->
+  <div id="future-letter-read-overlay" class="future-letters-overlay future-letters-read-overlay hidden" onclick="onFutureLetterReadOverlayClick(event)">
+    <div class="future-letters-modal future-letter-read-modal">
+      <div class="future-letters-header">
+        <h3 id="future-letter-read-title">💌 Letter</h3>
+        <button class="future-letters-close" onclick="onHideFutureLetterRead()" aria-label="Close">×</button>
+      </div>
+      <div class="future-letter-read-body" id="future-letter-read-body">
+        <!-- Populated by JavaScript -->
       </div>
     </div>
   </div>
