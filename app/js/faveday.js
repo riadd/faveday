@@ -924,7 +924,7 @@
       handleRoute();
     }
 
-    onScoreAddedAndNavigateBack() {
+    onScoreAddedAndNavigateBack(savedDate) {
       // Update the data like onScoreAdded but navigate back instead of handling current route
       this.dataManager.getAllScores().sort((a, b) => b.date - a.date); // sort in descending order
       
@@ -939,8 +939,10 @@
       $('#topArea').show();
       $('#loading').hide();
       
-      // Navigate back to previous page instead of handling current route
-      if (window.history.length > 1) {
+      // A saved diary day shows its own month; otherwise go back to the previous page
+      if (savedDate) {
+        this.showMonth(savedDate.getFullYear(), savedDate.getMonth() + 1);
+      } else if (window.history.length > 1) {
         history.back();
       } else {
         // Fallback to dashboard if no history
@@ -2310,7 +2312,7 @@
       }
       
       this.hideEditScore();
-      this.onScoreAddedAndNavigateBack();
+      this.onScoreAddedAndNavigateBack(this.isFutureEntry ? null : new Date(dateId));
     }
     
     updateScoreProgress(text) {
@@ -3405,7 +3407,7 @@
           window.onShowSearch(path[1]);
           break;
         case 'month':
-          window.app.showMonth(path[1], path[2]);
+          window.app.showMonth(Number(path[1]), Number(path[2]));
           break;
         case 'months':
           window.app.showMonths(path[1]);
