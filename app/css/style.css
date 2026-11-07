@@ -1380,8 +1380,11 @@ tr .yearRow {
   padding-top: 5px;
 }
 
-.yearCal td {
-  border-spacing: 3px;
+.yearCal .dot {
+  display: block;
+  width: 15px;
+  aspect-ratio: 1;
+  margin: 0 auto;
   border-radius: 50%;
 }
 
