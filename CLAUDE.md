@@ -40,6 +40,18 @@ The cost of one careful 5-minute audit is far below the cost of writing, reviewi
 - `app/lib/faveday/settings-manager.js` — User configuration UI
 - `app/lib/faveday/config-store.js` — Synchronous config singleton (`window.configStore`); single source of truth, no `setConfig()` chains
 - `tag-cache.json` — Cached tag statistics
+- `app/lib/faveday/media-store.js` — Main process: media record, copying, ffmpeg copies, joined playback file
+- `app/lib/faveday/media-manager.js` — Renderer: media column, edit screen list, drag and drop, thumbnails
+- `app/lib/faveday/media-player.js` — Renderer: player that fills the app window
+
+### Media
+
+- **Storage**: originals in `<data folder>/media/<year>/`, the record in `<data folder>/media/media.json` (day id to `{main, items}`). Neither is at the top level of the data folder or a `.txt`, because the score loader reads every top level `.txt`, and `scores-YYYY.txt` has no spare field.
+- **Copies**: each video gets `<hash>-clip.mp4` (2 s, 1280x720, 30 fps, H.264, AAC) and `<hash>-thumb.mp4` (2 s, 160x120, no sound) in `<userData>/media-cache`. The cache is per machine and missing copies are remade in the background at startup. Photos show the original.
+- **Player**: fills the app window, never OS full screen. Plays the original. If it can't be decoded, it plays `<hash>-full.mp4`, converted on demand. HEIC photos are refused because neither Chromium nor the bundled ffmpeg can read them.
+- **Continuous playback**: the clips of the list are joined without re-encoding into one `reel-*.mp4` and played in a single `<video>`. Measured with 100 clips: swapping two preloaded `<video>` elements lost about 60 ms per switch (over 6 s in total, worst frame gap 107 ms); the joined file lost none (worst frame gap 55 ms, which is the normal display cadence). Keep every clip's format identical, or the join breaks.
+- **What a list plays**: pages call `mediaManager.setPlaylistFilter` with a filter over all days of the page, because the year and months pages only render a random sample. Dashboard and years pass `null`, then the clicked table's rows count.
+- **ffmpeg**: `ffmpeg-static`, unpacked from the asar with `asar.unpack` in `forge.config.js`, and resolved in `main.js` by replacing `app.asar` with `app.asar.unpacked`.
 
 ### Tag System
 

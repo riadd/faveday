@@ -3,7 +3,8 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
   packagerConfig: {
-    asar: true,
+    // ffmpeg is run as a program, which can't happen from inside the asar.
+    asar: { unpack: '**/node_modules/ffmpeg-static/**' },
   },
   rebuildConfig: {},
   makers: [

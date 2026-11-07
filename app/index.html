@@ -24,6 +24,8 @@
   <script type="text/javascript" src="./lib/faveday/router.js"></script>
   <script type="text/javascript" src="./lib/faveday/settings-manager.js"></script>
   <script type="text/javascript" src="./lib/faveday/widget-manager.js"></script>
+  <script type="text/javascript" src="./lib/faveday/media-player.js"></script>
+  <script type="text/javascript" src="./lib/faveday/media-manager.js"></script>
   <script type="text/javascript" src="./js/faveday.js"></script>
 
   <!-- tmpl-scores -->
@@ -32,9 +34,10 @@
       <th>Date</th>
       <th>Total</th>
       <th>Notes</th>
+      <th>Media</th>
     </tr>
     {{#scores}}
-      <tr class="score {{empty}}">
+      <tr class="score {{empty}}" data-date-id="{{dateId}}">
         <td class="date">
           <a onclick="onShowMonth('{{monthId}}')" data-date-id="{{dateId}}">
             <span>{{dateStr}}</span>
@@ -45,8 +48,43 @@
           <a onclick="onShowEditScore('{{dateId}}')">{{summaryText}}</a>
         </td>
         <td class="notes">{{{text}}}</td>
+        <td class="media">{{{mediaCell}}}</td>
       </tr>
     {{/scores}}
+  </script>
+
+  <!-- tmpl-media-cell -->
+  <script type="text/mustache" id="tmpl-media-cell">
+    {{#adding}}<span class="media-thumb media-thumb-status">Adding</span>{{/adding}}
+    {{#item}}
+      <a class="media-thumb" title="{{title}}" onclick="onOpenMedia(this, '{{dateId}}')">
+        {{#thumbUrl}}<video data-src="{{thumbUrl}}" muted loop playsinline></video>{{/thumbUrl}}
+        {{#photoUrl}}<img src="{{photoUrl}}" loading="lazy" alt="">{{/photoUrl}}
+        {{#status}}<span class="media-thumb-status">{{status}}</span>{{/status}}
+        {{#extraCount}}<span class="media-thumb-extra">+{{extraCount}}</span>{{/extraCount}}
+      </a>
+    {{/item}}
+  </script>
+
+  <!-- tmpl-edit-media -->
+  <script type="text/mustache" id="tmpl-edit-media">
+    {{#items}}
+      <div class="edit-media-item">
+        {{#thumb}}
+          <a class="media-thumb" title="{{title}}" onclick="onOpenEditMedia({{index}})">
+            {{#thumbUrl}}<video data-src="{{thumbUrl}}" muted loop playsinline></video>{{/thumbUrl}}
+            {{#photoUrl}}<img src="{{photoUrl}}" loading="lazy" alt="">{{/photoUrl}}
+            {{#status}}<span class="media-thumb-status">{{status}}</span>{{/status}}
+          </a>
+        {{/thumb}}
+        <div class="edit-media-actions">
+          {{#isMain}}<span class="edit-media-main">Main video</span>{{/isMain}}
+          {{#canMakeMain}}<button type="button" onclick="onSetMainVideo({{index}})">Make main</button>{{/canMakeMain}}
+          <button type="button" onclick="onRemoveMedia(this, {{index}})">Remove</button>
+        </div>
+      </div>
+    {{/items}}
+    {{#adding}}<div class="edit-media-item"><span class="media-thumb media-thumb-status">Adding</span></div>{{/adding}}
   </script>
 
   <!-- tmpl-dashboard -->
@@ -159,7 +197,7 @@
     {{> header}}
     {{> scoreBar}}
 
-    <h1>{{title}} <small>{{scoreTypeIcon}} {{displayScore}}</small></h1>
+    <h1>{{title}} <small>{{scoreTypeIcon}} {{displayScore}}</small> <span class="media-play-slot"></span></h1>
     {{> yearsBar}}
     {{> monthBar}}
     {{}}
@@ -200,7 +238,7 @@
   <script type="text/mustache" id="tmpl-months">
     {{> header}}
 
-    <h1>{{title}} <small>{{scoreTypeIcon}} {{displayScore}}</small></h1>
+    <h1>{{title}} <small>{{scoreTypeIcon}} {{displayScore}}</small> <span class="media-play-slot"></span></h1>
     {{> yearsBar}}
 
     <table class="box yearCal">
@@ -259,7 +297,7 @@
   <!-- tmpl-search -->
   <script type="text/mustache" id="tmpl-search">
     <div class="search-header">
-      <h1>{{count}} Results <small>{{scoreTypeIcon}} {{displayScore}}</small></h1>
+      <h1>{{count}} Results <small>{{scoreTypeIcon}} {{displayScore}}</small> <span class="media-play-slot"></span></h1>
       <div class="search-type-toggle">
         <span class="toggle-label">Tags only</span>
         <label class="switch">
@@ -358,7 +396,7 @@
     {{> header}}
     {{> scoreBar}}
 
-    <h1>{{year}} <small>{{scoreTypeIcon}}&nbsp;{{displayScore}}</small></h1>
+    <h1>{{year}} <small>{{scoreTypeIcon}}&nbsp;{{displayScore}}</small> <span class="media-play-slot"></span></h1>
     {{> yearsBar}}
 
     <table class="box yearCal">
@@ -1144,6 +1182,7 @@
   <!-- new score form -->
   <div id="editScore">
     <progress id="editScoreProgress" value="0" max="100"></progress>
+    <div id="editScoreMedia"></div>
     <form>
       <textarea id="editScoreText" placeholder="Notes"></textarea>
     </form>
@@ -1211,6 +1250,25 @@
       <div class="future-letters-body" id="future-letters-body">
         <!-- Populated by JavaScript -->
       </div>
+    </div>
+  </div>
+
+  <!-- Video and photo player, fills the app window -->
+  <div id="media-modal" class="media-modal hidden">
+    <video id="media-modal-video" class="hidden" playsinline></video>
+    <img id="media-modal-photo" class="hidden" alt="">
+    <div id="media-modal-status" class="media-modal-status"></div>
+    <div class="media-modal-bar media-modal-top">
+      <span id="media-modal-title"></span>
+      <button id="media-modal-close" aria-label="Close">×</button>
+    </div>
+    <div class="media-modal-bar media-modal-bottom">
+      <button id="media-modal-prev" aria-label="Previous">‹</button>
+      <button id="media-modal-play">Pause</button>
+      <button id="media-modal-next" aria-label="Next">›</button>
+      <span id="media-modal-counter"></span>
+      <button id="media-modal-list" class="hidden"></button>
+      <button id="media-modal-mute">Mute</button>
     </div>
   </div>
 

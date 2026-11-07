@@ -185,6 +185,7 @@
       this.router = new Router();
       this.settingsManager = new SettingsManager(this.scoreCalculator, this.router, this.dataManager);
       this.widgetManager = new WidgetManager(this.dataManager, this.scoreCalculator, this.router);
+      this.mediaManager = new MediaManager(this);
       
       this.showSearch = this.showSearch.bind(this);
       this.tmplScores = Hogan.compile($('#tmpl-scores').html());
@@ -226,6 +227,7 @@
       // Load tag cache and future entries
       this.tagCache = await window.api.getTagCache();
       this.dataManager.setFutureEntries(await window.api.loadFutureEntries());
+      await this.mediaManager.load();
         
       // Rebuild command palette search index with new data
       if (this.buildSearchIndex) {
@@ -861,6 +863,7 @@
     
     async loadScores() {
       await this.dataManager.loadScores();
+      await this.mediaManager.load();
       
       // Update properties from dataManager
       this.tagCache = this.dataManager.getTagCache();
@@ -1142,7 +1145,8 @@
           styleClass: score.styleClass(),
           summaryText: score.summaryText(),
           dateId: score.dateId(),
-          empty: score.empty(),
+          empty: this.mediaManager.hasMedia(score.dateId()) ? '' : score.empty(),
+          mediaCell: this.mediaManager.cellHtml(score.dateId()),
           // Use enhanced text instead of regular text
           text: score.enhancedText ? score.enhancedText(this.tagCache) : score.text()
         };
@@ -1302,6 +1306,7 @@
       const nextFutureLetter = this.widgetManager.getNextFutureLetter();
 
       this.pushHistory('/', '');
+      this.mediaManager.setPlaylistFilter(null);
       
       return this.render('#tmpl-dashboard', '#content', {
         recentScores: this.tmplScores.render({scores: this.enhanceScoresForDisplay(recent)}),
@@ -1359,11 +1364,13 @@
       let nextYearDate = new Date(monthDate).addYears(1);
       
       this.pushHistory(`/month/${yearNum}/${monthNum}`, title);
+      const monthPrefix = `${yearNum}-${String(monthNum).padStart(2, '0')}-`;
+      this.mediaManager.setPlaylistFilter(dateId => dateId.startsWith(monthPrefix));
 
       //this.showSummary(monthScores);
 
       let virtualMonthScores = []
-      for (let dateNum=1; dateNum<=31; dateNum++) {
+      for (let dateNum=1; dateNum<=new Date(yearNum, monthNum, 0).getDate(); dateNum++) {
         // Find the last entry for this date (most recent if multiple exist)
         let matches = monthScores.filter(s => 
           s.date.getFullYear() === yearNum &&
@@ -1452,6 +1459,7 @@
 
       let title = date.format('{Month}');
       this.pushHistory(`/months/${monthId}`, title);
+      this.mediaManager.setPlaylistFilter(dateId => parseInt(dateId.slice(5, 7)) === monthNum + 1);
 
       let randomScores = monthScores.filter(s => s.summary >=3).sample(5);
       let bestScores = monthScores.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
@@ -1663,6 +1671,7 @@
       }
 
       this.pushHistory('/years', 'Years');
+      this.mediaManager.setPlaylistFilter(null);
       
       const renderData = {
         scores: [...allYears].reverse(),
@@ -1943,6 +1952,7 @@
       let bestScores = oneYear.filter(s => s.summary === 5).sample(1).sortBy(s => s.date, true);
 
       this.pushHistory(`/year/${year}`, year);
+      this.mediaManager.setPlaylistFilter(dateId => dateId.startsWith(`${year}-`));
       
       const displayScore = this.scoreCalculator.calculate(oneYear);
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
@@ -2065,6 +2075,9 @@
         }
       }
       
+      const foundDates = new Set(foundScores.map(s => s.dateId()));
+      this.mediaManager.setPlaylistFilter(dateId => foundDates.has(dateId));
+
       // Calculate life quality for search results using configurable weights
       const displayScore = foundScores.length > 0 ? this.scoreCalculator.calculate(foundScores) : 0;
       const scoreTypeInfo = this.widgetManager.getScoreTypeInfo();
@@ -2172,6 +2185,7 @@
       
       // Update UI based on entry type
       this.updateEntryModeUI();
+      this.mediaManager.showEditDay(dateId, this.isFutureEntry);
       
       textarea.focus(); // Focus on the textarea
       textarea.get(0).setSelectionRange(score.notes.length, score.notes.length);
@@ -2937,6 +2951,26 @@
       window.app.hideFutureLetterRead();
     }
   }
+
+  window.onOpenMedia = function(element, dateId) {
+    window.app.mediaManager.openDay(element, dateId);
+  };
+
+  window.onOpenEditMedia = function(index) {
+    window.app.mediaManager.openEditItem(index);
+  };
+
+  window.onSetMainVideo = function(index) {
+    window.app.mediaManager.setMainVideo(index);
+  };
+
+  window.onRemoveMedia = function(button, index) {
+    window.app.mediaManager.removeItem(button, index);
+  };
+
+  window.onPlayMediaList = function() {
+    window.app.mediaManager.playList();
+  };
 
   window.onShowSearch = async function(id) {
     // Old search input value setting removed - now using command palette

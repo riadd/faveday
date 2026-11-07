@@ -4,6 +4,8 @@ const electron = require('electron');
 const path = require('path')
 const os = require('os')
 const TagCacheBuilder = require('./lib/faveday/tag-cache');
+const MediaStore = require('./lib/faveday/media-store');
+const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -80,6 +82,14 @@ ipcMain.handle('save-future-entries', async (event, futureEntries) => {
     await saveFutureEntries(config.filesPath, futureEntries);
   }
 });
+
+ipcMain.handle('load-media', () => mediaStore.load());
+ipcMain.handle('add-media', (event, dateId, paths) => mediaStore.addFiles(dateId, paths));
+ipcMain.handle('remove-media', (event, dateId, file) => mediaStore.removeItem(dateId, file));
+ipcMain.handle('set-main-video', (event, dateId, file) => mediaStore.setMain(dateId, file));
+ipcMain.handle('media-full-copy-url', (event, dateId, file) => mediaStore.fullCopyUrl(dateId, file));
+ipcMain.handle('build-media-reel', (event, dateIds) => mediaStore.buildReel(dateIds));
+ipcMain.handle('remove-media-reel', () => mediaStore.removeReelFiles());
 
 ipcMain.handle('select-folder', async (event) => {
   const selectedPath = await selectFolder();
@@ -293,6 +303,15 @@ async function saveFutureEntries(dirPath, futureEntries) {
 
 const configFilePath = path.join(app.getPath('userData'), 'faveday-config.json');
 let config = {}
+
+const mediaStore = new MediaStore({
+  getDataDir: () => config.filesPath,
+  cacheDir: path.join(app.getPath('userData'), 'media-cache'),
+  ffmpegPath,
+  onVideoUpdate: (update) => {
+    if (mainWindow) mainWindow.webContents.send('media-video-update', update);
+  }
+});
 
 function createWindow() {
   loadConfig();

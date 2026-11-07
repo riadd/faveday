@@ -1,4 +1,4 @@
-﻿const { contextBridge, ipcRenderer } = require('electron');
+﻿const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
   loadScores: () => ipcRenderer.invoke('load-scores'),
@@ -15,5 +15,14 @@ contextBridge.exposeInMainWorld('api', {
   setLifeQualityWeights: (weights) => ipcRenderer.invoke('set-life-quality-weights', weights),
   setScoreType: (scoreType) => ipcRenderer.invoke('set-score-type', scoreType),
   setDefaultEmptyScore: (defaultEmptyScore) => ipcRenderer.invoke('set-default-empty-score', defaultEmptyScore),
-  setWordCountGoal: (wordCountGoal) => ipcRenderer.invoke('set-word-count-goal', wordCountGoal)
+  setWordCountGoal: (wordCountGoal) => ipcRenderer.invoke('set-word-count-goal', wordCountGoal),
+  loadMedia: () => ipcRenderer.invoke('load-media'),
+  addMedia: (dateId, paths) => ipcRenderer.invoke('add-media', dateId, paths),
+  removeMedia: (dateId, file) => ipcRenderer.invoke('remove-media', dateId, file),
+  setMainVideo: (dateId, file) => ipcRenderer.invoke('set-main-video', dateId, file),
+  mediaFullCopyUrl: (dateId, file) => ipcRenderer.invoke('media-full-copy-url', dateId, file),
+  buildMediaReel: (dateIds) => ipcRenderer.invoke('build-media-reel', dateIds),
+  removeMediaReel: () => ipcRenderer.invoke('remove-media-reel'),
+  onMediaVideoUpdate: (callback) => ipcRenderer.on('media-video-update', (event, update) => callback(update)),
+  getPathForFile: (file) => webUtils.getPathForFile(file)
 });

@@ -3366,3 +3366,221 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 
+
+/* =========================================================================
+   Media: list column, edit screen list, player
+   ========================================================================= */
+.scores td.media {
+  width: 80px;
+  padding: 6px 8px;
+}
+
+.media-thumb {
+  position: relative;
+  display: block;
+  width: 80px;
+  height: 60px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #333;
+  cursor: pointer;
+}
+
+.media-thumb video,
+.media-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-thumb-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  font-size: 11px;
+  font-style: italic;
+}
+
+.media-thumb-extra {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ddd;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.scores tr.media-drop-target {
+  background: #6d6d6d;
+}
+
+#editScore.media-drop-target,
+#editScore.media-drop-target form,
+#editScore.media-drop-target textarea {
+  background-color: #444;
+}
+
+.media-play-slot a {
+  color: #ababab;
+  letter-spacing: 0;
+  font-weight: normal;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.media-play-slot a:hover {
+  color: #fff;
+  background: transparent;
+  text-decoration: underline;
+}
+
+#editScoreMedia {
+  position: absolute;
+  top: 30px;
+  left: 20px;
+  bottom: 110px;
+  width: calc(15% - 30px);
+  min-width: 90px;
+  overflow-y: auto;
+}
+
+.edit-media-item {
+  margin-bottom: 14px;
+}
+
+.edit-media-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.edit-media-main {
+  color: #ddd;
+}
+
+.edit-media-actions button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+}
+
+.edit-media-actions button:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.edit-media-actions button.confirm {
+  color: #ff794d;
+}
+
+.media-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10002;
+  background: #000;
+  /* The title bar's drag region underneath would otherwise swallow clicks on the player's top bar. */
+  -webkit-app-region: no-drag;
+}
+
+/* A fixed element can't cover the page scrollbar, so it goes away while the player is open. */
+html:has(.media-modal:not(.hidden)) {
+  overflow: hidden;
+}
+
+.media-modal.hidden,
+.media-modal .hidden {
+  display: none;
+}
+
+.media-modal video,
+.media-modal img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.media-modal-status {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  pointer-events: none;
+}
+
+.media-modal-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  color: #eee;
+  background: rgba(0, 0, 0, 0.55);
+  transition: opacity 0.3s ease;
+}
+
+.media-modal-top {
+  top: 0;
+  justify-content: space-between;
+  font-size: 16px;
+}
+
+.media-modal-bottom {
+  bottom: 0;
+  font-size: 14px;
+}
+
+.media-modal.idle {
+  cursor: none;
+}
+
+.media-modal.idle .media-modal-bar {
+  opacity: 0;
+}
+
+.media-modal-bar button {
+  min-width: 36px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid #666;
+  border-radius: 4px;
+  background: transparent;
+  color: #eee;
+  cursor: pointer;
+}
+
+.media-modal-bar button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+#media-modal-counter {
+  flex: 1;
+  color: #bbb;
+}
+
+#media-modal-close {
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+}
