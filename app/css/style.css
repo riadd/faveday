@@ -1435,6 +1435,11 @@ tr .yearRow {
 .monthCal a {
   color: #cecece;
 }
+.monthCal .slice-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
 
 /* years cal */
 
