@@ -3,6 +3,8 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
   packagerConfig: {
+    // Windows exe icon (.ico, extension added by the packager).
+    icon: './assets/icon',
     // ffmpeg is run as a program, which can't happen from inside the asar.
     asar: { unpack: '**/node_modules/ffmpeg-static/**' },
   },

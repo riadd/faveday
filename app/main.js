@@ -323,6 +323,7 @@ function createWindow() {
     width: config.windowState.width,
     height: config.windowState.height,
 
+    icon: path.join(__dirname, '../assets/icon.ico'),
     frame: false,
     titleBarOverlay: {
       color: '#2f3241',
