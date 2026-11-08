@@ -34,7 +34,6 @@
       <th>Date</th>
       <th>Total</th>
       <th>Notes</th>
-      <th>Media</th>
     </tr>
     {{#scores}}
       <tr class="score {{empty}}" data-date-id="{{dateId}}">
@@ -43,12 +42,12 @@
             <span>{{dateStr}}</span>
             <small>{{weekday}}</small>
           </a>
+          <div class="date-media">{{{mediaCell}}}</div>
         </td>
         <td class="summary {{styleClass}}">
           <a onclick="onShowEditScore('{{dateId}}')">{{summaryText}}</a>
         </td>
         <td class="notes">{{{text}}}</td>
-        <td class="media">{{{mediaCell}}}</td>
       </tr>
     {{/scores}}
   </script>

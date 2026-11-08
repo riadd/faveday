@@ -3374,9 +3374,14 @@ input[type="date"]:focus, input[type="number"]:focus {
 /* =========================================================================
    Media: list column, edit screen list, player
    ========================================================================= */
-.scores td.media {
-  width: 80px;
-  padding: 6px 8px;
+.scores .date .date-media:not(:empty) {
+  margin-top: 8px;
+}
+
+.scores .date .media-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
 }
 
 .media-thumb {

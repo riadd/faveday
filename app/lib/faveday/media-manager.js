@@ -67,7 +67,7 @@ class MediaManager {
 
   refreshDay(dateId) {
     document.querySelectorAll(`tr.score[data-date-id="${dateId}"]`).forEach(row => {
-      row.querySelector('td.media').innerHTML = this.cellHtml(dateId);
+      row.querySelector('div.date-media').innerHTML = this.cellHtml(dateId);
       if (this.hasMedia(dateId)) row.classList.remove('empty');
     });
     if (dateId === this.editDateId) this.renderEditList();
