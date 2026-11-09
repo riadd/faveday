@@ -83,6 +83,24 @@ ipcMain.handle('save-future-entries', async (event, futureEntries) => {
   }
 });
 
+// The future letters that have been opened, kept next to future.txt in the data folder.
+ipcMain.handle('load-future-seen', () => {
+  if (config.filesPath == null) return [];
+  const seenFile = `${config.filesPath}/future-seen.json`;
+  try {
+    return fs.existsSync(seenFile) ? JSON.parse(fs.readFileSync(seenFile, 'utf-8')) : [];
+  } catch (error) {
+    console.error('Error loading seen future letters:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('save-future-seen', (event, dateIds) => {
+  if (config.filesPath != null) {
+    fs.writeFileSync(`${config.filesPath}/future-seen.json`, JSON.stringify(dateIds), 'utf-8');
+  }
+});
+
 ipcMain.handle('load-media', () => mediaStore.load());
 ipcMain.handle('add-media', (event, dateId, paths) => mediaStore.addFiles(dateId, paths));
 ipcMain.handle('remove-media', (event, dateId, file) => mediaStore.removeItem(dateId, file));

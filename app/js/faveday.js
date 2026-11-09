@@ -1006,9 +1006,10 @@
         }
 
         return {
-          dateId: d.format("{yyyy}-{MM}-{dd}"),
+          dateId: this.dataManager.futureLetterId(d),
           dateLabel: this.formatDateWithOrdinal(d),
           isPast: isPast,
+          seen: this.dataManager.isFutureLetterSeen(d),
           sortDate: d.getTime(),
           statusText: statusText
         };
@@ -1040,12 +1041,22 @@
       const overlay = document.getElementById('future-letters-overlay');
       if (overlay) overlay.classList.add('hidden');
       this.futureLettersVisible = false;
+      this.refreshFutureLetterWidget();
+    }
+
+    /**
+     * Redraw the page behind the letters modal when it shows the Future Letter
+     * widget, so the new dot and the headline follow what has been read.
+     */
+    refreshFutureLetterWidget() {
+      if (document.querySelector('.future-letter-countdown')) this.showDashboard();
+      else if (document.querySelector('.future-letter-analytics')) this.showJourneyAnalytics();
     }
 
     readFutureLetter(dateId) {
       const futureEntries = this.dataManager.getFutureEntries() || [];
       const entry = futureEntries.find(e =>
-        new Date(e.date).format("{yyyy}-{MM}-{dd}") === dateId
+        this.dataManager.futureLetterId(e.date) === dateId
       );
       if (!entry) return;
 
@@ -1075,6 +1086,13 @@
       const overlay = document.getElementById('future-letter-read-overlay');
       if (overlay) overlay.classList.remove('hidden');
       this.futureLetterReadVisible = true;
+
+      this.dataManager.markFutureLetterSeen(d).then(() => {
+        // Keep the list behind the reader in step: the "New" tag goes away
+        if (this.futureLettersVisible) {
+          this.render('#tmpl-future-letters', '#future-letters-body', this.getFutureLettersData(), {});
+        }
+      });
     }
 
     hideFutureLetterRead() {

@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('api', {
   getTagCache: () => ipcRenderer.invoke('get-tag-cache'),
   loadFutureEntries: () => ipcRenderer.invoke('load-future-entries'),
   saveFutureEntries: (entries) => ipcRenderer.invoke('save-future-entries', entries),
+  loadFutureSeen: () => ipcRenderer.invoke('load-future-seen'),
+  saveFutureSeen: (dateIds) => ipcRenderer.invoke('save-future-seen', dateIds),
   minimize: () => ipcRenderer.send('minimize-window'),
   maximize: () => ipcRenderer.send('maximize-window'),
   close: () => ipcRenderer.send('close-window'),

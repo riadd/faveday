@@ -811,6 +811,7 @@ tr .yearRow {
 .future-letter-countdown .bento-main-value {
   color: white;
   font-weight: 600;
+  font-size: 1.6em;
 }
 
 .future-preview {
@@ -857,6 +858,10 @@ tr .yearRow {
 .analytics-item.future-letter-analytics .analytics-main-value,
 .analytics-item.future-letter-analytics small {
   color: rgba(255, 255, 255, 0.92);
+}
+
+.analytics-item.future-letter-analytics .analytics-main-value {
+  font-size: 20px;
 }
 
 .analytics-item.future-letter-analytics small a {
@@ -997,6 +1002,17 @@ tr .yearRow {
 
 .future-letter-item.arrived .letter-date {
   color: #cdd3ff;
+}
+
+.future-letter-item .letter-new {
+  color: #fff;
+  background: #667eea;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  margin-right: 8px;
 }
 
 .future-letter-item .letter-chevron {

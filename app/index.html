@@ -151,12 +151,11 @@
       
       {{#nextFutureLetter}}
       {{#totalCount}}
-      <div class="bento-item future-letter-countdown clickable-widget {{#hasArrived}}future-letter-has-arrived{{/hasArrived}}" onclick="onShowFutureLetters()">
-        <div class="clickable-indicator"></div>
+      <div class="bento-item future-letter-countdown clickable-widget {{#hasUnseen}}future-letter-has-arrived{{/hasUnseen}}" onclick="onShowFutureLetters()">
+        {{#hasUnseen}}<div class="clickable-indicator"></div>{{/hasUnseen}}
         <h4>💌 Future Letter</h4>
         <div class="bento-main-value">{{message}}</div>
-        {{#hasArrived}}<small>tap to read</small>{{/hasArrived}}
-        {{^hasArrived}}<small>tap to view all</small>{{/hasArrived}}
+        <small>{{caption}}</small>
       </div>
       {{/totalCount}}
       {{^totalCount}}
@@ -1009,11 +1008,11 @@
       <!-- Future Letters -->
       {{#nextFutureLetter}}
       {{#totalCount}}
-      <div class="analytics-item future-letter-analytics clickable-widget {{#hasArrived}}future-letter-has-arrived{{/hasArrived}}" onclick="onShowFutureLetters()">
-        <div class="clickable-indicator"></div>
+      <div class="analytics-item future-letter-analytics clickable-widget {{#hasUnseen}}future-letter-has-arrived{{/hasUnseen}}" onclick="onShowFutureLetters()">
+        {{#hasUnseen}}<div class="clickable-indicator"></div>{{/hasUnseen}}
         <h4>💌 Future Letter</h4>
         <div class="analytics-main-value">{{message}}</div>
-        <small>{{#hasArrived}}tap to read{{/hasArrived}}{{^hasArrived}}tap to view all{{/hasArrived}}</small>
+        <small>{{caption}}</small>
       </div>
       {{/totalCount}}
       {{^totalCount}}
@@ -1042,6 +1041,7 @@
           <div class="letter-date">{{dateLabel}}</div>
           <div class="letter-status">{{statusText}}</div>
         </div>
+        {{^seen}}<div class="letter-new">New</div>{{/seen}}
         <div class="letter-chevron">›</div>
       </li>
       {{/isPast}}

@@ -8,6 +8,7 @@ class DataManager {
   constructor() {
     this.scores = [];
     this.futureEntries = [];
+    this.futureSeen = new Set();
     this.tagCache = null;
     this.years = [];
   }
@@ -30,6 +31,7 @@ class DataManager {
       // Load tag cache and future entries
       this.tagCache = await window.api.getTagCache();
       this.futureEntries = await window.api.loadFutureEntries();
+      this.futureSeen = new Set(await window.api.loadFutureSeen());
       
       return this.scores;
     } catch (error) {
@@ -205,6 +207,30 @@ class DataManager {
    */
   getFutureEntries() {
     return this.futureEntries;
+  }
+
+  /**
+   * Id of a future letter: its arrival date as YYYY-MM-DD
+   * @param {Date|string} date - Arrival date of the letter
+   * @returns {string}
+   */
+  futureLetterId(date) {
+    return new Date(date).format("{yyyy}-{MM}-{dd}");
+  }
+
+  isFutureLetterSeen(date) {
+    return this.futureSeen.has(this.futureLetterId(date));
+  }
+
+  /**
+   * Remember that a future letter was opened, so it stops counting as new
+   * @param {Date|string} date - Arrival date of the letter
+   */
+  async markFutureLetterSeen(date) {
+    const id = this.futureLetterId(date);
+    if (this.futureSeen.has(id)) return;
+    this.futureSeen.add(id);
+    await window.api.saveFutureSeen([...this.futureSeen]);
   }
 
   /**

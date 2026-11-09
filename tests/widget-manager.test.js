@@ -174,6 +174,41 @@ function runTests() {
     return total.totalEntries === 0;
   });
   
+  console.log('💌 Testing Future Letter widget...');
+  const dayOffset = n => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + n); return d; };
+  const letterManager = (entries, seenDates) => {
+    const seen = new Set(seenDates.map(d => d.getTime()));
+    return new WidgetManager({
+      getFutureEntries: () => entries.map(date => ({ date, notes: 'x' })),
+      isFutureLetterSeen: date => seen.has(date.getTime())
+    }, MockScoreCalculator, MockRouter);
+  };
+
+  test('Unread arrived letter is the headline', () => {
+    const w = letterManager([dayOffset(-3), dayOffset(10)], []).getNextFutureLetter();
+    return w.hasUnseen && w.message === '1 letter arrived' && w.caption === 'tap to read';
+  });
+
+  test('Counts only unread letters', () => {
+    const w = letterManager([dayOffset(-3), dayOffset(-8), dayOffset(10)], [dayOffset(-8)]).getNextFutureLetter();
+    return w.unseenCount === 1 && w.message === '1 letter arrived';
+  });
+
+  test('All read shows the countdown to the next letter', () => {
+    const w = letterManager([dayOffset(-3), dayOffset(10)], [dayOffset(-3)]).getNextFutureLetter();
+    return !w.hasUnseen && w.message === 'in 10 days' && w.caption === 'next letter';
+  });
+
+  test('All read and none ahead shows days since the last letter', () => {
+    const w = letterManager([dayOffset(-3), dayOffset(-40)], [dayOffset(-3), dayOffset(-40)]).getNextFutureLetter();
+    return w.message === '3 days ago' && w.caption === 'last of 2 letters';
+  });
+
+  test('No letters at all', () => {
+    const w = letterManager([], []).getNextFutureLetter();
+    return w.totalCount === 0 && !w.hasUnseen;
+  });
+
   // Reset test data
   MockDataManager.setMockData(testScores);
   
